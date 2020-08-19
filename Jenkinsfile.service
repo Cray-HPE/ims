@@ -1,0 +1,14 @@
+
+@Library('dst-shared@release/shasta-1.3') _
+
+dockerBuildPipeline {
+    app = "ims-service"
+    name = "cms-ims-service"
+    description = "Cray Management Image Management Service"
+    repository = "cray"
+    imagePrefix = "cray"
+    dockerfile = "Dockerfile.service"
+    product = "shasta-premium,shasta-standard"
+    enableSonar = true
+    receiveEvent = ["IMS"]
+}

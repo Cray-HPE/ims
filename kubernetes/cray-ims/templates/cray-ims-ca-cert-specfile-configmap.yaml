@@ -1,0 +1,47 @@
+# Copyright 2019 Cray Inc. All Rights Reserved.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ims-ca-rpm-specfile
+  namespace: {{ .Values.ims_config.cray_ims_job_namespace }}
+  labels:
+    app.kubernetes.io/name: cray-ims
+data:
+  cray_ca_cert.spec: |
+    Name: cray_ca_cert
+    License: Cray Software License Agreement
+    Summary: Cray Root CA Certificate
+    Group: System/Management
+    Version: 1.0.0
+    Release: 1
+    Source: %{name}-%{version}.tar.gz
+    Vendor: Cray Inc.
+
+    %define cray_ca_cert_file /etc/cray/ca/certificate_authority.crt
+    %define ca_cert_dest_dir /usr/share/pki/trust/anchors
+    %define ca_cert_dest_file %{ca_cert_dest_dir}/cray_certificate_authority.crt
+
+    %description
+    cray cms tools
+
+    %prep
+    %setup -q
+
+    %build
+
+    %install
+    install -d %{buildroot}%{ca_cert_dest_dir}
+    install -m 644 %{cray_ca_cert_file} %{buildroot}%{ca_cert_dest_file}
+
+    %post
+    # force rebuilding all certificate stores.
+    update-ca-certificates
+
+    %clean
+
+    %files
+    %attr(-,root,root)
+    %{ca_cert_dest_file}
+
+    %changelog

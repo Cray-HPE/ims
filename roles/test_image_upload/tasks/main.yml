@@ -1,0 +1,12 @@
+# Copyright 2019, Cray Inc.  All Rights Reserved.
+---
+
+- name: Invoke ims_image_upload
+  ims_image_upload:
+    name: jsl
+    rootfs_path: /var/opt/cray/boot_images/SLES15
+  register: result
+
+- name: see that default
+  debug:
+    var: result

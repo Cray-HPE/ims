@@ -1,0 +1,127 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Please refer to https://stash.us.cray.com/projects/CLOUD/repos/cray-charts/browse/stable/cray-service/values.yaml?at=refs%2Fheads%2Fmaster
+# for more info on values you can set/override
+# Note that cray-service.containers[*].image and cray-service.initContainers[*].image map values are one of the only structures that
+# differ from the standard kubernetes container spec:
+# image:
+#   repository: ""
+#   tag: "" (default = "latest")
+#   pullPolicy: "" (default = "IfNotPresent")
+
+s3:
+  endpoint: ~
+  ims_bucket: "ims"
+  boot_images_bucket: "boot-images"
+  protocol: "http"
+  connect_timeout: "60"
+  read_timeout: "60"
+
+ims_config:
+  cray_ims_job_namespace: "ims"
+  cray_ims_service_namespace: "services"
+
+  # {cray_ims_utils_image_org}/{cray_ims_utils_image_name}:{cray_ims_utils_image_version}
+  cray_ims_utils_image_org: "cray"
+  cray_ims_utils_image_name: "cray-ims-utils"
+  cray_ims_utils_image_version: "2.1.4"
+
+  # {cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org}/{`cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name`}:{cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version}
+  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org: "cray"
+  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name: "cray-ims-kiwi-ng-opensuse-x86_64-builder"
+  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version: "0.1.2"
+
+  # {cray_ims_sshd_image_org}/{cray_ims_sshd_image_name}:{cray_ims_sshd_image_version}
+  cray_ims_sshd_image_org: "cray"
+  cray_ims_sshd_image_name: "cray-ims-sshd"
+  cray_ims_sshd_image_version: "1.2.0"
+
+api_gw:
+  api_gw_service_name: "istio-ingressgateway"
+  api_gw_service_namespace: "istio-system"
+
+keycloak:
+  keycloak_admin_client_auth_secret_name: "admin-client-auth"
+
+customer_access:
+  shasta_domain: "shasta.local"
+  access_pool: "customer-access"
+
+cray-service:
+  type: Deployment
+  nameOverride: cray-ims
+
+  containers:
+    - name: cray-ims
+      image:
+        repository: cray/cray-ims-service
+      ports:
+        - name: http
+          containerPort: 80
+      envFrom:
+        - configMapRef:
+            name: ims-config
+      env:
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ims-s3-credentials
+              key: access_key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ims-s3-credentials
+              key: secret_key
+      volumeMounts:
+        - mountPath: /var/ims/data
+          name: cray-ims-data
+        - name: ca-vol
+          mountPath: /mnt/ca-vol
+        - name: v2-image-create-job-template-vol
+          mountPath: /mnt/ims/v2/job_templates/create
+        - name: v2-image-customize-job-template-vol
+          mountPath: /mnt/ims/v2/job_templates/customize
+      livenessProbe:
+        httpGet:
+          port: 80
+          path: /healthz/live
+        initialDelaySeconds: 5
+        periodSeconds: 60
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readinessProbe:
+        httpGet:
+          port: 80
+          path: /healthz/ready
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+  volumes:
+    - name: cray-ims-data
+      persistentVolumeClaim:
+        claimName: cray-ims-data-claim
+    - name: ca-vol
+      configMap:
+        name: cray-configmap-ca-public-key
+    - name: v2-image-create-job-template-vol
+      configMap:
+        name: cray-configmap-ims-v2-image-create
+    - name: v2-image-customize-job-template-vol
+      configMap:
+        name: cray-configmap-ims-v2-image-customize
+
+  serviceAccountName: ims-service-launch-job
+
+  persistentVolumeClaims:
+    - name: data-claim # will be prefixed with cray-ims-
+      resources:
+        requests:
+          storage: 10Gi
+
+  ingress:
+    enabled: true
+    prefix: /apis/ims/
+    uri: /
+
+  strategy:
+    type: Recreate
