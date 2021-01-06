@@ -1,0 +1,52 @@
+## Cray Image Management Service Dockerfile
+## Copyright 2018, Cray Inc. All rights reserved.
+
+# Create 'base' image target
+FROM dtr.dev.cray.com/baseos/alpine:3.12.0 as base
+WORKDIR /app
+RUN mkdir -p /var/ims/data
+VOLUME ["/var/ims/data"]
+
+ADD requirements.txt constraints.txt /app/
+RUN apk update && \
+    apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev && \
+    PIP_INDEX_URL=http://dst.us.cray.com/piprepo/simple \
+    PIP_TRUSTED_HOST=dst.us.cray.com \
+    pip3 install --no-cache-dir -U pip && \
+    pip3 install --no-cache-dir -U wheel && \
+    pip3 install --no-cache-dir -r requirements.txt
+
+# Install server
+COPY src/ /app/src/
+
+# Run unit tests
+FROM base as testing
+ADD docker_test_entry.sh /app/
+ADD requirements-test.txt /app/
+RUN pip install -r /app/requirements-test.txt
+COPY tests /app/tests
+ARG FORCE_TESTS=null
+CMD [ "./docker_test_entry.sh" ]
+
+# Run openapi validation on openapi.yaml
+FROM dtr.dev.cray.com/openapitools/openapi-generator-cli:v3.3.4 as openapi-validator
+RUN mkdir /api
+COPY api/openapi.yaml /api
+ARG FORCE_OPENAPI_VALIDATION_CHECK=null
+RUN docker-entrypoint.sh validate -i /api/openapi.yaml || true
+
+# Run code style checkers
+FROM testing as codestyle
+ADD .pylintrc .pycodestyle /app/
+ADD runCodeStyleCheck.sh /app/
+ARG FORCE_STYLE_CHECKS=null
+CMD [ "./runCodeStyleCheck.sh" ]
+
+# Build Application Image
+FROM base as application
+
+EXPOSE 80
+# RUN apk add --no-cache py3-gunicorn py3-gevent py3-greenlet
+copy .version /app/
+COPY config/gunicorn.py /app/
+ENTRYPOINT ["gunicorn", "-c", "/app/gunicorn.py", "src.server.app:app"]
