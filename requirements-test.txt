@@ -1,0 +1,11 @@
+-c constraints.txt
+
+# Testing requirements for testing cms-datastore
+testtools
+fixtures
+pytest
+pytest-cov
+pycodestyle
+pylint
+mock
+responses

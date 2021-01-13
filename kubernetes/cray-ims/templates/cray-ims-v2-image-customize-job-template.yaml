@@ -1,0 +1,220 @@
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
+apiVersion: v1
+data:
+  image_configmap_customize.yaml.template: |
+    ---
+    kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: cray-ims-$id-configmap
+      namespace: $namespace
+    data:
+      public_key:
+        $public_key
+  image_service_customize.yaml.template: |
+    ---
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: cray-ims-$id-service
+      namespace: $namespace
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: $hostname
+        metallb.universe.tf/address-pool: $address_pool
+    spec:
+      selector:
+        app: ims-$id-customize
+      type: LoadBalancer
+      ports:
+      - port: 22
+        protocol: TCP
+        targetPort: 22
+  image_job_customize.yaml.template: |
+    ---
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: cray-ims-$id-customize
+      namespace: $namespace
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: ims-$id-customize
+        spec:
+          restartPolicy: Never  # Don't ever restart this job
+          initContainers:
+          # Pull the image from the configmap location and mount it in a volume
+          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
+            imagePullPolicy: Always
+            name: prepare
+            env:
+            - name: API_GATEWAY_HOSTNAME
+              value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
+            - name: CA_CERT
+              value: /etc/cray/ca/certificate_authority.crt
+            - name: OAUTH_CONFIG_DIR
+              value: '/etc/admin-client-auth'
+            - name: IMS_JOB_ID
+              value: "$id"
+            - name: DOWNLOAD_MD5SUM
+              value: "$download_md5sum"
+            volumeMounts:
+            - name: image-vol
+              mountPath: /mnt/image
+            - name: ca-pubkey
+              mountPath: /etc/cray/ca
+              readOnly: true
+            - name: admin-client-auth
+              mountPath: '/etc/admin-client-auth'
+              readOnly: true
+            command: [ "sh", "-ce", "/scripts/prep-env.sh /mnt/image \"$download_url\"" ]
+            resources:
+              requests:
+                memory: "$size_gb"
+                cpu: "500m"
+              limits:
+                memory: "$limit_gb"
+                cpu: "8"
+          # User customization of image root
+          containers:
+          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
+            imagePullPolicy: Always
+            name: buildenv-sidecar
+            command: ["sh", "-ce", "/scripts/buildenv-sidecar.sh /mnt/image"]
+            resources:
+              requests:
+                memory: "$size_gb"
+                cpu: "500m"
+              limits:
+                memory: "$limit_gb"
+                cpu: "48"
+            env:
+            - name: API_GATEWAY_HOSTNAME
+              value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
+            - name: CA_CERT
+              value: /etc/cray/ca/certificate_authority.crt
+            - name: OAUTH_CONFIG_DIR
+              value: '/etc/admin-client-auth'
+            - name: ENABLE_DEBUG
+              value: '$enable_debug'
+            - name: IMS_ACTION
+              value: customize
+            - name: SERVICE_NAME
+              value: cray-ims-$id-service
+            - name: IMAGE_ROOT_PARENT
+              value: /mnt/image
+            - name: IMAGE_ROOT_ARCHIVE_NAME
+              value: $image_root_archive_name
+            - name: KERNEL_FILENAME
+              value: $kernel_filename
+            - name: INITRD_FILENAME
+              value: $initrd_filename
+            - name: KERNEL_PARAMETERS_FILENAME
+              value: $kernel_parameters_filename
+            - name: IMS_JOB_ID
+              value: "$id"
+            - name: SSH_JAIL
+              value: "$ssh_jail"
+            - name: S3_BUCKET
+              value: "$s3_bucket"
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ims-s3-credentials
+                  key: access_key
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ims-s3-credentials
+                  key: secret_key
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: ims-s3-credentials
+                  key: s3_endpoint
+            - name: S3_SSL_VALIDATE
+              valueFrom:
+                secretKeyRef:
+                  name: ims-s3-credentials
+                  key: ssl_validate
+            volumeMounts:
+            - name: image-vol
+              mountPath: /mnt/image
+            - name: ims-config-vol
+              mountPath: /etc/cray/ims
+            - name: ca-pubkey
+              mountPath: /etc/cray/ca
+              readOnly: true
+            - name: ssh-pubkey
+              mountPath: /etc/cray
+              readOnly: true
+            - name: admin-client-auth
+              mountPath: '/etc/admin-client-auth'
+              readOnly: true
+          # sshd container
+          - image: {{ .Values.ims_config.cray_ims_sshd_image_org }}/{{ .Values.ims_config.cray_ims_sshd_image_name }}:{{ .Values.ims_config.cray_ims_sshd_image_version }}
+            imagePullPolicy: Always
+            name: sshd
+            ports:
+            - containerPort: 22
+            env:
+            - name: API_GATEWAY_HOSTNAME
+              value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
+            - name: CA_CERT
+              value: /etc/cray/ca/certificate_authority.crt
+            - name: ENABLE_DEBUG
+              value: '$enable_debug'
+            - name: IMS_ACTION
+              value: customize
+            - name: IMAGE_ROOT_PARENT
+              value: /mnt/image
+            - name: SSHD_OPTIONS
+              value: "-E /etc/cray/ims/sshd.log -f /etc/cray/ims/sshd_config"
+            # If the -f options is specified in SSHD_OPTIONS, the value of SSHD_CONFIG_FILE must match in order for the ssh jail to be setup correctly.
+            # SSHD_CONFIG_FILE is only used for writing to the sshd config file, and is not passed to sshd unless specified in SSHD_OPTIONS.
+            - name: SSHD_CONFIG_FILE
+              value: "/etc/cray/ims/sshd_config"
+            - name: IMS_JOB_ID
+              value: "$id"
+            - name: SSH_JAIL
+              value: "$ssh_jail"
+            resources:
+              requests:
+                memory: "$size_gb"
+                cpu: "500m"
+              limits:
+                memory: "$limit_gb"
+                cpu: "8"
+            volumeMounts:
+            - name: image-vol
+              mountPath: /mnt/image
+            - name: ims-config-vol
+              mountPath: /etc/cray/ims
+            - name: ca-pubkey
+              mountPath: /etc/cray/ca
+              readOnly: true
+          volumes:
+          - name: image-vol
+            emptyDir:
+              medium: Memory
+          - name: ims-config-vol
+            emptyDir:
+              medium: Memory
+          - name: ca-pubkey
+            configMap:
+              name: cray-configmap-ca-public-key
+          - name: ssh-pubkey
+            configMap:
+              name: cray-ims-$id-configmap
+              items:
+              - key: public_key
+                path: authorized_keys
+          - name: admin-client-auth
+            secret:
+              secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"
+kind: ConfigMap
+metadata:
+  name: cray-configmap-ims-v2-image-customize
+  namespace: {{ .Values.ims_config.cray_ims_service_namespace }}

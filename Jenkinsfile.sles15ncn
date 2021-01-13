@@ -1,0 +1,9 @@
+@Library('dst-shared') _
+rpmBuild(
+    specfile: "cray-ims-crayctldeploy.spec",
+    product: "csm",
+    channel: "casmcms-builds",
+    fanout_params: ["sle15sp1"],
+    recv_triggers: ["cme-premium-cf"],
+    buildPrepScript: "runBuildPrep.rpm.sh"
+)

@@ -1,0 +1,8 @@
+# Copyright 2019, Cray Inc. All rights reserved.
+---
+- hosts: managers
+  any_errors_fatal: true
+  gather_facts: no
+  remote_user: root
+  roles:
+    - test_image_upload

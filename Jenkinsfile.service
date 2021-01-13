@@ -1,0 +1,14 @@
+
+@Library('dst-shared@master') _
+
+dockerBuildPipeline {
+    app = "ims-service"
+    name = "cms-ims-service"
+    description = "Cray Management Image Management Service"
+    repository = "cray"
+    imagePrefix = "cray"
+    dockerfile = "Dockerfile.service"
+    product = "csm"
+    enableSonar = true
+    receiveEvent = ["IMS"]
+}
