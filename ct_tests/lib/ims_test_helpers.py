@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2020 Cray Inc. All Rights Reserved.
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 
 """
 General IMS test helper functions.
@@ -87,7 +87,7 @@ def unstore_ims_id(thing_type):
     resource_name = ims_thing_id_resource_name(thing_type)
     remove_resource(resource_name)
 
-def do_run_cmd(cmd_list, cmd_string, show_output=None, return_rc=False):
+def do_run_cmd(cmd_list, cmd_string, show_output=None, return_rc=False, env_var=None):
     """ 
     Runs the specified command, then displays, logs, and returns the output
     """
@@ -98,6 +98,8 @@ def do_run_cmd(cmd_list, cmd_string, show_output=None, return_rc=False):
         "stdout": subprocess.PIPE,
         "stderr": subprocess.PIPE,
         "check": not return_rc }
+    if env_var != None:
+        run_kwargs['env'] = env_var
     if show_output:
         output = info
     else:
