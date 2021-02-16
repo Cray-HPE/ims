@@ -4,7 +4,7 @@ set -x -o pipefail
 
 get_container_versions_on_branch() {
   local BRANCH=$1
-  if wget "http://car.dev.cray.com/artifactory/csm/SCMS/noos/noarch/${BRANCH}/cms-team/manifest.txt"; then
+  if wget "https://arti.dev.cray.com/artifactory/csm-misc-${BRANCH}-local/manifest/manifest.txt"; then
     echo "Contents of manifest.txt"
     echo "===="
     cat manifest.txt
@@ -32,12 +32,12 @@ get_container_versions_on_branch() {
 get_container_versions() {
   if [[ $GIT_BRANCH =~ release\/.* ]]; then
     echo "Release Branch"
-    if ! get_container_versions_on_branch "$GIT_BRANCH"; then
+    if ! get_container_versions_on_branch "stable"; then
       return 1
     fi
   else
     echo "non-Release Branch"
-    if ! get_container_versions_on_branch "dev/master"; then
+    if ! get_container_versions_on_branch "master"; then
       return 1
     fi
   fi
