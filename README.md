@@ -212,32 +212,10 @@ $ ./runLint.sh
 ```
 
 ### CT Tests
-CT tests can be found in /ct-tests
 
-On a physical system, CMS tests can be found in /opt/cray/tests/crayctl-stage{NUMBER}/cms
-Please see https://connect.us.cray.com/confluence/display/DST/Stage+Tests+Guidelines for more details.
+See cms-tools repo for details on running CT tests for this service.
 
-example: run CT test for IMS at crayctl stage 4
-```
-# /opt/cray/tests/crayctl-stage4/cms/ims_stage4_ct_tests.sh
-or
-# cmsdev test ims --ct
-```
-
-Tests return 0 for success, 1 otherwise
-
-### API and Smoke Tests
-Similar to CT tests, API and smoke tests can be ran on a system via the cmsdev tool.
-https://stash.us.cray.com/projects/SCMS/repos/cms-tools/browse/cmsdev
-
-example: run IMS smoke tests
-```
-# cmsdev test ims --smoke --verbose
-```
-example: run IMS API tests
-```
-# cmsdev test ims --api
-```
+### Openapi Spec Validation
 
 Validate IMS openapi spec
 ```
@@ -318,4 +296,4 @@ as the API version.
 
 ## License
 
-Copyright 2020, Cray Inc. All Rights Reserved.
+Copyright 2020-2021 Hewlett Packard Enterprise Development LP
