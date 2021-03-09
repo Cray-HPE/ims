@@ -132,9 +132,12 @@ cray-service:
 
   serviceAccountName: ims-service-launch-job
 
+  storageClass: ceph-cephfs-external
   persistentVolumeClaims:
     data-claim:
       name: data-claim # will be prefixed with cray-ims-
+      accessModes:
+        - ReadWriteMany
       resources:
         requests:
           storage: 10Gi
