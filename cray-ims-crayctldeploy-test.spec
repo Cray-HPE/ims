@@ -1,7 +1,7 @@
-# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 
 Name: cray-ims-crayctldeploy-test
-License: Cray Software License Agreement
+License: MIT
 Summary: Cray post-install tests for Image Management Service (IMS)
 Group: System/Management
 Version: %(cat .rpm_version_cray-ims-crayctldeploy-test)

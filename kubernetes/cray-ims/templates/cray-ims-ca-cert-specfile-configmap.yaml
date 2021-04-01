@@ -1,4 +1,4 @@
-# Copyright 2019 Cray Inc. All Rights Reserved.
+# Copyright 2019,2021 Hewlett Packard Enterprise Development LP
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -10,10 +10,10 @@ metadata:
 data:
   cray_ca_cert.spec: |
     Name: cray_ca_cert
-    License: Cray Software License Agreement
+    License: MIT
     Summary: Cray Root CA Certificate
     Group: System/Management
-    Version: 1.0.0
+    Version: 1.0.1
     Release: 1
     Source: %{name}-%{version}.tar.gz
     Vendor: Cray Inc.
