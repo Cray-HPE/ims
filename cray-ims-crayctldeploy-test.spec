@@ -1,4 +1,22 @@
 # Copyright 2019-2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 
 Name: cray-ims-crayctldeploy-test
 License: MIT
@@ -12,15 +30,12 @@ Requires: python3-requests
 
 # Test defines. These may also make sense to put in a central location
 %define tests /opt/cray/tests
-%define smslong %{tests}/sms-long
 %define testlib %{tests}/lib
 
 # CMS test defines
-%define smslongcms %{smslong}/cms
 %define cmslib %{testlib}/cms
 
 # IMS test defines
-%define smslongims %{smslongcms}/ims
 %define imslib %{cmslib}/ims
 
 %description
@@ -32,12 +47,7 @@ This is a collection of post-install tests for Image Management Service (IMS)
 %build
 
 %install
-install -m 755 -d %{buildroot}%{smslongcms}/
 install -m 755 -d %{buildroot}%{imslib}/
-
-# Install long run tests
-install ct_tests/ims_api_build_cray_sles15sp1_barebones_test.sh %{buildroot}%{smslongcms}
-install ct_tests/ims_cli_build_cray_sles15sp1_barebones_test.sh %{buildroot}%{smslongcms}
 
 # Install test modules
 # We do not want the following Python files executable, so they won't get picked up and
@@ -52,8 +62,6 @@ install -m 644 ct_tests/lib/ims_test_k8s_helpers.py %{buildroot}%{imslib}
 install -m 644 ct_tests/lib/ims_test_logger.py %{buildroot}%{imslib}
 
 %clean
-rm -f  %{buildroot}%{smslongcms}/ims_api_build_cray_sles15sp1_barebones_test.sh
-rm -f  %{buildroot}%{smslongcms}/ims_cli_build_cray_sles15sp1_barebones_test.sh
 rm -f  %{buildroot}%{imslib}/ims_build_image.py
 rm -f  %{buildroot}%{imslib}/ims_test_api_helpers.py
 rm -f  %{buildroot}%{imslib}/ims_test_cli_helpers.py
@@ -76,8 +84,5 @@ rmdir %{buildroot}%{imslib}
 %attr(644, root, root) %{imslib}/ims_test_ims_helpers.py
 %attr(644, root, root) %{imslib}/ims_test_k8s_helpers.py
 %attr(644, root, root) %{imslib}/ims_test_logger.py
-
-%{smslongcms}/ims_api_build_cray_sles15sp1_barebones_test.sh
-%{smslongcms}/ims_cli_build_cray_sles15sp1_barebones_test.sh
 
 %changelog
