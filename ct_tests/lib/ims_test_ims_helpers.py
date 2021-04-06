@@ -1,5 +1,22 @@
-#!/usr/bin/env python3
-# Copyright 2020 Cray Inc. All Rights Reserved.
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 
 """
 IMS-related test helper functions
@@ -82,7 +99,7 @@ def verify_ims_thing_deleted(thing_type, id):
         url = ims_url(thing_type=thing_type, id=id)
         requests_get(url=url, return_json=False, expected_sc=404)
     else:
-        cmdresp = run_ims_cli_cmd(thing_type, "get", id, parse_json_output=False, return_rc=True)
+        cmdresp = run_ims_cli_cmd(thing_type, "describe", id, parse_json_output=False, return_rc=True)
         if cmdresp["rc"] == 0:
             error_exit("IMS %s should have been deleted, but it does not appear to be" % thing_type)
     info("IMS %s successfully deleted" % thing_type)

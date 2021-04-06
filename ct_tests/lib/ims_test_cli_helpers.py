@@ -1,5 +1,22 @@
-#!/usr/bin/env python3
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 
 """
 Test helper functions for CLI
@@ -109,30 +126,30 @@ def run_ims_cli_cmd(thing_type, command, *args, parse_json_output=True, return_r
     else:
         # Let's try CLI command without our own config file first.
         cmdresp = run_cmd_list(cmdlist, return_rc=True)
+        info("%s command return code = %d" % (
+            " ".join(cmdlist), cmdresp["rc"]))
+        debug("Command stdout:\n%s" % cmdresp["out"])
+        debug("Command stderr:\n%s" % cmdresp["err"])
         if cmdresp["rc"] != 0:
             if any(estring in cmdresp["err"] for estring in config_error_strings):
                 info("CLI command failure may be due to configuration error. Will generate our own config file and retry")
                 cmdresp = run_cmd_list(cmdlist, return_rc=True, env_var=config_env())
+                info("%s command return code = %d" % (
+                    " ".join(cmdlist), cmdresp["rc"]))
+                debug("Command stdout:\n%s" % cmdresp["out"])
+                debug("Command stderr:\n%s" % cmdresp["err"])
                 if cmdresp["rc"] != 0:
                     info("CLI command failed even using our CLI config file.")
-                    error("%s command failed with return code %d" % (
-                        " ".join(cmdlist), cmdresp["rc"]))
-                    info("Command stdout:\n%s" % cmdresp["out"])
-                    info("Command stderr:\n%s" % cmdresp["err"])
-                    error_exit()
-                elif not return_rc:
-                    # Command passed but user did not request return code in the response, so let's remove it
-                    del cmdresp["rc"]
+                    if not return_rc:
+                        error("%s command failed" % " ".join(cmdlist))
+                        error_exit()
             else:
                 info("CLI command failed and does not appear to be obviously related to the CLI config")
-                error("%s command failed with return code %d" % (
-                    " ".join(cmdlist), cmdresp["rc"]))
-                info("Command stdout:\n%s" % cmdresp["out"])
-                info("Command stderr:\n%s" % cmdresp["err"])
-                error_exit()
-        elif not return_rc:
-            # Command passed but user did not request return code in the response, so let's remove it
-            del cmdresp["rc"]
+                if not return_rc:
+                    error("%s command failed" % " ".join(cmdlist))
+                    error_exit()
+    if not return_rc:
+        del cmdresp["rc"]
     if parse_json_output:
         try:
             cmdresp["json"] = json.loads(cmdresp["out"])
