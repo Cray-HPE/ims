@@ -29,7 +29,7 @@ ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
 # Run openapi validation on openapi.yaml
-FROM dtr.dev.cray.com/openapitools/openapi-generator-cli:v3.3.4 as openapi-validator
+FROM arti.dev.cray.com/third-party-docker-stable-local/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
 RUN mkdir /api
 COPY api/openapi.yaml /api
 ARG FORCE_OPENAPI_VALIDATION_CHECK=null
