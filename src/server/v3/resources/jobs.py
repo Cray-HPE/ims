@@ -22,7 +22,7 @@ from src.server.errors import problemify, generate_missing_input_response, gener
     generate_resource_not_found_response
 from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json
 from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
-    JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES
+    JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
@@ -112,15 +112,10 @@ class V3BaseJobResource(Resource):
         name = job.kubernetes_service
         namespace = job.kubernetes_namespace
         body = client.V1DeleteOptions(propagation_policy='Background')
-        try:
-            api_response = self._delete_namespaced_destination_rule(namespace)(name, body=body)
-            current_app.logger.debug('%s %s "%s" resource: %s', log_id, self.ISTIO_RESOURCE_DESTINATION_RULE,
-                                     name, api_response)
-        except ApiException as e:
-            current_app.logger.warning(
-                '%s Exception when calling delete_namespaced_custom_object', log_id, exc_info=True
-            )
-            raise e
+
+        api_response = self._delete_namespaced_destination_rule(namespace)(name, body=body)
+        current_app.logger.debug('%s %s "%s" resource: %s', log_id, self.ISTIO_RESOURCE_DESTINATION_RULE,
+                                 name, api_response)
 
         return api_response
 
@@ -199,7 +194,7 @@ class V3BaseJobResource(Resource):
 
         return new_job, None
 
-    def delete_kubernetes_resources(self, log_id, job):
+    def delete_kubernetes_resources(self, log_id, job, delete_job=True):
         """ Delete the underlying kubernetes resources that are created for the create/customize job workflow """
         errors = []
         retval = True
@@ -214,8 +209,9 @@ class V3BaseJobResource(Resource):
 
         resources = OrderedDict()
         resources['service'] = k8s_v1api.delete_namespaced_service
-        resources['job'] = k8s_batchv1api.delete_namespaced_job
-        resources['configmap'] = k8s_v1api.delete_namespaced_config_map
+        if delete_job:
+            resources['job'] = k8s_batchv1api.delete_namespaced_job
+            resources['configmap'] = k8s_v1api.delete_namespaced_config_map
 
         # Delete the underlying kubernetes service, job and configmap resources
         for resource, delete_fn in resources.items():
@@ -226,7 +222,7 @@ class V3BaseJobResource(Resource):
                 delete_fn(body=k8s_delete_options, namespace=namespace, name=name)
             except ApiException as api_exception:
                 if api_exception.reason == "Not Found":
-                    current_app.logger.warning("%s K8s %s %s was not found to delete.",
+                    current_app.logger.info("%s K8s %s %s was not found to delete.",
                                                log_id, resource, name)
                 else:
                     current_app.logger.error("%s Received APIException deleting k8s %s %s. %s",
@@ -244,7 +240,7 @@ class V3BaseJobResource(Resource):
             self._delete_istio_destination_rule_for_job(log_id, job)
         except ApiException as api_exception:
             if api_exception.reason == "Not Found":
-                current_app.logger.warning("%s K8s DestinationRule %s was not found to delete.",
+                current_app.logger.info("%s K8s DestinationRule %s was not found to delete.",
                                            log_id, job.kubernetes_job)
             else:
                 current_app.logger.error("%s Error encountered deleting istio DestinationRule %s",
@@ -782,6 +778,21 @@ class V3JobResource(V3BaseJobResource):
 
         job = current_app.data["jobs"][job_id]
         for key, value in list(json_data.items()):
+            if key == "status":
+                if value in (JOB_STATUS_ERROR, JOB_STATUS_SUCCESS):
+                    # The job pod is either in `error` or `success` state. Either way, processing is complete.
+                    # We need to delete the k8s service (to release the CAN IP), but not the IMS job POD.
+                    # Leaving the job pod allows users to access the job logs. The job pod will get cleaned up
+                    # when the IMS job is deleted.
+                    current_app.logger.info("%s Deleting k8s service IP for IMS Job", log_id)
+                    status, errors = self.delete_kubernetes_resources(log_id, job, delete_job=False)
+                    if not status:
+                        current_app.logger.info("%s errors encountered while deleting k8s service IP: %s", log_id, errors)
+                        return problemify(status=http.client.INTERNAL_SERVER_ERROR,
+                                          detail='Errors were encountered cleaning up kubernetes service IP for '
+                                                 'IMS job_id=%s. Review the errors, take any corrective '
+                                                 'action and then re-run the request with valid information.' % job_id,
+                                          errors=errors)
             setattr(job, key, value)
         current_app.data['jobs'][job_id] = job
 
