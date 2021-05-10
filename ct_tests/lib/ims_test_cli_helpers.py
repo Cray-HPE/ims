@@ -148,8 +148,8 @@ def run_ims_cli_cmd(thing_type, command, *args, parse_json_output=True, return_r
                 if not return_rc:
                     error("%s command failed" % " ".join(cmdlist))
                     error_exit()
-    if not return_rc:
-        del cmdresp["rc"]
+        if not return_rc:
+            del cmdresp["rc"]
     if parse_json_output:
         try:
             cmdresp["json"] = json.loads(cmdresp["out"])
