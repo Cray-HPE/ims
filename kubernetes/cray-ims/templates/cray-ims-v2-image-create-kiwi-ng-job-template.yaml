@@ -1,4 +1,3 @@
-# © Copyright 2019-2020, Cray Inc.
 apiVersion: v1
 data:
   image_configmap_create.yaml.template: |
