@@ -1,5 +1,4 @@
 # Image Management Service API Specification
-# © Copyright 2019-2020 Hewlett Packard Enterprise Development LP
 openapi: 3.0.2
 
 info:
