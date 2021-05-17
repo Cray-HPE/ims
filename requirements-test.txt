@@ -1,6 +1,6 @@
 -c constraints.txt
 
-# Testing requirements for testing cms-datastore
+# Testing requirements for testing cms-ims
 testtools
 fixtures
 pytest

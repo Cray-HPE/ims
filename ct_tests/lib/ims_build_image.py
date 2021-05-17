@@ -18,6 +18,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+# (MIT License)
 
 """
 Usage: <ims_build_image.py> [-i <initrd_name>] [-k <kernel name>] [-v] {api|cli} <recipe_name>
