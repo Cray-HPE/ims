@@ -90,16 +90,8 @@ pin_dependent_containers() {
   return 1
 }
 
-update_versions() {
-    ./install_cms_meta_tools.sh || exit 1
-    RC=0
-    ./cms_meta_tools/update_versions/update_versions.sh || RC=1
-    rm -rf ./cms_meta_tools
-    return $RC
-}
-
 # Update the version strings from the placeholder value
-if ! update_versions ; then
+if ! ./update_versions.sh ; then
   echo "ERROR: Failed updating version placeholder strings"
   exit 1
 fi
