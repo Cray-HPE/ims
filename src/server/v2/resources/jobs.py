@@ -40,7 +40,9 @@ from kubernetes.client.rest import ApiException
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
-from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json
+from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
+    IMAGE_MANIFEST_VERSION_1_0, IMAGE_MANIFEST_VERSION, IMAGE_MANIFEST_ARTIFACTS, IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, \
+    IMAGE_MANIFEST_ARTIFACT_TYPE
 from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
     JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
 
@@ -375,8 +377,8 @@ class V2JobCollection(V2BaseJobResource):
 
         def _get_rootfs_artifact_from_v1_manifest():
             try:
-                root_fs_artifacts = [artifact for artifact in manifest_json['artifacts'] if
-                                     artifact['type'].startswith('application/vnd.cray.image.rootfs.squashfs')]
+                root_fs_artifacts = [artifact for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS] if
+                                     artifact[IMAGE_MANIFEST_ARTIFACT_TYPE].startswith(IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS)]
             except ValueError as value_error:
                 current_app.logger.info("%s Received ValueError while processing manifest file for image_id=%s.",
                                         log_id, ims_image_id, exc_info=value_error)
@@ -417,8 +419,8 @@ class V2JobCollection(V2BaseJobResource):
 
         try:
             return {
-                "1.0": _get_rootfs_artifact_from_v1_manifest,
-            }.get(manifest_json['version'])()
+                IMAGE_MANIFEST_VERSION_1_0: _get_rootfs_artifact_from_v1_manifest,
+            }.get(manifest_json[IMAGE_MANIFEST_VERSION])()
         except (TypeError, KeyError) as e:
             current_app.logger.info("Unknown manifest version or manifest.json is corrupt or invalid for IMS "
                                     "image_id=%s.", ims_image_id, exc_info=e)

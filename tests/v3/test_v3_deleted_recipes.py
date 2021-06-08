@@ -29,7 +29,7 @@ from botocore.stub import Stubber
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url
+from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3RecipesDataFixture, V3DeletedRecipesDataFixture
 from tests.utils import check_error_responses
 
@@ -56,7 +56,7 @@ class TestV3DeletedRecipeBase(TestCase):
             'link': {
                 'path': 'http://ims/deleted/recipes/{}/recipe.tgz'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,

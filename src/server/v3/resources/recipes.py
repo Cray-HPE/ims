@@ -30,7 +30,7 @@ from flask_restful import Resource
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
      generate_resource_not_found_response, generate_patch_conflict
 from src.server.helper import validate_artifact, delete_artifact, get_log_id, \
-    soft_delete_artifact, soft_undelete_artifact
+    soft_delete_artifact, soft_undelete_artifact, ARTIFACT_LINK
 from src.server.models.recipes import V2RecipeRecordInputSchema, V2RecipeRecordSchema, V2RecipeRecordPatchSchema, \
     V2RecipeRecord
 from src.server.v3.models.recipes import V3DeletedRecipeRecordPatchSchema, V3DeletedRecipeRecord, \
@@ -207,7 +207,7 @@ class V3RecipeResource(V3BaseRecipeCollection):
 
         recipe = current_app.data[self.recipes_table][recipe_id]
         for key, value in list(json_data.items()):
-            if key == "link":
+            if key == ARTIFACT_LINK:
                 if recipe.link and dict(recipe.link) == value:
                     # The stored link value matches what is trying to be patched.
                     # In this case, for idempotency reasons, do not return failure.

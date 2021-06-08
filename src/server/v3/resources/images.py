@@ -30,10 +30,11 @@ from flask_restful import Resource
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response, generate_patch_conflict
 from src.server.helper import validate_artifact, delete_artifact, soft_delete_artifact, soft_undelete_artifact, \
-    read_manifest_json, get_log_id, write_new_image_manifest
-from src.server.v3.models import PATCH_OPERATION_UNDELETE
+    read_manifest_json, get_log_id, write_new_image_manifest, IMAGE_MANIFEST_VERSION_1_0, ARTIFACT_LINK_TYPE, \
+    ARTIFACT_LINK, IMAGE_MANIFEST_ARTIFACTS, validate_image_manifest
 from src.server.models.images import V2ImageRecordInputSchema, V2ImageRecordSchema, V2ImageRecordPatchSchema, \
     V2ImageRecord
+from src.server.v3.models import PATCH_OPERATION_UNDELETE
 from src.server.v3.models.images import V3DeletedImageRecordPatchSchema, V3DeletedImageRecord, \
     V3DeletedImageRecordSchema
 
@@ -58,14 +59,14 @@ class V3BaseImageResource(Resource):
         """
 
         manifest_data = {
-            'version': '1.0',
+            'version': IMAGE_MANIFEST_VERSION_1_0,
             'created': deleted_image.deleted.strftime("%Y-%m-%d %H:%M:%S"),
             'artifacts': artifacts
         }
         manifest_link = {
             'path': f's3://{current_app.config["S3_BOOT_IMAGES_BUCKET"]}/deleted/'
                     f'{deleted_image.id}/deleted_manifest.json',
-            'type': deleted_image.link["type"]
+            'type': deleted_image.link[ARTIFACT_LINK_TYPE]
         }
         write_new_image_manifest(manifest_link, manifest_data)
         return manifest_link
@@ -79,14 +80,14 @@ class V3BaseImageResource(Resource):
         soft_deleted_artifacts = []
         try:
             # delete all the artifacts that are listed in the manifest.json
-            for artifact in manifest_json['artifacts']:
-                if "link" in artifact and artifact["link"]:
+            for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS]:
+                if ARTIFACT_LINK in artifact and artifact[ARTIFACT_LINK]:
                     try:
-                        link = soft_delete_artifact(artifact["link"])
+                        link = soft_delete_artifact(artifact[ARTIFACT_LINK])
                         if link:
                             soft_deleted_artifacts.append(
                                 {
-                                    'type': artifact['type'],
+                                    'type': artifact[ARTIFACT_LINK_TYPE],
                                     'md5': artifact['md5'],
                                     'link': link
                                 }
@@ -125,10 +126,10 @@ class V3BaseImageResource(Resource):
         original_manifest_link = None
         try:
             # undelete all the artifacts that are listed in the deleted_manifest.json
-            for artifact in manifest_json['artifacts']:
-                if "link" in artifact and artifact["link"]:
+            for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS]:
+                if ARTIFACT_LINK in artifact and artifact[ARTIFACT_LINK]:
                     try:
-                        link = soft_undelete_artifact(artifact["link"])
+                        link = soft_undelete_artifact(artifact[ARTIFACT_LINK])
                         if artifact['type'] == 'application/vnd.cray.image.manifest':
                             original_manifest_link = link
 
@@ -157,10 +158,10 @@ class V3BaseImageResource(Resource):
 
         try:
             # delete all the artifacts that are listed in the manifest.json
-            for artifact in manifest_json['artifacts']:
-                if "link" in artifact and artifact["link"]:
+            for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS]:
+                if ARTIFACT_LINK in artifact and artifact[ARTIFACT_LINK]:
                     try:
-                        delete_artifact(artifact["link"])
+                        delete_artifact(artifact[ARTIFACT_LINK])
                     except Exception as exc:  # pylint: disable=broad-except
                         current_app.logger.warning("%s Could not delete artifact %s listed in the "
                                                    "manifest.json for image_id=%s",
@@ -217,9 +218,8 @@ class V3ImageCollection(V3BaseImageResource):
         new_image = image_schema.load(json_data)
 
         if new_image.link:
-            _, problem = validate_artifact(new_image.link)
+            problem = validate_image_manifest(new_image.link)
             if problem:
-                current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                 return problem
 
         # Save to datastore
@@ -322,7 +322,7 @@ class V3ImageResource(V3BaseImageResource):
 
         image = current_app.data[self.images_table][image_id]
         for key, value in list(json_data.items()):
-            if key == "link":
+            if key == ARTIFACT_LINK:
                 if image.link and dict(image.link) == value:
                     # The stored link value matches what is trying to be patched.
                     # In this case, for idempotency reasons, do not return failure.
@@ -331,10 +331,10 @@ class V3ImageResource(V3BaseImageResource):
                     current_app.logger.info("%s image record cannot be patched since it already has link info", log_id)
                     return generate_patch_conflict()
                 else:
-                    _, problem = validate_artifact(value)
+                    problem = validate_image_manifest(value)
                     if problem:
-                        current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                         return problem
+
             else:
                 current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
                 return generate_data_validation_failure(errors=[])

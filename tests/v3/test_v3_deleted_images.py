@@ -25,15 +25,15 @@ import json
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from testtools import TestCase
-from botocore.stub import Stubber
 from botocore.response import StreamingBody
+from botocore.stub import Stubber
+from testtools import TestCase
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url
-from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
+from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
 from tests.utils import check_error_responses
+from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
 
 
 class TestV3BaseDeletedImage(TestCase):
@@ -58,7 +58,7 @@ class TestV3BaseDeletedImage(TestCase):
                     "link": {
                         "path": "s3://boot-images/deleted/{}/rootfs".format(self.test_with_link_id),
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": "application/vnd.cray.image.rootfs.squashfs",
                     "md5": self.getUniqueString()
@@ -67,7 +67,7 @@ class TestV3BaseDeletedImage(TestCase):
                     "link": {
                         "path": "s3://boot-images/deleted/{}/deleted_manifest.json".format(self.test_with_link_id),
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": "application/vnd.cray.image.manifest",
                     "md5": self.getUniqueString()
@@ -80,7 +80,7 @@ class TestV3BaseDeletedImage(TestCase):
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
@@ -118,7 +118,7 @@ class TestV3BaseDeletedImage(TestCase):
         self.s3resource_stub.add_response(method='copy_object',
                                           service_response={
                                               'CopyObjectResult': {
-                                                  'ETag': f"\"{ etag }\"",
+                                                  'ETag': f"\"{etag}\"",
                                               },
                                               'ResponseMetadata': {
                                                   'HTTPStatusCode': 200,
@@ -133,13 +133,13 @@ class TestV3BaseDeletedImage(TestCase):
         self.s3resource_stub.add_response(method='delete_object',
                                           service_response={},
                                           expected_params={
-                                            'Bucket': bucket,
-                                            'Key': key
+                                              'Bucket': bucket,
+                                              'Key': key
                                           })
 
         self.s3resource_stub.add_response(method='head_object',
                                           service_response={
-                                              'ETag': f"\"{ etag }\"",
+                                              'ETag': f"\"{etag}\"",
                                           },
                                           expected_params={
                                               'Bucket': bucket,
@@ -187,7 +187,10 @@ class TestV3DeletedImageEndpoint(TestV3BaseDeletedImage):
         s3_manifest_json = json.dumps(self.test_with_link_manifest).encode()
         self.s3_stub.add_response(
             method='get_object',
-            service_response={'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            service_response={
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             expected_params={'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
         )
 
@@ -232,7 +235,7 @@ class TestV3DeletedImageEndpoint(TestV3BaseDeletedImage):
         response = self.app.get(self.all_images_link)
         self.assertEqual(response.status_code, 200, 'status code was not 200')
         self.assertThat(json.loads(response.data),
-                        HasLength(len(self.data)-1), 'collection does not match expected result')
+                        HasLength(len(self.data) - 1), 'collection does not match expected result')
 
     def test_hard_delete(self):
         """ DELETE /v3/deleted/images/{image_id} """
@@ -243,7 +246,10 @@ class TestV3DeletedImageEndpoint(TestV3BaseDeletedImage):
         s3_manifest_json = json.dumps(self.test_with_link_manifest).encode()
         self.s3_stub.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
@@ -277,7 +283,7 @@ class TestV3ImagesCollectionEndpoint(TestV3BaseDeletedImage):
         response = self.app.get(self.all_deleted_images_link)
         self.assertEqual(response.status_code, 200, 'status code was not 200')
         response_data = json.loads(response.data)
-        assert(len(self.data) == len(response_data))
+        assert (len(self.data) == len(response_data))
         for source_record in self.data:
             match_found = False
             for response_record in response_data:
@@ -311,7 +317,10 @@ class TestV3ImagesCollectionEndpoint(TestV3BaseDeletedImage):
                 s3_manifest_json = json.dumps(self.test_with_link_manifest).encode()
                 self.s3_stub.add_response(
                     method='get_object',
-                    service_response={'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+                    service_response={
+                        'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                        'ContentLength': len(s3_manifest_json)
+                    },
                     expected_params={'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
                 )
 
@@ -370,7 +379,10 @@ class TestV3ImagesCollectionEndpoint(TestV3BaseDeletedImage):
                 s3_manifest_json = json.dumps(self.test_with_link_manifest).encode()
                 self.s3_stub.add_response(
                     'get_object',
-                    {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+                    {
+                        'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                        'ContentLength': len(s3_manifest_json)
+                    },
                     manifest_expected_params
                 )
 
