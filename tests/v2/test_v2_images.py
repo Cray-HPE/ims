@@ -28,6 +28,7 @@ import io
 import json
 import unittest
 import uuid
+
 from botocore.response import StreamingBody
 from botocore.stub import Stubber
 from testtools import TestCase
@@ -178,7 +179,10 @@ class TestV2ImageEndpoint(TestCase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
@@ -233,6 +237,20 @@ class TestV2ImageEndpoint(TestCase):
         }
 
         expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.stubber.add_response('head_object', {"ETag": link_data["link"]["etag"]}, expected_params)
+
+        s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
+        manifest_expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.stubber.add_response(
+            'get_object',
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json),
+            },
+            manifest_expected_params
+        )
+
+        expected_params = {'Bucket': s3_bucket, 'Key': "{}/rootfs".format(self.test_id)}
         self.stubber.add_response('head_object', {"ETag": link_data["link"]["etag"]}, expected_params)
 
         self.stubber.activate()
@@ -342,6 +360,22 @@ class TestV2ImagesCollectionEndpoint(TestCase):
         self.test_images = self.useFixture(V2ImagesDataFixture(initial_data=self.data)).datastore
         self.test_domain = 'https://api-gw-service-nmn.local'
 
+        self.s3_manifest_data = {
+            "version": "1.0",
+            "created": "2020-01-14 03:17:14",
+            "artifacts": [
+                {
+                    "link": {
+                        "path": "s3://boot-images/{}/rootfs".format(self.test_id),
+                        "etag": self.getUniqueString(),
+                        "type": "s3"
+                    },
+                    "type": "application/vnd.cray.image.rootfs.squashfs",
+                    "md5": self.getUniqueString()
+                }
+            ]
+        }
+
     def test_get(self):
         """ Test happy path GET """
         response = self.app.get(self.test_uri)
@@ -374,6 +408,21 @@ class TestV2ImagesCollectionEndpoint(TestCase):
         }
 
         expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.stubber.add_response('head_object', {"ETag": input_data["link"]["etag"]}, expected_params)
+
+        s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
+        manifest_expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+
+        self.stubber.add_response(
+            'get_object',
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
+            manifest_expected_params
+        )
+
+        expected_params = {'Bucket': s3_bucket, 'Key': "{}/rootfs".format(self.test_id)}
         self.stubber.add_response('head_object', {"ETag": input_data["link"]["etag"]}, expected_params)
 
         self.stubber.activate()

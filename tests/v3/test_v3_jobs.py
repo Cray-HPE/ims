@@ -23,23 +23,23 @@
 """
 Unit tests for resources/jobs.py
 """
+import datetime
 import io
 import json
 import unittest
+import uuid
 
-import datetime
 import mock
 import responses
-import uuid
+from botocore.exceptions import ClientError
 from botocore.response import StreamingBody
 from botocore.stub import Stubber
-from botocore.exceptions import ClientError
 from kubernetes.client.rest import ApiException
 from testtools import TestCase
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url
+from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
 from src.server.models.jobs import STATUS_TYPES
 from tests.utils import check_error_responses
 from tests.v2.ims_fixtures import \
@@ -193,7 +193,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'link': {
                 'path': 's3://ims/{}/recipe.tgz'.format(self.test_recipe_id),
                 'etag': self.getUniqueString(self.test_recipe_id),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_recipe_id,
@@ -203,7 +203,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'link': {
                 'path': 's3://ims/{}/manifest.json'.format(self.test_image_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_image_id,
@@ -236,7 +236,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                     "link": {
                         "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/rootfs",
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": self.manifest_rootfs_mime_type,
                     "md5": self.getUniqueString()
@@ -245,7 +245,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                     "link": {
                         "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/initrd",
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": self.manifest_initrd_mime_type,
                     "md5": self.getUniqueString()
@@ -254,7 +254,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                     "link": {
                         "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/kernel",
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": self.manifest_kernel_mime_type,
                     "md5": self.getUniqueString()
@@ -372,7 +372,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
             else:
                 self.assertEqual(response_data[key], self.job_data[key])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_enable_debug_false(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test happy path POST """
@@ -416,7 +417,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'kernel_parameters_file_name'],
                               'returned keys not the same')
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_enable_debug_true(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
 
@@ -480,7 +482,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'kernel_parameters_file_name'],
                               'returned keys not the same')
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_ims_job_namespace(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test happy path POST """
@@ -550,7 +553,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertEqual(response.status_code, 400, 'status code was not 400')
 
     @responses.activate
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_customize_with_out_ssh_container(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test happy path POST without a ssh_container """
@@ -581,12 +585,15 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
-        rootfs_manifest_info = [ artifact for artifact in self.s3_manifest_data["artifacts"]
-                                 if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
+        rootfs_manifest_info = [artifact for artifact in self.s3_manifest_data["artifacts"]
+                                if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
@@ -623,7 +630,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
                               'returned keys not the same')
 
     @responses.activate
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_customize_with_ssh_container(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test happy path POST with one ssh_container """
@@ -663,12 +671,15 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
-        rootfs_manifest_info = [ artifact for artifact in self.s3_manifest_data["artifacts"]
-                                 if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
+        rootfs_manifest_info = [artifact for artifact in self.s3_manifest_data["artifacts"]
+                                if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
@@ -783,7 +794,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_missing_image_root_archive_name(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where image_root_archive_name is missing """
         input_job_type = "create"
@@ -805,7 +817,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("image_root_archive_name", response.json["errors"],
                       "Expected image_root_archive_name to be listed in error detail")
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_image_root_archive_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where image_root_archive_name is blank """
         input_job_type = "create"
@@ -827,7 +840,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("image_root_archive_name", response.json["errors"],
                       "Expected image_root_archive_name to be listed in error detail")
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_kernel_file_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where kernel_file_name is blank """
         input_job_type = "create"
@@ -849,7 +863,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("kernel_file_name", response.json["errors"],
                       "Expected kernel_file_name to be listed in error detail")
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_initrd_file_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where initrd_file_name is blank """
         input_job_type = "create"
@@ -871,7 +886,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("initrd_file_name", response.json["errors"],
                       "Expected initrd_file_name to be listed in error detail")
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_invalid_job_type(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where job type is invalid """
         input_artifact_id = self.test_recipe_id
@@ -892,7 +908,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("job_type", response.json["errors"],
                       "Expected job_type to be listed in error detail")
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_invalid_create_artifact_id(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the artifact_id is invalid for create case """
         input_job_type = "create"
@@ -911,7 +928,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_422_create_artifact_not_in_s3(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the S3 recipe is not in S3 """
@@ -937,7 +955,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_customize_manifest_not_in_s3(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json is not in s3  """
 
@@ -963,7 +982,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_does_not_have_rootfs(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json does not list a rootfs object  """
 
@@ -998,7 +1018,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                     "link": {
                         "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/kernel",
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": self.manifest_kernel_mime_type,
                     "md5": self.getUniqueString()
@@ -1009,7 +1029,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json_no_rootfs = json.dumps(s3_manifest_data_no_rootfs).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_rootfs), len(s3_manifest_json_no_rootfs))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_rootfs), len(s3_manifest_json_no_rootfs)),
+                'ContentLength': len(s3_manifest_json_no_rootfs)
+            },
             manifest_expected_params
         )
 
@@ -1019,7 +1042,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_bad_version(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json has an unknown version  """
 
@@ -1053,7 +1077,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json_bad_version = json.dumps(s3_manifest_data_bad_version).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json_bad_version), len(s3_manifest_json_bad_version))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json_bad_version), len(s3_manifest_json_bad_version)),
+                'ContentLength': len(s3_manifest_json_bad_version)
+            },
             manifest_expected_params
         )
 
@@ -1063,7 +1090,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_no_version(self, mock_open, utils_mock, config_mock, client_mock):
 
         """ Test case where the manifest.json does not have a version  """
@@ -1097,7 +1125,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json_no_version = json.dumps(s3_manifest_data_no_version).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_version), len(s3_manifest_json_no_version))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_version), len(s3_manifest_json_no_version)),
+                'ContentLength': len(s3_manifest_json_no_version)
+            },
             manifest_expected_params
         )
 
@@ -1107,7 +1138,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_customize_rootfs_not_in_s3(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the rootfs object is not in s3 """
 
@@ -1137,7 +1169,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
@@ -1149,7 +1184,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_400_customize_cannot_create_presigned_url(self, s3_mock, mock_open, utils_mock,
                                                             config_mock, client_mock):
@@ -1180,12 +1216,15 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.stubber.add_response(
             'get_object',
-            {'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             manifest_expected_params
         )
 
-        rootfs_manifest_info = [ artifact for artifact in self.s3_manifest_data["artifacts"]
-                                 if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
+        rootfs_manifest_info = [artifact for artifact in self.s3_manifest_data["artifacts"]
+                                if artifact["type"].startswith(self.manifest_rootfs_mime_type)]
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
@@ -1204,7 +1243,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open, read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_400_public_key_invalid(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the public-key does not exist in IMS """

@@ -23,10 +23,7 @@
 from marshmallow import Schema, fields
 from marshmallow.validate import OneOf, Length
 
-ARTIFACT_LINK_TYPE_S3 = 's3'
-ARTIFACT_LINK_TYPES = (
-    ARTIFACT_LINK_TYPE_S3,
-)
+from src.server.helper import ARTIFACT_LINK_TYPES
 
 
 class ArtifactLink(Schema):

@@ -24,12 +24,14 @@ Images API
 """
 
 import http.client
+
 from flask import jsonify, request, current_app
 from flask_restful import Resource
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
-     generate_resource_not_found_response, generate_patch_conflict
-from src.server.helper import validate_artifact, delete_artifact, read_manifest_json, get_log_id
+    generate_resource_not_found_response, generate_patch_conflict
+from src.server.helper import validate_artifact, delete_artifact, read_manifest_json, get_log_id, \
+    validate_image_manifest, IMAGE_MANIFEST_ARTIFACTS
 from src.server.models.images import V2ImageRecordInputSchema, V2ImageRecordSchema, V2ImageRecordPatchSchema
 
 image_user_input_schema = V2ImageRecordInputSchema()
@@ -50,7 +52,7 @@ class V2BaseImageResource(Resource):
 
         try:
             # delete all the artifacts that are listed in the manifest.json
-            for artifact in manifest_json['artifacts']:
+            for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS]:
                 if "link" in artifact and artifact["link"]:
                     try:
                         delete_artifact(artifact["link"])
@@ -110,7 +112,7 @@ class V2ImageCollection(V2BaseImageResource):
         new_image = image_schema.load(json_data)
 
         if new_image.link:
-            _, problem = validate_artifact(new_image.link)
+            problem = validate_image_manifest(new_image.link)
             if problem:
                 current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                 return problem
@@ -218,7 +220,7 @@ class V2ImageResource(V2BaseImageResource):
                     current_app.logger.info("%s image record cannot be patched since it already has link info", log_id)
                     return generate_patch_conflict()
                 else:
-                    _, problem = validate_artifact(value)
+                    problem = validate_image_manifest(value)
                     if problem:
                         current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                         return problem
