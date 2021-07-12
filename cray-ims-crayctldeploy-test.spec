@@ -86,5 +86,3 @@ rmdir %{buildroot}%{imslib}
 %attr(644, root, root) %{imslib}/ims_test_ims_helpers.py
 %attr(644, root, root) %{imslib}/ims_test_k8s_helpers.py
 %attr(644, root, root) %{imslib}/ims_test_logger.py
-
-%changelog
