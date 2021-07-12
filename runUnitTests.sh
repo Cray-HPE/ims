@@ -21,6 +21,5 @@
 #
 # (MIT License)
 
-docker rmi -f ims-service-unittests:latest
-docker build --target testing -t ims-service-unittests -f Dockerfile.service .
-docker run --rm ims-service-unittests:latest
+docker build --target testing -t ${DOCKER_NAME}-unittests:${VERSION} .
+docker run --rm ${DOCKER_NAME}-unittests:${VERSION}
