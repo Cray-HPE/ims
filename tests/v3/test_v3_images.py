@@ -34,7 +34,7 @@ from testtools import TestCase
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url
+from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
 from tests.utils import check_error_responses
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
 
@@ -54,7 +54,7 @@ class TestV3ImageBase(TestCase):
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_with_link_id,
@@ -98,7 +98,7 @@ class TestV3ImageBase(TestCase):
                     "link": {
                         "path": "s3://boot-images/{}/rootfs".format(self.test_with_link_id),
                         "etag": self.getUniqueString(),
-                        "type": "s3"
+                        "type": ARTIFACT_LINK_TYPE_S3
                     },
                     "type": "application/vnd.cray.image.rootfs.squashfs",
                     "md5": self.getUniqueString()
@@ -229,7 +229,10 @@ class TestV3ImageEndpoint(TestV3ImageBase):
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
         self.s3_stub.add_response(
             method='get_object',
-            service_response={'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+            service_response={
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
             expected_params={'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
         )
 
@@ -333,11 +336,25 @@ class TestV3ImageEndpoint(TestV3ImageBase):
             'link': {
                 'path': 's3://{}/{}'.format(s3_bucket, s3_key),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
         expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.s3_stub.add_response('head_object', {"ETag": link_data["link"]["etag"]}, expected_params)
+
+        s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
+        manifest_expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.s3_stub.add_response(
+            'get_object',
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json),
+            },
+            manifest_expected_params
+        )
+
+        expected_params = {'Bucket': s3_bucket, 'Key': "{}/rootfs".format(self.test_with_link_id)}
         self.s3_stub.add_response('head_object', {"ETag": link_data["link"]["etag"]}, expected_params)
 
         self.s3_stub.activate()
@@ -373,7 +390,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
             'link': {
                 'path': 's3://{}/{}'.format(s3_bucket, s3_key),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
@@ -455,11 +472,26 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
             'link': {
                 'path': 's3://{}/{}'.format(s3_bucket, s3_key),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
         expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+        self.s3_stub.add_response('head_object', {"ETag": input_data["link"]["etag"]}, expected_params)
+
+        s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
+        manifest_expected_params = {'Bucket': s3_bucket, 'Key': s3_key}
+
+        self.s3_stub.add_response(
+            'get_object',
+            {
+                'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                'ContentLength': len(s3_manifest_json)
+            },
+            manifest_expected_params
+        )
+
+        expected_params = {'Bucket': s3_bucket, 'Key': "{}/rootfs".format(self.test_with_link_id)}
         self.s3_stub.add_response('head_object', {"ETag": input_data["link"]["etag"]}, expected_params)
 
         self.s3_stub.activate()
@@ -552,7 +584,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(test_artifact_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
@@ -575,7 +607,10 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                 s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
                 self.s3_stub.add_response(
                     method='get_object',
-                    service_response={'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json))},
+                    service_response={
+                        'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
+                        'ContentLength': len(s3_manifest_json)
+                    },
                     expected_params={'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
                 )
 

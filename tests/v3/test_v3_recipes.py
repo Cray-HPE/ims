@@ -33,7 +33,7 @@ from testtools import TestCase
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url
+from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
 from tests.utils import check_error_responses
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3RecipesDataFixture, V3DeletedRecipesDataFixture
 
@@ -56,7 +56,7 @@ class TestV3RecipeBase(TestCase):
             'link': {
                 'path': 'http://ims/recipes/{}/recipe.tgz'.format(self.test_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
@@ -218,7 +218,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
             'link': {
                 'path': 's3://{}/{}'.format(s3_bucket, s3_key),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
@@ -258,7 +258,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
             'link': {
                 'path': 's3://{}/{}'.format(s3_bucket, s3_key),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             }
         }
 
@@ -379,7 +379,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
         link = {
             'path': 's3://{}/{}'.format(s3_bucket, s3_key),
             'etag': self.getUniqueString(),
-            'type': 's3'
+            'type': ARTIFACT_LINK_TYPE_S3
         }
         self._post(link=link)
 
@@ -464,7 +464,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
             'link': {
                 'path': 's3://ims/{}/recipe.tgz'.format(test_artifact_id),
                 'etag': self.getUniqueString(),
-                'type': 's3'
+                'type': ARTIFACT_LINK_TYPE_S3
             },
             'recipe_type': input_recipe_type,
             'linux_distribution': input_linux_distribution,

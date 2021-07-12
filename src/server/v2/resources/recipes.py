@@ -29,7 +29,7 @@ from flask_restful import Resource
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
      generate_resource_not_found_response, generate_patch_conflict
-from src.server.helper import validate_artifact, delete_artifact, get_log_id
+from src.server.helper import validate_artifact, delete_artifact, get_log_id, ARTIFACT_LINK
 from src.server.models.recipes import V2RecipeRecordInputSchema, V2RecipeRecordSchema, V2RecipeRecordPatchSchema
 
 recipe_user_input_schema = V2RecipeRecordInputSchema()
@@ -183,7 +183,7 @@ class V2RecipeResource(Resource):
 
         recipe = current_app.data["recipes"][recipe_id]
         for key, value in list(json_data.items()):
-            if key == "link":
+            if key == ARTIFACT_LINK:
                 if recipe.link and dict(recipe.link) == value:
                     # The stored link value matches what is trying to be patched.
                     # In this case, for idempotency reasons, do not return failure.

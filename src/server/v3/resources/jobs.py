@@ -40,7 +40,9 @@ from kubernetes.client.rest import ApiException
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
-from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json
+from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
+    IMAGE_MANIFEST_VERSION_1_0, IMAGE_MANIFEST_VERSION, IMAGE_MANIFEST_ARTIFACTS, IMAGE_MANIFEST_ARTIFACT_TYPE, \
+    IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, ARTIFACT_LINK
 from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
     JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
 
@@ -376,8 +378,8 @@ class V3JobCollection(V3BaseJobResource):
 
         def _get_rootfs_artifact_from_v1_manifest():
             try:
-                root_fs_artifacts = [artifact for artifact in manifest_json['artifacts'] if
-                                     artifact['type'].startswith('application/vnd.cray.image.rootfs.squashfs')]
+                root_fs_artifacts = [artifact for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS] if
+                                     artifact[IMAGE_MANIFEST_ARTIFACT_TYPE].startswith(IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS)]
             except ValueError as value_error:
                 current_app.logger.info("%s Received ValueError while processing manifest file for image_id=%s.",
                                         log_id, ims_image_id, exc_info=value_error)
@@ -405,7 +407,7 @@ class V3JobCollection(V3BaseJobResource):
                                                'that is missing or invalid and then re-run the request with valid '
                                                'information.'.format(ims_image_id))
 
-            if ("link" not in root_fs_artifacts[0]) or (not root_fs_artifacts[0]["link"]):
+            if (ARTIFACT_LINK not in root_fs_artifacts[0]) or (not root_fs_artifacts[0][ARTIFACT_LINK]):
                 current_app.logger.info("%s The rootfs referenced in the manifest.json for ims_image_id=%s does not "
                                         "have a artifact_link.", log_id, ims_image_id)
                 return None, problemify(http.client.BAD_REQUEST,
@@ -418,8 +420,8 @@ class V3JobCollection(V3BaseJobResource):
 
         try:
             return {
-                "1.0": _get_rootfs_artifact_from_v1_manifest,
-            }.get(manifest_json['version'])()
+                IMAGE_MANIFEST_VERSION_1_0: _get_rootfs_artifact_from_v1_manifest,
+            }.get(manifest_json[IMAGE_MANIFEST_VERSION])()
         except (TypeError, KeyError) as e:
             current_app.logger.info("Unknown manifest version or manifest.json is corrupt or invalid for IMS "
                                     "image_id=%s.", ims_image_id, exc_info=e)
@@ -480,7 +482,7 @@ class V3JobCollection(V3BaseJobResource):
             if "md5" in rootfs_artifact and rootfs_artifact["md5"]:
                 manifest_rootfs_md5sum = rootfs_artifact["md5"]
 
-            s3obj_rootfs_md5sum, problem = validate_artifact(rootfs_artifact["link"])
+            s3obj_rootfs_md5sum, problem = validate_artifact(rootfs_artifact[ARTIFACT_LINK])
             if problem:
                 return None, problem
 
@@ -491,7 +493,7 @@ class V3JobCollection(V3BaseJobResource):
             md5sum = s3obj_rootfs_md5sum if s3obj_rootfs_md5sum else manifest_rootfs_md5sum
             md5sum = md5sum if md5sum else ""
 
-            download_url, problem = get_download_url(rootfs_artifact["link"])
+            download_url, problem = get_download_url(rootfs_artifact[ARTIFACT_LINK])
             if problem:
                 return None, problem
 

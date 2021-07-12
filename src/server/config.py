@@ -22,9 +22,8 @@
 """
 Configuration Objects for the Artifact Repository Service
 """
-import os
-
 import logging
+import os
 
 
 class Config:
@@ -57,7 +56,7 @@ class Config:
     S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')
     S3_SSL_VALIDATE = \
         False if os.getenv('S3_SSL_VALIDATE', 'False').lower() in ('false', 'off', 'no', 'f', '0') \
-        else os.getenv('S3_SSL_VALIDATE')
+            else os.getenv('S3_SSL_VALIDATE')
     S3_IMS_BUCKET = os.getenv('S3_IMS_BUCKET', 'ims')
     S3_BOOT_IMAGES_BUCKET = os.getenv('S3_BOOT_IMAGES_BUCKET', 'boot-images')
 
@@ -71,6 +70,9 @@ class Config:
     S3_READ_TIMEOUT = int(os.getenv('S3_READ_TIMEOUT', str(S3_READ_TIMEOUT_DEFAULT)))
 
     HACK_DATA_STORE = '/var/ims/data'
+
+    MAX_IMAGE_MANIFEST_SIZE_BYTES_DEFAULT = 1024 * 1024
+    MAX_IMAGE_MANIFEST_SIZE_BYTES = int(os.getenv('MAX_IMAGE_MANIFEST_SIZE_BYTES', str(MAX_IMAGE_MANIFEST_SIZE_BYTES_DEFAULT)))
 
 
 class DevelopmentConfig(Config):
