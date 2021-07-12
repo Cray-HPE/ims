@@ -1,0 +1,76 @@
+@Library('csm-shared-library') _
+
+pipeline {
+    agent {
+        label "metal-gcp-builder"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: "10"))
+        timestamps()
+    }
+
+    environment {
+        NAME = "cray-ims"
+        DESCRIPTION = "Cray Management Image Management Service"
+        IS_STABLE = getBuildIsStable()
+        VERSION = getDockerBuildVersion(isStable: env.IS_STABLE)
+        DOCKER_ARGS = getDockerBuildArgs(name: env.NAME, description: env.DESCRIPTION)
+        CHART_VERSION = getChartVersion(version: env.VERSION)
+        DOCKER_NAME = "cms-ims-service"
+        RPM_NAME = "cray-ims-crayctldeploy-test"
+    }
+
+    stages {
+        stage("Prepare") {
+            steps {
+                sh "make prepare"
+            }
+        }
+
+        stage("Build Prep") {
+            steps {
+                sh "make build_prep"
+            }
+        }
+
+        stage("Lint") {
+            steps {
+                sh "make lint"
+            }
+        }
+
+        stage("Build") {
+            parallel {
+                stage('Image') {
+                    steps {
+                        sh "make image"
+                    }
+                }
+
+                stage('Chart') {
+                    steps {
+                        sh "make chart"
+                    }
+                }
+
+                stage('Rpm') {
+                    steps {
+                        sh "make rpm"
+                    }
+                }
+            }
+        }
+
+        stage('Publish ') {
+            steps {
+                script {
+                    publishCsmDockerImage(image: env.DOCKER_NAME, tag: env.VERSION, isStable: env.IS_STABLE)
+                    publishCsmHelmCharts(component: env.NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
+                }
+            }
+        }
+    }
+}
