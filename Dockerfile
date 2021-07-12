@@ -22,7 +22,7 @@
 # (MIT License)
 
 # Create 'base' image target
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13.5 as base
+FROM artifactory.algol60.net/docker.io/alpine:latest as base
 WORKDIR /app
 RUN mkdir -p /var/ims/data
 VOLUME ["/var/ims/data"]
