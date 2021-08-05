@@ -22,17 +22,17 @@ ims_config:
   # {cray_ims_utils_image_org}/{cray_ims_utils_image_name}:{cray_ims_utils_image_version}
   cray_ims_utils_image_org: "cray"
   cray_ims_utils_image_name: "cray-ims-utils"
-  cray_ims_utils_image_version: "latest"
+  cray_ims_utils_image_version: "IMS_UTILS_VERSION"
 
   # {cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org}/{`cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name`}:{cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version}
   cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org: "cray"
   cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name: "cray-ims-kiwi-ng-opensuse-x86_64-builder"
-  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version: "latest"
+  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version: "IMS_KIWI_NG_VERSION"
 
   # {cray_ims_sshd_image_org}/{cray_ims_sshd_image_name}:{cray_ims_sshd_image_version}
   cray_ims_sshd_image_org: "cray"
   cray_ims_sshd_image_name: "cray-ims-sshd"
-  cray_ims_sshd_image_version: "latest"
+  cray_ims_sshd_image_version: "IMS_SSHD_VERSION"
 
 api_gw:
   api_gw_service_name: "istio-ingressgateway"
