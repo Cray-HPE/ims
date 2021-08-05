@@ -165,7 +165,7 @@ The following are required:
 
 ## Building
 ```
-$ docker build -t ims-service:dev -f Dockerfile.service .
+$ docker build -t ims-service:dev -f Dockerfile .
 ```
 
 ## Running Locally
