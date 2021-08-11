@@ -16,6 +16,7 @@ pipeline {
         IS_STABLE = getBuildIsStable()
         DOCKER_NAME = "cms-ims-service"
         RPM_NAME = "cray-ims-crayctldeploy-test"
+        BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
     }
 
     stages {
@@ -48,6 +49,13 @@ pipeline {
                     // Write chart version to .chart_version
                     writeFile(file: ".chart_version", text: chartver)
                 }
+            }
+        }
+
+        stage("Add RPM Metadata") {
+            steps {
+                echo "RPM build metadata is ${env.BUILD_METADATA}"
+                runLibraryScript("addRpmMetaData.sh", "")
             }
         }
 
@@ -91,7 +99,6 @@ pipeline {
                 stage('Chart') {
                     environment {
                         DOCKER_VERSION = sh(returnStdout: true, script: "head -1 .docker_version").trim()
-                        CHART_VERSION = sh(returnStdout: true, script: "head -1 .chart_version").trim()
                     }
 
                     steps {
@@ -114,12 +121,10 @@ pipeline {
             }
 
             steps {
-                script {
-                    publishCsmDockerImage(image: env.DOCKER_NAME, tag: env.DOCKER_VERSION, isStable: env.IS_STABLE)
-                    publishCsmHelmCharts(component: env.NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
-                }
+                publishCsmDockerImage(image: env.DOCKER_NAME, tag: env.DOCKER_VERSION, isStable: env.IS_STABLE)
+                publishCsmHelmCharts(component: env.NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
+                publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
+                publishCsmRpms(component: env.RPM_NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
             }
         }
     }

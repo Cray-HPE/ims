@@ -20,6 +20,9 @@
 #
 # (MIT License)
 
+# If you wish to perform a local build, you will need to clone or copy the contents of the
+# cms-meta-tools repo to ./cms_meta_tools
+
 NAME ?= cray-ims
 DOCKER_NAME ?= cray-ims-service
 CHART_PATH ?= kubernetes
@@ -71,7 +74,7 @@ chart_test:
 		docker run --rm -v ${PWD}/${CHART_PATH}:/apps ${HELM_UNITTEST_IMAGE} -3 ${NAME}
 
 rpm_package_source:
-		tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude .git --exclude dist --exclude ./cms_meta_tools -cvjf $(SOURCE_PATH) .
+		tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude .git --exclude ./dist --exclude ./cms_meta_tools -cvjf $(SOURCE_PATH) .
 
 rpm_build_source:
 		BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(SOURCE_PATH) --define "_topdir $(BUILD_DIR)"
