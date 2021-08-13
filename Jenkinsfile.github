@@ -14,7 +14,7 @@ pipeline {
         NAME = "cray-ims"
         DESCRIPTION = "Cray Management Image Management Service"
         IS_STABLE = getBuildIsStable()
-        DOCKER_NAME = "cms-ims-service"
+        DOCKER_NAME = "cray-ims-service"
         RPM_NAME = "cray-ims-crayctldeploy-test"
         BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
     }
