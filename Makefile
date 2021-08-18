@@ -40,23 +40,23 @@ SOURCE_NAME ?= ${RPM_NAME}-${SPEC_VERSION}
 BUILD_DIR ?= $(PWD)/dist/rpmbuild
 SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
 
-all : prepare build_prep lint unittests image chart rpm
+all : runbuildprep lint prepare unittests image chart rpm
 chart: chart_setup chart_package
 rpm: rpm_package_source rpm_build_source rpm_build
+
+runbuildprep:
+		./cms_meta_tools/scripts/runBuildPrep.sh
+
+lint:
+		./cms_meta_tools/scripts/runLint.sh
 
 prepare:
 		rm -rf $(BUILD_DIR)
 		mkdir -p $(BUILD_DIR)/SPECS $(BUILD_DIR)/SOURCES
 		cp $(SPEC_FILE) $(BUILD_DIR)/SPECS/
 
-build_prep:
-		./cms_meta_tools/scripts/runBuildPrep.sh
-
 image:
 		docker build --pull ${DOCKER_ARGS} --tag '${DOCKER_NAME}:${DOCKER_VERSION}' .
-
-lint:
-		./cms_meta_tools/scripts/runLint.sh
 
 unittests:
 		( DOCKER_NAME=${DOCKER_NAME} VERSION=${DOCKER_VERSION} ./runUnitTests.sh )
