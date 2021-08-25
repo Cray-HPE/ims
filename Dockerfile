@@ -1,4 +1,4 @@
-## Cray Image Management Service Dockerfile
+# Cray Image Management Service Dockerfile
 ## Copyright 2018, 2021 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,8 +30,8 @@ VOLUME ["/var/ims/data"]
 ADD requirements.txt constraints.txt /app/
 RUN apk update && \
     apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev && \
-    PIP_INDEX_URL=http://dst.us.cray.com/piprepo/simple \
-    PIP_TRUSTED_HOST=dst.us.cray.com \
+    PIP_INDEX_URL=https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple \
+    PIP_TRUSTED_HOST=arti.dev.cray.com \
     pip3 install --no-cache-dir -U pip && \
     pip3 install --no-cache-dir -U wheel && \
     pip3 install --no-cache-dir -r requirements.txt
