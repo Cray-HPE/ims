@@ -22,14 +22,16 @@
 # (MIT License)
 
 # Create 'base' image target
-FROM artifactory.algol60.net/docker.io/alpine:latest as base
+FROM artifactory.algol60.net/docker.io/alpine:3.13 as base
 WORKDIR /app
 RUN mkdir -p /var/ims/data
 VOLUME ["/var/ims/data"]
 
 ADD requirements.txt constraints.txt /app/
-RUN apk update && \
+RUN apk add --upgrade --no-cache apk-tools && \
+    apk update && \
     apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev && \
+    apk -U upgrade --no-cache && \
     PIP_INDEX_URL=https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple \
     PIP_TRUSTED_HOST=arti.dev.cray.com \
     pip3 install --no-cache-dir -U pip && \
@@ -43,7 +45,7 @@ COPY src/ /app/src/
 FROM base as testing
 ADD docker_test_entry.sh /app/
 ADD requirements-test.txt /app/
-RUN pip install -r /app/requirements-test.txt
+RUN pip3 install -r /app/requirements-test.txt
 COPY tests /app/tests
 ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
