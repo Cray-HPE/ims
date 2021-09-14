@@ -87,13 +87,13 @@ For instructions on using IMS to build or customize images see https://stash.us.
 
 ## Related Software
 
-* [ims-python-helper](https://stash.us.cray.com/projects/SCMS/repos/ims-python-helper)
+* [ims-python-helper](https://github.com/Cray-HPE/ims-python-helper)
 
   Python client library providing higher level and commonly used functions. For instance, 
   The `ims-python-helper` library is used in the `ims-utils` container to set job status 
   and upload and associate new/modified artifacts with a new IMS image record. 
   
-* [ims-utils](https://stash.us.cray.com/projects/SCMS/repos/init-ims)
+* [ims-utils](https://github.com/Cray-HPE/ims-utils)
 
   Utility container used in both the IMS create and customize job work flows as the basis
   for several containers including:
@@ -106,7 +106,7 @@ For instructions on using IMS to build or customize images see https://stash.us.
 
   Container used in the IMS create and customize workflows to provide a SSH shell environment.
  
-* [ims-kiwi-ng-opensuse-x86_64-builder](https://stash.us.cray.com/projects/SCMS/repos/ims-kiwi-ng-opensuse-x86_64-builder/browse)
+* [ims-kiwi-ng-opensuse-x86_64-builder](https://github.com/Cray-HPE/ims-kiwi-ng-opensuse-x86_64-builder)
 
   Container used in the IMS create job work flow to build a new image using the kiwi-ng tool. 
 
