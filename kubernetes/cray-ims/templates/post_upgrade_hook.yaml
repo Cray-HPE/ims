@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ims-post-upgrade
+  namespace: {{ .Values.ims_config.cray_ims_service_namespace }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-upgrade
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ims-post-upgrade-hook1-container
+        image: "baseos/alpine:3.13"
+        command:
+          - bin/sh
+          - -c
+          - chown -Rv 65534:65534 /var/ims/data
+        volumeMounts:
+          - mountPath: /var/ims/data
+            name: cray-ims-data
+      volumes:
+        - name: cray-ims-data
+          persistentVolumeClaim:
+            claimName: cray-ims-data-claim

@@ -174,7 +174,7 @@ The image can be run with the following command:
 
 ```bash
 $ docker run --rm --name ims-service \
-  -p 5000:80 \
+  -p 9000:9000 \
   -e "S3_ACCESS_KEY=minioadmin" \
   -e "S3_SECRET_KEY=minioadmin" \
   -e "S3_ENDPOINT=172.17.0.2:9000" \
@@ -185,14 +185,14 @@ $ docker run --rm --name ims-service \
   ims-service:dev
 ```
 
-This will start the IMS server on `http://localhost:5000`. An S3 instance is
+This will start the IMS server on `http://localhost:9000`. An S3 instance is
 required for the IMS server to do anything meaningful. See the [Configuration Options](#Configuration-Options)
 section for more information and further configuration possibilities.
 
 ```
-$ curl http://127.0.0.1:5000/images
+$ curl http://127.0.0.1:9000/images
 []
-$ curl http://127.0.0.1:5000/recipes
+$ curl http://127.0.0.1:9000/recipes
 []
 ```
 
