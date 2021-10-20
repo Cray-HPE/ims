@@ -1,4 +1,4 @@
-@Library('cms-meta-tools') _
+@Library('cms-meta-tools@CASMCMS-7232-master') _
 @Library('csm-shared-library') __
 
 pipeline {
