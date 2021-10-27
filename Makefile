@@ -63,7 +63,6 @@ unittests:
 
 chart_setup:
 		mkdir -p ${CHART_PATH}/.packaged
-		printf "\nglobal:\n  appVersion: ${CHART_VERSION}" >> ${CHART_PATH}/${NAME}/values.yaml
 
 chart_package:
 		helm dep up ${CHART_PATH}/${NAME}
