@@ -23,7 +23,7 @@
 # Gunicorn settings for IMS
 import os
 
-bind = "0.0.0.0:80"
+bind = "0.0.0.0:9000"
 # workers = int(os.environ.get('WORKERS', 1))
 
 # Worker

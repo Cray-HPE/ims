@@ -24,15 +24,23 @@
 # Create 'base' image target
 FROM artifactory.algol60.net/docker.io/alpine:3.13 as base
 WORKDIR /app
-RUN mkdir -p /var/ims/data
-VOLUME ["/var/ims/data"]
+RUN mkdir -p /var/ims/data /app /results && \
+    chown -Rv 65534:65534 /var/ims/data /app /results
+VOLUME ["/var/ims/data", "/results"]
 
-ADD requirements.txt constraints.txt /app/
 RUN apk add --upgrade --no-cache apk-tools && \
     apk update && \
     apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev && \
-    apk -U upgrade --no-cache && \
-    PIP_INDEX_URL=https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple \
+    apk -U upgrade --no-cache
+
+USER 65534:65534
+
+ADD requirements.txt constraints.txt /app/
+ENV VIRTUAL_ENV=/app/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN PIP_INDEX_URL=https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple \
     PIP_TRUSTED_HOST=arti.dev.cray.com \
     pip3 install --no-cache-dir -U pip && \
     pip3 install --no-cache-dir -U wheel && \
@@ -43,19 +51,21 @@ COPY src/ /app/src/
 
 # Run unit tests
 FROM base as testing
+
 ADD docker_test_entry.sh /app/
 ADD requirements-test.txt /app/
 RUN pip3 install -r /app/requirements-test.txt
+
 COPY tests /app/tests
 ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
 # Run openapi validation on openapi.yaml
 FROM arti.dev.cray.com/third-party-docker-stable-local/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
-RUN mkdir /api
-COPY api/openapi.yaml /api
+RUN mkdir /tmp/api
+COPY api/openapi.yaml /tmp/api/
 ARG FORCE_OPENAPI_VALIDATION_CHECK=null
-RUN docker-entrypoint.sh validate -i /api/openapi.yaml || true
+RUN docker-entrypoint.sh validate -i /tmp/api/openapi.yaml || true
 
 # Run code style checkers
 FROM testing as codestyle
@@ -67,8 +77,8 @@ CMD [ "./runCodeStyleCheck.sh" ]
 # Build Application Image
 FROM base as application
 
-EXPOSE 80
+EXPOSE 9000
 # RUN apk add --no-cache py3-gunicorn py3-gevent py3-greenlet
-copy .version /app/
+COPY .version /app/
 COPY config/gunicorn.py /app/
 ENTRYPOINT ["gunicorn", "-c", "/app/gunicorn.py", "src.server.app:app"]

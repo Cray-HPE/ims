@@ -56,7 +56,7 @@ cray-service:
         repository: cray/cray-ims-service
       ports:
         - name: http
-          containerPort: 80
+          containerPort: 9000
       envFrom:
         - configMapRef:
             name: ims-config
@@ -94,7 +94,7 @@ cray-service:
           mountPath: /mnt/ims/v2/job_templates/customize
       livenessProbe:
         httpGet:
-          port: 80
+          port: 9000
           path: /healthz/live
         initialDelaySeconds: 5
         periodSeconds: 60
@@ -102,7 +102,7 @@ cray-service:
         failureThreshold: 3
       readinessProbe:
         httpGet:
-          port: 80
+          port: 9000
           path: /healthz/ready
         initialDelaySeconds: 5
         periodSeconds: 10
