@@ -127,7 +127,7 @@ info:
       The original image is still intact.  A user may want to install additional software, 
       install licenses, change the timezone, add mount points, etc.
     
-  version: @VERSION@
+  version: "0.0.0"
   title: Image Management Service
   license:
     name: Hewlett Packard Enterprise Development LP
