@@ -29,9 +29,11 @@ from flask_restful import Resource
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response, generate_patch_conflict
-from src.server.helper import validate_artifact, delete_artifact, soft_delete_artifact, soft_undelete_artifact, \
+from src.server.helper import delete_artifact, soft_delete_artifact, soft_undelete_artifact, \
     read_manifest_json, get_log_id, write_new_image_manifest, IMAGE_MANIFEST_VERSION_1_0, ARTIFACT_LINK_TYPE, \
     ARTIFACT_LINK, IMAGE_MANIFEST_ARTIFACTS, validate_image_manifest
+from src.server.ims_exceptions import ImsReadManifestJsonException, ImsArtifactValidationException, \
+    ImsSoftUndeleteArtifactException
 from src.server.models.images import V2ImageRecordInputSchema, V2ImageRecordSchema, V2ImageRecordPatchSchema, \
     V2ImageRecord
 from src.server.v3.models import PATCH_OPERATION_UNDELETE
@@ -123,7 +125,7 @@ class V3BaseImageResource(Resource):
         if problem:
             return None, problem
 
-        original_manifest_link = None
+        original_manifest_link = manifest_link
         try:
             # undelete all the artifacts that are listed in the deleted_manifest.json
             for artifact in manifest_json[IMAGE_MANIFEST_ARTIFACTS]:
@@ -133,6 +135,10 @@ class V3BaseImageResource(Resource):
                         if artifact['type'] == 'application/vnd.cray.image.manifest':
                             original_manifest_link = link
 
+                    except ImsSoftUndeleteArtifactException:
+                        current_app.logger.warning("%s Could not undelete artifact %s listed in the "
+                                                   "manifest.json for image_id=%s",
+                                                   log_id, artifact, image_id)
                     except Exception as exc:  # pylint: disable=broad-except
                         current_app.logger.warning("%s Could not undelete artifact %s listed in the "
                                                    "manifest.json for image_id=%s",
@@ -143,9 +149,13 @@ class V3BaseImageResource(Resource):
         except KeyError:
             current_app.logger.info("%s malformed manifest.json for image_id=%s. No artifacts section.",
                                     log_id, image_id)
+            return False, problemify(status=http.client.UNPROCESSABLE_ENTITY,
+                                     detail="The image's manifest.json is malformed. "
+                                            "The manifest does not contain an artifacts section.")
 
-        # delete the deleted_manifest.json
-        delete_artifact(manifest_link)
+        if original_manifest_link != manifest_link:
+            # delete the deleted_manifest.json
+            delete_artifact(manifest_link)
 
         # return link to the original manifest
         return original_manifest_link, None
@@ -169,9 +179,12 @@ class V3BaseImageResource(Resource):
                 else:
                     current_app.logger.warning("%s malformed manifest json for image_id=%s. "
                                                "Artifact does not contain a link value.", log_id, image_id)
-        except KeyError:
+        except (KeyError, TypeError):
             current_app.logger.info("%s malformed manifest.json for image_id=%s. No artifacts section.",
                                     log_id, image_id)
+            return False, problemify(status=http.client.UNPROCESSABLE_ENTITY,
+                                     detail="The image's manifest.json is malformed. "
+                                            "The manifest does not contain a manifest section.")
 
         # delete the manifest.json
         delete_artifact(manifest_link)
@@ -243,8 +256,16 @@ class V3ImageCollection(V3BaseImageResource):
                 deleted_image = V3DeletedImageRecord(name=image.name, link=image.link,
                                                      id=image.id, created=image.created)
                 if deleted_image.link:
-                    artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
-                    deleted_image.link = self._create_deleted_manifest(deleted_image, artifacts)
+                    try:
+                        artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
+                        deleted_image.link = self._create_deleted_manifest(deleted_image, artifacts)
+                    except ImsReadManifestJsonException as exc:
+                        current_app.logger.info(f"Unable to read IMS image manifest. Ignoring. ")
+                        current_app.logger.info(str(exc))
+                    except ImsArtifactValidationException as exc:
+                        current_app.logger.info(f"The artifact {image.link} is not in S3 and "
+                                                f"was not soft-deleted. Ignoring")
+                        current_app.logger.info(str(exc))
 
                 current_app.data[self.deleted_images_table][image_id] = deleted_image
                 images_to_delete.append(image_id)
@@ -289,8 +310,16 @@ class V3ImageResource(V3BaseImageResource):
             image = current_app.data[self.images_table][image_id]
             deleted_image = V3DeletedImageRecord(name=image.name, link=image.link, id=image.id, created=image.created)
             if deleted_image.link:
-                artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
-                deleted_image.link = self._create_deleted_manifest(deleted_image, artifacts)
+                try:
+                    artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
+                    deleted_image.link = self._create_deleted_manifest(deleted_image, artifacts)
+                except ImsReadManifestJsonException as exc:
+                    current_app.logger.info(f"Unable to read IMS image manifest. Ignoring. ")
+                    current_app.logger.info(str(exc))
+                except ImsArtifactValidationException as exc:
+                    current_app.logger.info(f"The artifact {image.link} is not in S3 and "
+                                            f"was not soft-deleted. Ignoring")
+                    current_app.logger.info(str(exc))
             current_app.data[self.deleted_images_table][image_id] = deleted_image
             del current_app.data[self.images_table][image_id]
         except KeyError:
@@ -331,9 +360,17 @@ class V3ImageResource(V3BaseImageResource):
                     current_app.logger.info("%s image record cannot be patched since it already has link info", log_id)
                     return generate_patch_conflict()
                 else:
-                    problem = validate_image_manifest(value)
-                    if problem:
-                        return problem
+                    try:
+                        problem = validate_image_manifest(value)
+                        if problem:
+                            return problem
+                    except ImsReadManifestJsonException as exc:
+                        current_app.logger.info(f"Unable to read IMS image manifest. Ignoring. ")
+                        current_app.logger.info(str(exc))
+                    except ImsArtifactValidationException as exc:
+                        current_app.logger.info(f"The artifact {value} is not in S3 and "
+                                                f"was not soft-deleted. Ignoring")
+                        current_app.logger.info(str(exc))
 
             else:
                 current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
@@ -372,8 +409,19 @@ class V3DeletedImageCollection(V3BaseImageResource):
                 # TODO ADD IMAGE FILTER OPTIONS
 
                 if deleted_image.link:
-                    current_app.logger.info("%s Deleting artifacts for deleted_image_id: %s", log_id, deleted_image_id)
-                    self._delete_manifest_and_artifacts(log_id, deleted_image_id, deleted_image.link)
+                    try:
+                        current_app.logger.info("%s Deleting artifacts for deleted_image_id: %s", log_id,
+                                                deleted_image_id)
+                        _, errors = self._delete_manifest_and_artifacts(log_id, deleted_image_id, deleted_image.link)
+                        if errors:
+                            return errors
+                    except ImsReadManifestJsonException as exc:
+                        current_app.logger.info(f"Unable to read IMS image manifest. Ignoring. ")
+                        current_app.logger.info(str(exc))
+                    except ImsArtifactValidationException as exc:
+                        current_app.logger.info(f"The artifact {deleted_image.link} is not in S3 and "
+                                                f"was not soft-deleted. Ignoring")
+                        current_app.logger.info(str(exc))
                 else:
                     current_app.logger.debug("%s No artifacts to delete for deleted_image_id: %s",
                                              log_id, deleted_image_id)
@@ -419,13 +467,21 @@ class V3DeletedImageCollection(V3BaseImageResource):
                     if key == "operation":
                         if value == PATCH_OPERATION_UNDELETE:
                             if image.link:
-                                original_manifest_link, errors = self._soft_undelete_manifest_and_artifacts(
-                                    log_id, deleted_image_id, image.link)
-                                if errors:
-                                    # TODO Handle Errors
-                                    pass
-                                image.link = original_manifest_link
-
+                                try:
+                                    original_manifest_link, errors = self._soft_undelete_manifest_and_artifacts(
+                                        log_id, deleted_image_id, image.link)
+                                    if errors:
+                                        return errors
+                                    image.link = original_manifest_link
+                                except ImsReadManifestJsonException as exc:
+                                    current_app.logger.info(f"Unable to read IMS image manifest. ")
+                                    current_app.logger.info(str(exc))
+                                    return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
+                                except ImsArtifactValidationException as exc:
+                                    current_app.logger.info(f"The artifact {image.link} is not in S3 and "
+                                                            f"was not soft-deleted.")
+                                    current_app.logger.info(str(exc))
+                                    return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
                             current_app.data[self.images_table][deleted_image_id] = image
                             images_to_undelete.append(deleted_image_id)
                         else:
@@ -473,8 +529,18 @@ class V3DeletedImageResource(V3BaseImageResource):
         try:
             image = current_app.data[self.deleted_images_table][deleted_image_id]
             if image.link:
-                current_app.logger.info("%s Deleting artifacts", log_id)
-                self._delete_manifest_and_artifacts(log_id, deleted_image_id, image.link)
+                try:
+                    current_app.logger.info("%s Deleting artifacts", log_id)
+                    _, errors = self._delete_manifest_and_artifacts(log_id, deleted_image_id, image.link)
+                    if errors:
+                        return errors
+                except ImsReadManifestJsonException as exc:
+                    current_app.logger.info(f"Unable to read IMS image manifest. Ignoring. ")
+                    current_app.logger.info(str(exc))
+                except ImsArtifactValidationException as exc:
+                    current_app.logger.info(f"The artifact {image.link} is not in S3 and "
+                                            f"was not soft-deleted. Ignoring")
+                    current_app.logger.info(str(exc))
             else:
                 current_app.logger.debug("%s No artifacts to delete", log_id)
             del current_app.data[self.deleted_images_table][deleted_image_id]
@@ -512,12 +578,21 @@ class V3DeletedImageResource(V3BaseImageResource):
             if key == "operation":
                 if value == PATCH_OPERATION_UNDELETE:
                     if image.link:
-                        original_manifest_link, errors = self._soft_undelete_manifest_and_artifacts(
-                            log_id, deleted_image_id, image.link)
-                        if errors:
-                            # TODO Handle Errors
-                            pass
-                        image.link = original_manifest_link
+                        try:
+                            original_manifest_link, errors = self._soft_undelete_manifest_and_artifacts(
+                                log_id, deleted_image_id, image.link)
+                            if errors:
+                                return errors
+                            image.link = original_manifest_link
+                        except ImsReadManifestJsonException as exc:
+                            current_app.logger.info(f"Unable to read IMS image manifest. ")
+                            current_app.logger.info(str(exc))
+                            return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
+                        except ImsArtifactValidationException as exc:
+                            current_app.logger.info(f"The artifact {image.link} is not in S3 and "
+                                                    f"was not soft-deleted.")
+                            current_app.logger.info(str(exc))
+                            return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
                     current_app.data[self.images_table][deleted_image_id] = image
                     del current_app.data[self.deleted_images_table][deleted_image_id]

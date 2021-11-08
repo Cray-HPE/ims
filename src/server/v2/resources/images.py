@@ -30,7 +30,7 @@ from flask_restful import Resource
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response, generate_patch_conflict
-from src.server.helper import validate_artifact, delete_artifact, read_manifest_json, get_log_id, \
+from src.server.helper import delete_artifact, read_manifest_json, get_log_id, \
     validate_image_manifest, IMAGE_MANIFEST_ARTIFACTS
 from src.server.models.images import V2ImageRecordInputSchema, V2ImageRecordSchema, V2ImageRecordPatchSchema
 

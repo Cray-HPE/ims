@@ -29,6 +29,8 @@ from botocore.exceptions import ClientError
 from flask import current_app as app
 
 from src.server.errors import problemify
+from src.server.ims_exceptions import ImsArtifactValidationException, ImsReadManifestJsonException, \
+    ImsSoftUndeleteArtifactException
 
 try:
     from urllib.parse import urlparse
@@ -107,28 +109,27 @@ def read_manifest_json(manifest_json_link):
             if s3_manifest_obj['ContentLength'] >= app.config['MAX_IMAGE_MANIFEST_SIZE_BYTES']:
                 return None, problemify(status=http.client.BAD_REQUEST,
                                         detail='Image manifest file is larger than the expected maximum size '
-                                               'for the s3 artifact {}. Please determine '
+                                               f'for the s3 artifact {str(manifest_json_link)}. Please determine '
                                                'the specific information that is missing or invalid and then '
-                                               're-run the request with valid information.'.format(
-                                            str(manifest_json_link)))
+                                               're-run the request with valid information.')
             s3_manifest_data = s3_manifest_obj['Body'].read().decode('utf-8')
 
         except (UnicodeDecodeError, ClientError) as error:
             app.logger.error("Unable to read manifest file {}.".format(str(manifest_json_link)))
             app.logger.debug(error)
-            return None, problemify(status=http.client.BAD_REQUEST,
-                                    detail='Unable to read manifest file for the s3 artifact {}. Please determine '
-                                           'the specific information that is missing or invalid and then '
-                                           're-run the request with valid information.'.format(str(manifest_json_link)))
+            raise ImsReadManifestJsonException('Unable to read manifest file for the s3 artifact {}. Please determine '
+                                               'the specific information that is missing or invalid and then '
+                                               're-run the request with valid '
+                                               'information.'.format(str(manifest_json_link)))
 
         try:
             s3_manifest_json = json.loads(s3_manifest_data)
             return s3_manifest_json, None
         except json.JSONDecodeError:
-            return None, problemify(status=http.client.BAD_REQUEST,
-                                    detail='Manifest file is not valid Json for the s3 artifact {}. Please determine '
-                                           'the specific information that is missing or invalid and then '
-                                           're-run the request with valid information.'.format(str(manifest_json_link)))
+            raise ImsReadManifestJsonException('Manifest file is not valid Json for the s3 artifact {}. Please '
+                                               'determine the specific information that is missing or invalid and then '
+                                               're-run the request with valid '
+                                               'information.'.format(str(manifest_json_link)))
 
     return {
         ARTIFACT_LINK_TYPE_S3: _read_s3_manifest_json
@@ -169,6 +170,50 @@ def get_download_url(artifact_link):
     }.get(artifact_link[ARTIFACT_LINK_TYPE].lower())()
 
 
+def verify_recipe_link_unique(link):
+    """
+    Do a linear search of known IMS recipes. If the link path value being set matches an existing IMS recipe record,
+    raise an UNPROCESSABLE_ENTITY exception.
+    """
+    if link:
+        for recipe_record in app.data['recipes'].values():
+            try:
+                recipe_link = recipe_record.link
+                if recipe_link and link[ARTIFACT_LINK_PATH] == recipe_link[ARTIFACT_LINK_PATH]:
+                    app.logger(f'The link path {link[ARTIFACT_LINK_PATH]} matches the link path for the '
+                               f'IMS recipe record {recipe_record.id}.')
+                    return problemify(status=http.client.UNPROCESSABLE_ENTITY,
+                                      detail=f'The link path {link[ARTIFACT_LINK_PATH]} matches the link path for the '
+                                             f'IMS recipe record {recipe_record.id}. The link value must be unique and '
+                                             'cannot be duplicated. Determine the specific information that is missing '
+                                             'or invalid and then re-run the request with valid information.')
+            except KeyError:
+                pass
+    return None
+
+
+def verify_image_link_unique(link):
+    """
+    Do a linear search of known IMS images. If the link path value being set matches an existing IMS image record,
+    raise an UNPROCESSABLE_ENTITY exception.
+    """
+    if link:
+        for image_record in app.data['images'].values():
+            try:
+                image_link = image_record.link
+                if image_link and link[ARTIFACT_LINK_PATH] == image_link[ARTIFACT_LINK_PATH]:
+                    app.logger.info(f'The link path {link[ARTIFACT_LINK_PATH]} matches the link path for the '
+                                    f'IMS image record {image_record.id}.')
+                    return problemify(status=http.client.UNPROCESSABLE_ENTITY,
+                                      detail=f'The link path {link[ARTIFACT_LINK_PATH]} matches the link path for the '
+                                             f'IMS image record {image_record.id}. The link value must be unique and '
+                                             'cannot be duplicated. Determine the specific information that is missing '
+                                             'or invalid and then re-run the request with valid information.')
+            except KeyError:
+                pass
+    return None
+
+
 def validate_artifact(artifact_link):
     """
     Verify that a given artifact is available.
@@ -196,23 +241,22 @@ def validate_artifact(artifact_link):
                 md5sum = s3_obj["Metadata"]["md5sum"]
 
         except ClientError as error:
-            app.logger.error("s3 object {} was not found.".format(str(artifact_link)))
+            app.logger.error(f"Could not validate artifact link or artifact doesn't exist for {str(artifact_link)}.")
             app.logger.debug(error)
-            return False, problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                     detail='The s3 artifact {} cannot be validated. Please determine the '
-                                            'specific information that is missing or invalid and then '
-                                            're-run the request with valid information.'.format(str(artifact_link)))
-        return md5sum, None
+            raise ImsArtifactValidationException(f'The s3 artifact {artifact_link} cannot be validated. Please '
+                                                 'determine the specific information that is missing or invalid and '
+                                                 'then re-run the request with valid information.')
+        return md5sum
 
     try:
         return {
             ARTIFACT_LINK_TYPE_S3: _validate_s3_artifact
         }.get(artifact_link[ARTIFACT_LINK_TYPE].lower())()
     except KeyError:
-        return False, problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                 detail='The s3 artifact {} cannot be validated. THe artifact link type is not supported. '
-                                        'Please determine the specific information that is missing or invalid and then '
-                                        're-run the request with valid information.'.format(str(artifact_link)))
+        app.logger.error(f'The s3 artifact {artifact_link} cannot be validated. The link type is not supported.')
+        raise ImsArtifactValidationException(f'The s3 artifact {artifact_link} cannot be validated. The artifact link '
+                                             'type is not supported. Please determine the specific information that is '
+                                             'missing or invalid and then re-run the request with valid information.')
 
 
 def validate_image_manifest(link):
@@ -225,41 +269,48 @@ def validate_image_manifest(link):
 
         if not isinstance(artifacts, list):
             return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                              detail="The image's manifest.json is malformed. The artifacts property is not a json list.")
+                              detail="The image's manifest.json is malformed. "
+                                     "The artifacts property is not a json list.")
 
         for artifact in artifacts:
 
             if not isinstance(artifact, dict):
                 return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                  detail="The image's manifest.json is malformed. A listed artifact is not a json dictionary.")
+                                  detail="The image's manifest.json is malformed. "
+                                         "A listed artifact is not a json dictionary.")
 
             try:
                 artifact_link = artifact[ARTIFACT_LINK]
             except KeyError:
                 return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                  detail="The image's manifest.json is malformed. An artifact does not have a link value")
+                                  detail="The image's manifest.json is malformed. "
+                                         "An artifact does not have a link value")
 
             try:
                 link_type = artifact_link[ARTIFACT_LINK_TYPE]
             except KeyError:
                 return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                  detail="The image's manifest.json is malformed. An artifact does not have a link type field")
+                                  detail="The image's manifest.json is malformed. "
+                                         "An artifact does not have a link type field")
 
             if link_type not in ARTIFACT_LINK_TYPES:
                 return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                  detail="The image's manifest.json is malformed. An artifact link type '{}' not supported".format(
-                                      link_type))
+                                  detail="The image's manifest.json is malformed. "
+                                         f"An artifact link type '{link_type}' not supported")
 
             try:
-                link_path = artifact_link[ARTIFACT_LINK_PATH]
+                _ = artifact_link[ARTIFACT_LINK_PATH]
             except KeyError:
                 return problemify(status=http.client.UNPROCESSABLE_ENTITY,
-                                  detail="The image's manifest.json is malformed. An artifact does not have a link path field")
+                                  detail="The image's manifest.json is malformed. "
+                                         "An artifact does not have a link path field")
 
-            _, problem = validate_artifact(artifact_link)
-            if problem:
+            try:
+                validate_artifact(artifact_link)
+            except ImsArtifactValidationException as exc:
                 app.logger.info("Could not validate artifact link or artifact doesn't exist")
-                return problem
+                app.logger.info(str(exc))
+                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
         try:
             root_fs_artifacts = [artifact for artifact in artifacts if
@@ -272,23 +323,30 @@ def validate_image_manifest(link):
         if not root_fs_artifacts:
             app.logger.info("No rootfs artifact could be found in the image manifest %s.", link)
             return problemify(status=http.client.BAD_REQUEST,
-                              detail='Error reading the manifest.json for IMS %s. The manifest '
+                              detail=f'Error reading the manifest.json for IMS {link}. The manifest '
                                      'does not include any rootfs artifacts. Determine the specific '
                                      'information that is missing or invalid and then re-run the request '
-                                     'with valid information.'.format(link))
+                                     'with valid information.')
 
         elif len(root_fs_artifacts) > 1:
             app.logger.info("Multiple rootfs artifacts found in the image manifest %s.", link)
             return problemify(status=http.client.BAD_REQUEST,
-                              detail='Error reading the manifest.json for %s. The manifest '
+                              detail=f'Error reading the manifest.json for {link}. The manifest '
                                      'includes multiple rootfs artifacts. Determine the specific information '
                                      'that is missing or invalid and then re-run the request with valid '
-                                     'information.'.format(link))
+                                     'information.')
 
-    _, problem = validate_artifact(link)
+    problem = verify_image_link_unique(link)
     if problem:
-        app.logger.info("Could not validate artifact link or artifact doesn't exist")
+        app.logger.info("Link value being set is not unique")
         return problem
+
+    try:
+        validate_artifact(link)
+    except ImsArtifactValidationException as exc:
+        app.logger.info("Could not validate artifact link or artifact doesn't exist")
+        app.logger.info(str(exc))
+        return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
     manifest_json, problem = read_manifest_json(link)
     if problem:
@@ -325,10 +383,12 @@ def delete_artifact(artifact_link):
         app.logger.info("++ _delete_s3_artifact {}.".format(str(artifact_link)))
 
         try:
-            _, problem = validate_artifact(artifact_link)
-            if problem:
-                app.logger.error("s3 object {} was not found.".format(str(artifact_link)))
-                return False
+            try:
+                validate_artifact(artifact_link)
+            except ImsArtifactValidationException as exc:
+                app.logger.info("Could not validate artifact link or artifact doesn't exist")
+                app.logger.info(str(exc))
+                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
             s3url = S3Url(artifact_link[ARTIFACT_LINK_PATH])
             response = app.s3.delete_object(
@@ -373,10 +433,7 @@ def soft_delete_artifact(artifact_link):
         app.logger.info("++ _soft_delete_s3_artifact %s.", str(artifact_link))
 
         try:
-            _, problem = validate_artifact(artifact_link)
-            if problem:
-                app.logger.error("s3 object %s was not found.", str(artifact_link))
-                return False
+            validate_artifact(artifact_link)
 
             origin_url = S3Url(artifact_link[ARTIFACT_LINK_PATH])
             new_object = s3_move_artifact(origin_url, '/'.join([deleted_path, origin_url.key]))
@@ -411,15 +468,13 @@ def soft_undelete_artifact(artifact_link):
         app.logger.info("++ _soft_undelete_s3_artifact %s.", str(artifact_link))
 
         try:
-            _, problem = validate_artifact(artifact_link)
-            if problem:
-                app.logger.error("s3 object %s was not found.", str(artifact_link))
-                return False
+            validate_artifact(artifact_link)
 
             origin_url = S3Url(artifact_link[ARTIFACT_LINK_PATH])
             undeleted_path = origin_url.key
             if not undeleted_path.startswith(deleted_path):
-                app.logger.error("s3 object key %s is not in the expected %s folder.", str(artifact_link), deleted_path)
+                raise ImsSoftUndeleteArtifactException(f"s3 object key {artifact_link} is not "
+                                                       f"in the expected {deleted_path} folder.")
                 return False
             undeleted_path = undeleted_path[len(deleted_path):]
 

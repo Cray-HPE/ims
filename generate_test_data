@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# (MIT License)
+
+import datetime
+import json
+import os
+from io import BytesIO
+
+import boto3 as boto3
+import requests
+from botocore.exceptions import ClientError
+
+IMS_SERVICE_URL = os.environ.get("IMS_SERVICE_URL", "http://localhost:5000")
+
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "http://localhost:9000")
+S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "minioadmin")
+S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "minioadmin")
+S3_SSL_VALIDATE = True if os.environ.get("S3_SSL_VALIDATE", "False").lower in ('yes', 'true', '1', 'on', 'y') else False
+
+ONE_MEGABYTE = 1024 * 1024
+
+RECIPES_BUCKET = os.environ.get('RECIPES_BUCKET', 'ims')
+BOOT_IMAGES_BUCKET = os.environ.get('BOOT_IMAGES_BUCKET', 'boot-images')
+
+s3 = boto3.resource(
+    service_name='s3',
+    verify=S3_SSL_VALIDATE,
+    endpoint_url=S3_ENDPOINT,
+    aws_access_key_id=S3_ACCESS_KEY,
+    aws_secret_access_key=S3_SECRET_KEY,
+)
+
+
+def generate_test_file(bucket_name, key, artifact_type, size=ONE_MEGABYTE):
+    try:
+        bucket = s3.Bucket(bucket_name)
+        result = bucket.put_object(Key=key, Body=BytesIO(os.urandom(size)))
+
+        return {
+            'link': {
+                'path': f's3://{bucket_name}/{key}',
+                'etag': result.e_tag.strip('\"'),
+                'type': 's3'
+            },
+            'type': artifact_type
+        }
+    except ClientError as err:
+        raise
+
+
+def generate_image_manifest(image_id, artifacts):
+    """
+    Utility function to create an image manifest from a set of artifacts.
+    """
+    image_manifest_version_1_0 = '1.0'
+
+    manifest_data = {
+        'version': image_manifest_version_1_0,
+        'created': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'artifacts': artifacts
+    }
+
+    key = f'{image_id}/manifest.json'
+    bucket = s3.Bucket(BOOT_IMAGES_BUCKET)
+    result = bucket.put_object(Key=key, Body=BytesIO(json.dumps(manifest_data).encode('utf-8')))
+
+    return {
+        'path': f's3://{BOOT_IMAGES_BUCKET}/{key}',
+        'etag': result.e_tag.strip('\"'),
+        'type': 's3'
+    }
+
+
+def generate_ims_image():
+    result = requests.post(f'{IMS_SERVICE_URL}/images', json={'name': 'test'})
+    result.raise_for_status()
+    image = result.json()
+
+    artifacts = []
+    for artifact_name, artifact_type in [('rootfs', 'application/vnd.cray.image.rootfs.squashfs'),
+                                         ('initrd', 'application/vnd.cray.image.initrd'),
+                                         ('kernel', 'application/vnd.cray.image.kernel')]:
+        artifacts.append(
+            generate_test_file(BOOT_IMAGES_BUCKET, f'{image["id"]}/{artifact_name}', artifact_type)
+        )
+
+    manifest_link = generate_image_manifest(image['id'], artifacts)
+
+    result = requests.patch(f'{IMS_SERVICE_URL}/images/{image["id"]}', json={'link': manifest_link})
+    result.raise_for_status()
+    return result.json()
+
+
+def generate_ims_recipe():
+    result = requests.post(f'{IMS_SERVICE_URL}/recipes',
+                           json={'name': 'test', 'recipe_type': 'kiwi-ng', 'linux_distribution': 'sles15'})
+    result.raise_for_status()
+    recipe = result.json()
+
+    recipe_tgz = generate_test_file(RECIPES_BUCKET, f'recipes/{recipe["id"]}/recipe.tgz',
+                                    'application/vnd.cray.recipe.tgz')
+
+    result = requests.patch(f'{IMS_SERVICE_URL}/recipes/{recipe["id"]}', json={'link': recipe_tgz['link']})
+    result.raise_for_status()
+    return result.json()
+
+
+def main():
+    from pprint import pprint
+    print("Recipe:")
+    pprint(generate_ims_recipe())
+    print("Image:")
+    pprint(generate_ims_image())
+
+
+if __name__ == "__main__":
+    main()

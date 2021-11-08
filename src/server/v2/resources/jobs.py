@@ -38,6 +38,7 @@ from flask_restful import Resource
 from kubernetes import client, config, utils
 from kubernetes.client.rest import ApiException
 
+from src.server.ims_exceptions import ImsArtifactValidationException
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
 from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
@@ -362,9 +363,10 @@ class V2JobCollection(V2BaseJobResource):
         if problem:
             return None, problem
 
-        md5sum, problem = validate_artifact(artifact_record.link)
-        if problem:
-            return None, problem
+        try:
+            md5sum = validate_artifact(artifact_record.link)
+        except ImsArtifactValidationException as exc:
+            return None, problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
         return {'artifact': artifact_record, 'md5sum': md5sum}, None
 
@@ -481,9 +483,10 @@ class V2JobCollection(V2BaseJobResource):
             if "md5" in rootfs_artifact and rootfs_artifact["md5"]:
                 manifest_rootfs_md5sum = rootfs_artifact["md5"]
 
-            s3obj_rootfs_md5sum, problem = validate_artifact(rootfs_artifact["link"])
-            if problem:
-                return None, problem
+            try:
+                s3obj_rootfs_md5sum = validate_artifact(rootfs_artifact["link"])
+            except ImsArtifactValidationException as exc:
+                return None, problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
             if manifest_rootfs_md5sum and s3obj_rootfs_md5sum and manifest_rootfs_md5sum != s3obj_rootfs_md5sum:
                 current_app.logger.info("%s The rootfs md5sum from the manifest.json does not match the md5sum "
