@@ -44,9 +44,24 @@ data:
         spec:
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
-          # Pull the image from the configmap location and mount it in a volume
-          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
-            imagePullPolicy: Always
+          # Step 1: Set ownership of volume mounts
+          - name: set-ownership
+            image: artifactory.algol60.net/docker.io/alpine:latest
+            command: ["/bin/sh"]
+            args:
+            - -c
+            - >-
+              set -x &&
+              chown -R 65534:65534 /etc/cray/ims &&
+              chown -R 65534:65534 /mnt/image
+            volumeMounts:
+            - name: ims-config-vol
+              mountPath: /etc/cray/ims
+            - name: image-vol
+              mountPath: /mnt/image
+          # Step 2: Download and extract the image root filesystem
+          - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
             name: prepare
             env:
             - name: API_GATEWAY_HOSTNAME
@@ -78,8 +93,8 @@ data:
                 cpu: "8"
           # User customization of image root
           containers:
-          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
             name: buildenv-sidecar
             command: ["sh", "-ce", "/scripts/buildenv-sidecar.sh /mnt/image"]
             resources:
@@ -153,8 +168,8 @@ data:
               mountPath: '/etc/admin-client-auth'
               readOnly: true
           # sshd container
-          - image: {{ .Values.ims_config.cray_ims_sshd_image_org }}/{{ .Values.ims_config.cray_ims_sshd_image_name }}:{{ .Values.ims_config.cray_ims_sshd_image_version }}
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_sshd.image.imagePullPolicy }}
             name: sshd
             ports:
             - containerPort: 22

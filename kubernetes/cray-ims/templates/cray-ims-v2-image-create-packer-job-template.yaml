@@ -45,8 +45,8 @@ data:
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
           # Step 1: Pull the image recipe from the configmap location
-          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
             name: fetch-recipe
             env:
             - name: API_GATEWAY_HOSTNAME
@@ -80,8 +80,8 @@ data:
                 memory: "$limit_gb"
                 cpu: "8"
           # Step 4: Build the image
-          - image: cray/cray-ims-packer-opensuse-x86_64-builder:latest
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_packer_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_packer_opensuse_x86_64_builder.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_packer_opensuse_x86_64_builder.image.imagePullPolicy }}
             name: build-image
             resources:
               requests:
@@ -122,8 +122,8 @@ data:
               mountPath: '/etc/admin-client-auth'
               readOnly: true
           containers:
-          - image: {{ .Values.ims_config.cray_ims_utils_image_org }}/{{ .Values.ims_config.cray_ims_utils_image_name }}:{{ .Values.ims_config.cray_ims_utils_image_version }}
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
+            imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
             name: buildenv-sidecar
             command: ["sh", "-ce", "/scripts/buildenv-sidecar.sh /mnt/image"]
             resources:
@@ -192,8 +192,8 @@ data:
               mountPath: '/etc/admin-client-auth'
               readOnly: true
           # sshd container
-          - image: {{ .Values.ims_config.cray_ims_sshd_image_org }}/{{ .Values.ims_config.cray_ims_sshd_image_name }}:{{ .Values.ims_config.cray_ims_sshd_image_version }}
-            imagePullPolicy: Always
+          - image: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
+            imagePullPolicy:  {{ .Values.cray_ims_sshd.image.imagePullPolicy }}
             name: sshd
             ports:
             - containerPort: 22

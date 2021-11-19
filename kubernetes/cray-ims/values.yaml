@@ -19,20 +19,29 @@ ims_config:
   cray_ims_job_namespace: "ims"
   cray_ims_service_namespace: "services"
 
-  # {cray_ims_utils_image_org}/{cray_ims_utils_image_name}:{cray_ims_utils_image_version}
-  cray_ims_utils_image_org: "cray"
-  cray_ims_utils_image_name: "cray-ims-utils"
-  cray_ims_utils_image_version: "IMS_UTILS_VERSION"
+cray_ims_utils:
+  image:
+    repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-utils"
+    tag: "1.2.3"
+    imagePullPolicy: IfNotPresent
 
-  # {cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org}/{`cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name`}:{cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version}
-  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_org: "cray"
-  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_name: "cray-ims-kiwi-ng-opensuse-x86_64-builder"
-  cray_ims_kiwi_ng_opensuse_x86_64_builder_image_version: "IMS_KIWI_NG_VERSION"
+cray_ims_kiwi_ng_opensuse_x86_64_builder:
+  image:
+    repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-kiwi-ng-opensuse-x86_64-builder"
+    tag: "2.3.4"
+    imagePullPolicy: IfNotPresent
 
-  # {cray_ims_sshd_image_org}/{cray_ims_sshd_image_name}:{cray_ims_sshd_image_version}
-  cray_ims_sshd_image_org: "cray"
-  cray_ims_sshd_image_name: "cray-ims-sshd"
-  cray_ims_sshd_image_version: "IMS_SSHD_VERSION"
+cray_ims_sshd:
+  image:
+    repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-sshd"
+    tag: "3.4.5"
+    imagePullPolicy: IfNotPresent
+
+cray_ims_packer_opensuse_x86_64_builder:
+  image:
+    repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-packer-opensuse-x86_64-builder"
+    tag: "latest"
+    imagePullPolicy: IfNotPresent
 
 api_gw:
   api_gw_service_name: "istio-ingressgateway"
@@ -53,7 +62,8 @@ cray-service:
     cray-ims:
       name: cray-ims
       image:
-        repository: cray/cray-ims-service
+        repository: artifactory.algol60.net/csm-docker/stable/cray-ims-service
+        # tag defaults to chart appVersion
       ports:
         - name: http
           containerPort: 9000
@@ -135,7 +145,7 @@ cray-service:
   storageClass: ceph-cephfs-external
   persistentVolumeClaims:
     data-claim:
-      name: data-claim # will be prefixed with cray-ims-
+      name: data-claim  # will be prefixed with cray-ims-
       accessModes:
         - ReadWriteMany
       resources:
