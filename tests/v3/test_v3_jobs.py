@@ -456,7 +456,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['ssh_containers'], 'ssh_containers not null')
 
-        external_host_name = "{}.ims.shasta.local".format(response_data['id'])
+        external_host_name = "{}.ims.cmn.shasta.local".format(response_data['id'])
         self.assertEqual(response_data['ssh_containers'][0]['connection_info']['customer_access']['host'],
                          external_host_name, 'SSH Container host value did not match expected value')
         self.assertEqual(response_data['ssh_containers'][0]['connection_info']['customer_access']['port'], 22,
@@ -709,7 +709,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertEqual(response_data['ssh_containers'][0]['jail'], ssh_container_jail,
                          'SSH Container jail value did not match')
 
-        external_host_name = "{}.ims.shasta.local".format(response_data['id'])
+        external_host_name = "{}.ims.cmn.shasta.local".format(response_data['id'])
         self.assertEqual(response_data['ssh_containers'][0]['connection_info']['customer_access']['host'],
                          external_host_name, 'SSH Container host value did not match expected value')
         self.assertEqual(response_data['ssh_containers'][0]['connection_info']['customer_access']['port'], 22,

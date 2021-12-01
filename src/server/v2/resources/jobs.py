@@ -74,8 +74,12 @@ class V2BaseJobResource(Resource):
         self.api_gateway_hostname = os.environ.get("API_GATEWAY_HOSTNAME", "api-gw-service-nmn.local")
         self.default_ims_job_namespace = os.environ.get("DEFAULT_IMS_JOB_NAMESPACE", "ims")
 
-        self.shasta_domain = os.environ.get("SHASTA_DOMAIN", "shasta.local")
-        self.customer_access_pool = os.environ.get("CUSTOMER_ACCESS_POOL", "customer-access")
+        self.job_customer_access_network_access_pool = os.environ.get(
+            "JOB_CUSTOMER_ACCESS_NETWORK_ACCESS_POOL", "customer-management")
+
+        # {job.id}.ims.{job_customer_access_subnet_name}.{job_customer_access_network_domain}"
+        self.job_customer_access_subnet_name = os.environ.get("JOB_CUSTOMER_ACCESS_SUBNET_NAME", "cmn")
+        self.job_customer_access_network_domain = os.environ.get("JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN", "shasta.local")
 
     def _create_namespaced_destination_rule(self, namespace):
         """ Helper routine to create a partial function to create a new ISTIO destination rule. """
@@ -606,7 +610,7 @@ class V2JobCollection(V2BaseJobResource):
             current_app.logger.info("%s Could not get download url for artifact", log_id)
             return problem
 
-        external_dns_hostname = "{}.ims.{}".format(str(new_job.id).lower(), self.shasta_domain)
+        external_dns_hostname = f"{str(new_job.id).lower()}.ims.{self.job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
 
         template_params = {
             "id": str(new_job.id).lower(),
@@ -621,7 +625,7 @@ class V2JobCollection(V2BaseJobResource):
             "kernel_filename": new_job.kernel_file_name,
             "initrd_filename": new_job.initrd_file_name,
             "kernel_parameters_filename": new_job.kernel_parameters_file_name,
-            "address_pool": self.customer_access_pool,
+            "address_pool": self.job_customer_access_network_access_pool,
             "hostname": external_dns_hostname,
             "namespace": self.default_ims_job_namespace,
             "s3_bucket": current_app.config["S3_BOOT_IMAGES_BUCKET"]
