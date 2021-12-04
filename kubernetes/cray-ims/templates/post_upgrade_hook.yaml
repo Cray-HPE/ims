@@ -13,7 +13,8 @@ spec:
       restartPolicy: Never
       containers:
       - name: ims-post-upgrade-hook1-container
-        image: "artifactory.algol60.net/docker.io/alpine:latest"
+        image: {{ .Values.alpine.image.repository }}:{{ .Values.alpine.image.tag }}
+        imagePullPolicy: {{ .Values.alpine.image.pullPolicy }}
         command:
           - bin/sh
           - -c
