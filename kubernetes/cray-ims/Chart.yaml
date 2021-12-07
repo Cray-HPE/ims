@@ -30,5 +30,5 @@ annotations:
     - name: cray-ims-sshd
       image: artifactory.algol60.net/csm-docker/stable/cray-ims-sshd:3.4.5
     - name: alpine
-      image: artifactory.algol60.net/docker.io/alpine:latest
+      image: alpine:latest
   artifacthub.io/license: MIT

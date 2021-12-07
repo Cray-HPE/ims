@@ -22,7 +22,7 @@
 # (MIT License)
 
 # Create 'base' image target
-FROM artifactory.algol60.net/docker.io/alpine:3.13 as base
+FROM artifactory.algol60.net/docker.io/library/alpine:3.13 as base
 WORKDIR /app
 RUN mkdir -p /var/ims/data /app /results && \
     chown -Rv 65534:65534 /var/ims/data /app /results
