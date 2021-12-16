@@ -44,23 +44,7 @@ data:
         spec:
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
-          # Step 1: Set ownership of volume mounts
-          - name: set-ownership
-            image: {{ .Values.alpine.image.repository }}:{{ .Values.alpine.image.tag }}
-            imagePullPolicy: {{ .Values.alpine.image.pullPolicy }}
-            command: ["/bin/sh"]
-            args:
-            - -c
-            - >-
-              set -x &&
-              chown -R 65534:65534 /etc/cray/ims &&
-              chown -R 65534:65534 /mnt/image
-            volumeMounts:
-            - name: ims-config-vol
-              mountPath: /etc/cray/ims
-            - name: image-vol
-              mountPath: /mnt/image
-          # Step 2: Download and extract the image root filesystem
+          # Step 1: Download and extract the image root filesystem
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
             imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
             name: prepare
