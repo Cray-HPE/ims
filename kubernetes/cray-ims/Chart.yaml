@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cray-ims
-version: 0.0.0
+version: 0.0.0-imsserv
 description: Kubernetes resources for cray-ims
 keywords:
 - Image Management Service
@@ -18,17 +18,17 @@ dependencies:
 maintainers:
 - name: ecozzi-hpe
   email: eric.cozzi@hpe.com
-appVersion: 0.0.0
+appVersion: 0.0.0-imsserv
 annotations:
   artifacthub.io/images: |
     - name: cray-ims-service
-      image: artifactory.algol60.net/csm-docker/stable/cray-ims-service:0.0.0
+      image: artifactory.algol60.net/csm-docker/stable/cray-ims-service:0.0.0-imsserv
     - name: cray-ims-utils
-      image: artifactory.algol60.net/csm-docker/stable/cray-ims-utils:1.2.3
+      image: artifactory.algol60.net/csm-docker/stable/cray-ims-utils:0.0.0-imsutils
     - name: cray-ims-kiwi-ng-opensuse-x86_64-builder
-      image: artifactory.algol60.net/csm-docker/stable/cray-ims-kiwi-ng-opensuse-x86_64-builder:2.3.4
+      image: artifactory.algol60.net/csm-docker/stable/cray-ims-kiwi-ng-opensuse-x86_64-builder:0.0.0-imskiwi
     - name: cray-ims-sshd
-      image: artifactory.algol60.net/csm-docker/stable/cray-ims-sshd:3.4.5
+      image: artifactory.algol60.net/csm-docker/stable/cray-ims-sshd:0.0.0-imssshd
     - name: alpine
       image: alpine:latest
   artifacthub.io/license: MIT
