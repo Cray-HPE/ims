@@ -58,7 +58,8 @@ keycloak:
 
 customer_access:
   shasta_domain: "shasta.local"
-  access_pool: "customer-access"
+  access_pool: "customer-management"
+  subnet_name: "cmn"
 
 cray-service:
   type: Deployment
