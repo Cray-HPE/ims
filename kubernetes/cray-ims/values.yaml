@@ -28,19 +28,19 @@ ims_config:
 cray_ims_utils:
   image:
     repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-utils"
-    tag: "1.2.3"
+    tag: "0.0.0-imsutils"
     imagePullPolicy: IfNotPresent
 
 cray_ims_kiwi_ng_opensuse_x86_64_builder:
   image:
     repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-kiwi-ng-opensuse-x86_64-builder"
-    tag: "2.3.4"
+    tag: "0.0.0-imskiwi"
     imagePullPolicy: IfNotPresent
 
 cray_ims_sshd:
   image:
     repository: "artifactory.algol60.net/csm-docker/stable/cray-ims-sshd"
-    tag: "3.4.5"
+    tag: "0.0.0-imssshd"
     imagePullPolicy: IfNotPresent
 
 cray_ims_packer_opensuse_x86_64_builder:
