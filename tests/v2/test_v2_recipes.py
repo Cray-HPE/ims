@@ -1,4 +1,7 @@
-# Copyright 2018-2019, 2021 Hewlett Packard Enterprise Development LP
+#
+# MIT License
+#
+# (C) Copyright 2018-2019, 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -12,13 +15,11 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-# (MIT License)
 
 """
 Unit tests for resources/recipes.py
@@ -64,6 +65,7 @@ class TestV2RecipeEndpoint(TestCase):
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
         }
@@ -72,6 +74,7 @@ class TestV2RecipeEndpoint(TestCase):
             'link': None,
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
         }
@@ -324,8 +327,8 @@ class TestV2RecipesCollectionEndpoint(TestCase):
                              r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
             self.assertIsNotNone(response_data['created'], 'recipe creation date/time was not set properly')
             self.assertItemsEqual(response_data.keys(),
-                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution', 'id'],
-                                  'returned keys not the same')
+                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution',
+                                   'template_dictionary', 'id'], 'returned keys not the same')
             if link:
                 self.assertEqual(response_data['link'], link, "artifact link values do not match")
 

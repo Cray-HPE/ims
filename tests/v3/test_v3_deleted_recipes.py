@@ -1,4 +1,7 @@
-# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# MIT License
+#
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -12,13 +15,11 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-# (MIT License)
 
 import json
 from datetime import datetime, timedelta
@@ -60,6 +61,7 @@ class TestV3DeletedRecipeBase(TestCase):
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_with_link_id,
@@ -72,6 +74,7 @@ class TestV3DeletedRecipeBase(TestCase):
             'link': None,
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_link_none_id,
@@ -84,6 +87,7 @@ class TestV3DeletedRecipeBase(TestCase):
             'link': None,
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_no_link_id,

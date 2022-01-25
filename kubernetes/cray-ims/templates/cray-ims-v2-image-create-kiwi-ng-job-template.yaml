@@ -1,3 +1,26 @@
+{{/*
+MIT License
+
+(C) Copyright 2022 Hewlett Packard Enterprise Development LP
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/}}
 apiVersion: v1
 data:
   image_configmap_create.yaml.template: |
@@ -10,6 +33,8 @@ data:
     data:
       public_key:
         $public_key
+      template_dictionary: |
+        $template_dictionary
   image_service_create.yaml.template: |
     ---
     kind: Service
@@ -70,6 +95,9 @@ data:
               readOnly: true
             - name: admin-client-auth
               mountPath: '/etc/admin-client-auth'
+              readOnly: true
+            - name: template-dictionary
+              mountPath: /etc/cray
               readOnly: true
             command: [ "sh", "-ce", "/scripts/fetch-recipe.sh /mnt/recipe \"$download_url\"" ]
             resources:
@@ -328,6 +356,12 @@ data:
               items:
               - key: public_key
                 path: authorized_keys
+          - name: template-dictionary
+            configMap:
+              name: cray-ims-$id-configmap
+              items:
+              - key: template_dictionary
+                path: template_dictionary
           - name: admin-client-auth
             secret:
               secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"

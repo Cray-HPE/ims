@@ -1,4 +1,7 @@
-# Copyright 2018-2021 Hewlett Packard Enterprise Development LP
+#
+# MIT License
+#
+# (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -12,13 +15,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-# (MIT License)
+
 """
 Image Management Service API Main
 """
@@ -57,10 +59,10 @@ def load_datastore(_app):
         V3DeletedPublicKeyRecordSchema(), 'id')
 
     _app.data['recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_recipes.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_recipes.json'),
         V2RecipeRecordSchema(), 'id')
     _app.data['deleted_recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_recipes.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v3.1_deleted_recipes.json'),
         V3DeletedRecipeRecordSchema(), 'id')
 
     _app.data['images'] = DataStoreHACK(
@@ -94,6 +96,7 @@ def load_v3_api(_app):
 def load_boto3(_app):
     """ Utility function to initialize S3 client objects. """
     boto3.set_stream_logger('boto3.resources', _app.config['LOG_LEVEL'])
+    boto3.set_stream_logger("botocore", _app.config['LOG_LEVEL'])
     _app.s3 = boto3.client(
         's3',
         endpoint_url=_app.config['S3_ENDPOINT'],

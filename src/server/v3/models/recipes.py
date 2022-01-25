@@ -1,4 +1,7 @@
-# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# MIT License
+#
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -12,13 +15,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-# (MIT License)
+
 import datetime
 
 from marshmallow import Schema, fields, post_load, RAISE
@@ -32,11 +34,12 @@ class V3DeletedRecipeRecord(V2RecipeRecord):
     """ The V3DeletedRecipeRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None, deleted=None):
+    def __init__(self, name, recipe_type, linux_distribution,
+                 link=None, id=None, created=None, deleted=None, template_dictionary=None):
         # Supplied
         self.deleted = deleted or datetime.datetime.now()
         super().__init__(name, recipe_type=recipe_type, linux_distribution=linux_distribution,
-                         link=link, id=id, created=created)
+                         link=link, id=id, created=created, template_dictionary=template_dictionary)
 
     def __repr__(self):
         return '<V3DeletedRecipeRecord(id={self.id!r})>'.format(self=self)
