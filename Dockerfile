@@ -1,5 +1,5 @@
 # Cray Image Management Service Dockerfile
-## Copyright 2018, 2021 Hewlett Packard Enterprise Development LP
+## Copyright 2018, 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -61,11 +61,13 @@ ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
 # Run openapi validation on openapi.yaml
-FROM arti.dev.cray.com/third-party-docker-stable-local/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
-RUN mkdir /tmp/api
-COPY api/openapi.yaml /tmp/api/
-ARG FORCE_OPENAPI_VALIDATION_CHECK=null
-RUN docker-entrypoint.sh validate -i /tmp/api/openapi.yaml || true
+# NOTE: at this time the openapi-generator-cli base image has CVE vulnerabilities
+# that we can't resolve.  Uncomment the below to use for testing and validation.
+# FROM arti.dev.cray.com/third-party-docker-stable-local/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
+# RUN mkdir /tmp/api
+# COPY api/openapi.yaml /tmp/api/
+# ARG FORCE_OPENAPI_VALIDATION_CHECK=null
+# RUN docker-entrypoint.sh validate -i /tmp/api/openapi.yaml || true
 
 # Run code style checkers
 FROM testing as codestyle
