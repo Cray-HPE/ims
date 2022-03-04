@@ -13,7 +13,8 @@ spec:
       restartPolicy: Never
       containers:
       - name: ims-post-upgrade-hook1-container
-        image: "baseos/alpine:3.13"
+        image: {{ .Values.alpine.image.repository }}:{{ .Values.alpine.image.tag }}
+        imagePullPolicy: {{ .Values.alpine.image.pullPolicy }}
         command:
           - bin/sh
           - -c

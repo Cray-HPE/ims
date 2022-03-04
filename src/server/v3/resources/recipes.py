@@ -27,10 +27,11 @@ import http.client
 from flask import jsonify, request, current_app
 from flask_restful import Resource
 
+from src.server.ims_exceptions import ImsArtifactValidationException, ImsSoftUndeleteArtifactException
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
      generate_resource_not_found_response, generate_patch_conflict
 from src.server.helper import validate_artifact, delete_artifact, get_log_id, \
-    soft_delete_artifact, soft_undelete_artifact, ARTIFACT_LINK
+    soft_delete_artifact, soft_undelete_artifact, ARTIFACT_LINK, verify_recipe_link_unique
 from src.server.models.recipes import V2RecipeRecordInputSchema, V2RecipeRecordSchema, V2RecipeRecordPatchSchema, \
     V2RecipeRecord
 from src.server.v3.models.recipes import V3DeletedRecipeRecordPatchSchema, V3DeletedRecipeRecord, \
@@ -93,10 +94,17 @@ class V3RecipeCollection(V3BaseRecipeCollection):
         new_recipe = recipe_schema.load(json_data)
 
         if new_recipe.link:
-            _, problem = validate_artifact(new_recipe.link)
+            problem = verify_recipe_link_unique(new_recipe.link)
             if problem:
-                current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
+                current_app.logger.info("Link value being set is not unique.")
                 return problem
+
+            try:
+                validate_artifact(new_recipe.link)
+            except ImsArtifactValidationException as exc:
+                current_app.logger.info(f"The artifact {new_recipe.link} is not in S3")
+                current_app.logger.info(str(exc))
+                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
         # Save to datastore
         current_app.data[self.recipes_table][str(new_recipe.id)] = new_recipe
@@ -122,6 +130,10 @@ class V3RecipeCollection(V3BaseRecipeCollection):
                 if deleted_recipe.link:
                     try:
                         deleted_recipe.link = soft_delete_artifact(recipe.link)
+                    except ImsArtifactValidationException as exc:
+                        current_app.logger.info(f"The artifact {recipe.link} is not in S3 and "
+                                                f"was not soft-deleted. Ignoring.")
+                        current_app.logger.info(str(exc))
                     except Exception as exc:  # pylint: disable=broad-except
                         current_app.logger.warning("%s Could not soft-delete artifact %s for recipe_id=%s",
                                                    log_id, recipe.link, recipe_id, exc_info=exc)
@@ -172,6 +184,10 @@ class V3RecipeResource(V3BaseRecipeCollection):
             if deleted_recipe.link:
                 try:
                     deleted_recipe.link = soft_delete_artifact(recipe.link)
+                except ImsArtifactValidationException as exc:
+                    current_app.logger.info(f"The artifact {recipe.link} is not in S3 and "
+                                            f"was not soft-deleted. Ignoring.")
+                    current_app.logger.info(str(exc))
                 except Exception as exc:  # pylint: disable=broad-except
                     current_app.logger.warning("%s Could not soft-delete artifact %s for recipe_id=%s",
                                                log_id, recipe.link, recipe_id, exc_info=exc)
@@ -216,10 +232,15 @@ class V3RecipeResource(V3BaseRecipeCollection):
                     current_app.logger.info("%s recipe record cannot be patched since it already has link info", log_id)
                     return generate_patch_conflict()
                 else:
-                    _, problem = validate_artifact(value)
+                    problem = verify_recipe_link_unique(value)
                     if problem:
-                        current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
+                        current_app.logger.info("Link value being set is not unique.")
                         return problem
+
+                    try:
+                        validate_artifact(value)
+                    except ImsArtifactValidationException as exc:
+                        return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
             else:
                 current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
                 return generate_data_validation_failure(errors=[])
@@ -310,11 +331,14 @@ class V3DeletedRecipeCollection(V3BaseRecipeCollection):
                 for key, value in list(json_data.items()):
                     if key == "operation":
                         if value == PATCH_OPERATION_UNDELETE:
-                            if recipe.link:
-                                recipe.link = soft_undelete_artifact(recipe.link)
+                            try:
+                                if recipe.link:
+                                    recipe.link = soft_undelete_artifact(recipe.link)
 
-                            current_app.data[self.recipes_table][deleted_recipe_id] = recipe
-                            recipes_to_undelete.append(deleted_recipe_id)
+                                current_app.data[self.recipes_table][deleted_recipe_id] = recipe
+                                recipes_to_undelete.append(deleted_recipe_id)
+                            except ImsArtifactValidationException as exc:
+                                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
                         else:
                             current_app.logger.info("%s Unsupported patch operation value %s.", log_id, value)
                             return generate_data_validation_failure(errors=[])
@@ -406,7 +430,12 @@ class V3DeletedRecipeResource(V3BaseRecipeCollection):
             if key == "operation":
                 if value == PATCH_OPERATION_UNDELETE:
                     if recipe.link:
-                        recipe.link = soft_undelete_artifact(recipe.link)
+                        try:
+                            recipe.link = soft_undelete_artifact(recipe.link)
+                        except ImsSoftUndeleteArtifactException:
+                            pass
+                        except ImsArtifactValidationException as exc:
+                            return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
                     current_app.data[self.recipes_table][deleted_recipe_id] = recipe
                     del current_app.data[self.deleted_recipes_table][deleted_recipe_id]

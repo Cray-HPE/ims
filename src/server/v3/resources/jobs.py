@@ -38,6 +38,7 @@ from flask_restful import Resource
 from kubernetes import client, config, utils
 from kubernetes.client.rest import ApiException
 
+from src.server.ims_exceptions import ImsArtifactValidationException
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
 from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
@@ -73,8 +74,12 @@ class V3BaseJobResource(Resource):
         self.api_gateway_hostname = os.environ.get("API_GATEWAY_HOSTNAME", "api-gw-service-nmn.local")
         self.default_ims_job_namespace = os.environ.get("DEFAULT_IMS_JOB_NAMESPACE", "ims")
 
-        self.shasta_domain = os.environ.get("SHASTA_DOMAIN", "shasta.local")
-        self.customer_access_pool = os.environ.get("CUSTOMER_ACCESS_POOL", "customer-access")
+        self.job_customer_access_network_access_pool = os.environ.get(
+            "JOB_CUSTOMER_ACCESS_NETWORK_ACCESS_POOL", "customer-management")
+
+        # {job.id}.ims.{job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
+        self.job_customer_access_subnet_name = os.environ.get("JOB_CUSTOMER_ACCESS_SUBNET_NAME", "cmn")
+        self.job_customer_access_network_domain = os.environ.get("JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN", "shasta.local")
 
     def _create_namespaced_destination_rule(self, namespace):
         """ Helper routine to create a partial function to create a new ISTIO destination rule. """
@@ -363,9 +368,10 @@ class V3JobCollection(V3BaseJobResource):
         if problem:
             return None, problem
 
-        md5sum, problem = validate_artifact(artifact_record.link)
-        if problem:
-            return None, problem
+        try:
+            md5sum = validate_artifact(artifact_record.link)
+        except ImsArtifactValidationException as exc:
+            return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
         return {'artifact': artifact_record, 'md5sum': md5sum}, None
 
@@ -482,9 +488,10 @@ class V3JobCollection(V3BaseJobResource):
             if "md5" in rootfs_artifact and rootfs_artifact["md5"]:
                 manifest_rootfs_md5sum = rootfs_artifact["md5"]
 
-            s3obj_rootfs_md5sum, problem = validate_artifact(rootfs_artifact[ARTIFACT_LINK])
-            if problem:
-                return None, problem
+            try:
+                s3obj_rootfs_md5sum = validate_artifact(rootfs_artifact[ARTIFACT_LINK])
+            except ImsArtifactValidationException as exc:
+                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
             if manifest_rootfs_md5sum and s3obj_rootfs_md5sum and manifest_rootfs_md5sum != s3obj_rootfs_md5sum:
                 current_app.logger.info("%s The rootfs md5sum from the manifest.json does not match the md5sum "
@@ -604,7 +611,7 @@ class V3JobCollection(V3BaseJobResource):
             current_app.logger.info("%s Could not get download url for artifact", log_id)
             return problem
 
-        external_dns_hostname = "{}.ims.{}".format(str(new_job.id).lower(), self.shasta_domain)
+        external_dns_hostname = f"{str(new_job.id).lower()}.ims.{self.job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
 
         template_params = {
             "id": str(new_job.id).lower(),
@@ -619,7 +626,7 @@ class V3JobCollection(V3BaseJobResource):
             "kernel_filename": new_job.kernel_file_name,
             "initrd_filename": new_job.initrd_file_name,
             "kernel_parameters_filename": new_job.kernel_parameters_file_name,
-            "address_pool": self.customer_access_pool,
+            "address_pool": self.job_customer_access_network_access_pool,
             "hostname": external_dns_hostname,
             "namespace": self.default_ims_job_namespace,
             "s3_bucket": current_app.config["S3_BOOT_IMAGES_BUCKET"]

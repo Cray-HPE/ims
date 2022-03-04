@@ -145,7 +145,7 @@ The following are required:
    ```
    $ docker pull minio/minio
    
-   $ docker run -p 9000:9000 -d minio/minio server /data
+   $ docker run -p 9000:9000,9001:9001 -d minio/minio server /data --console-address :9001
    941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
    
    $ docker logs 941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
@@ -162,6 +162,11 @@ The following are required:
       .NET:       https://docs.min.io/docs/dotnet-client-quickstart-guide
    Detected default credentials 'minioadmin:minioadmin', please change the credentials immediately using 'MINIO_ACCESS_KEY' and 'MINIO_SECRET_KEY'
    ```
+
+    NOTE: Using podman, the command to start minio would be similar to 
+    ```
+    $ podman run -p 9000:9000,9001:9001 --net cni-podman1 minio/minio server /data --console-address :9001
+    ```
 
 ## Building
 ```
