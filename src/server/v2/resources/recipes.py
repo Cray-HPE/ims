@@ -1,4 +1,7 @@
-# Copyright 2018-2021 Hewlett Packard Enterprise Development LP
+#
+# MIT License
+#
+# (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -12,13 +15,11 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-# (MIT License)
 """
 Recipe API
 """
@@ -27,9 +28,10 @@ import http.client
 from flask import jsonify, request, current_app
 from flask_restful import Resource
 
+from src.server.ims_exceptions import ImsArtifactValidationException
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
      generate_resource_not_found_response, generate_patch_conflict
-from src.server.helper import validate_artifact, delete_artifact, get_log_id, ARTIFACT_LINK
+from src.server.helper import validate_artifact, delete_artifact, get_log_id, ARTIFACT_LINK, verify_recipe_link_unique
 from src.server.models.recipes import V2RecipeRecordInputSchema, V2RecipeRecordSchema, V2RecipeRecordPatchSchema
 
 recipe_user_input_schema = V2RecipeRecordInputSchema()
@@ -77,10 +79,15 @@ class V2RecipeCollection(Resource):
         new_recipe = recipe_schema.load(json_data)
 
         if new_recipe.link:
-            _, problem = validate_artifact(new_recipe.link)
+            problem = verify_recipe_link_unique(new_recipe.link)
             if problem:
-                current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
+                current_app.logger.info("Link value being set is not unique")
                 return problem
+
+            try:
+                validate_artifact(new_recipe.link)
+            except ImsArtifactValidationException as exc:
+                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
         # Save to datastore
         current_app.data['recipes'][str(new_recipe.id)] = new_recipe
@@ -192,10 +199,15 @@ class V2RecipeResource(Resource):
                     current_app.logger.info("%s recipe record cannot be patched since it already has link info", log_id)
                     return generate_patch_conflict()
                 else:
-                    _, problem = validate_artifact(value)
+                    problem = verify_recipe_link_unique(value)
                     if problem:
-                        current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
+                        current_app.logger.info("Link value being set is not unique")
                         return problem
+
+                    try:
+                        validate_artifact(value)
+                    except ImsArtifactValidationException as exc:
+                        return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
             else:
                 current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
                 return generate_data_validation_failure(errors=[])

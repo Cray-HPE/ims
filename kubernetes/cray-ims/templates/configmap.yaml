@@ -1,3 +1,26 @@
+{{/*
+MIT License
+
+(C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -10,8 +33,10 @@ data:
   CA_CERT: "/mnt/ca-vol/certificate_authority.crt"
   DEFAULT_IMS_IMAGE_SIZE: "10"
   DEFAULT_IMS_JOB_NAMESPACE: "{{ .Values.ims_config.cray_ims_job_namespace }}"
-  SHASTA_DOMAIN: "{{ .Values.customer_access.shasta_domain }}"
-  CUSTOMER_ACCESS_POOL: "{{ .Values.customer_access.access_pool }}"
+
+  JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN: "{{ .Values.customer_access.shasta_domain }}"
+  JOB_CUSTOMER_ACCESS_SUBNET_NAME: "{{ .Values.customer_access.subnet_name }}"
+  JOB_CUSTOMER_ACCESS_NETWORK_ACCESS_POOL: "{{ .Values.customer_access.access_pool }}"
 
   S3_IMS_BUCKET: "{{ .Values.s3.ims_bucket }}"
   S3_BOOT_IMAGES_BUCKET: "{{ .Values.s3.boot_images_bucket }}"
