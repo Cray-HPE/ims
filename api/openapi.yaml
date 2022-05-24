@@ -2013,6 +2013,21 @@ components:
           description: Identifer specifing the artifact repository where the artifact is located
           example: s3
           type: string
+    RecipeKeyValuePair:
+      description: Key/value pair used to template an IMS recipe
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          description: Template variable to replace in the IMS recipe
+          example: CSM_RELEASE_VERSION
+          type: string
+        value:
+          description: Value to replace the template variable in the IMS recipe
+          example: 1.0.0
+          type: string
     RecipeRecord:
       description: A Recipe Record
       type: object
@@ -2055,6 +2070,11 @@ components:
           description: Name of the image
           example: centos7.5_barebones
           type: string
+        template_dictionary:
+          description: List of key/value pairs to be templated into the recipe when building the image.
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeKeyValuePair'
     DeletedRecipeRecord:
       description: A Deleted Recipe Record
       type: object

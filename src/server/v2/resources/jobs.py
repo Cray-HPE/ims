@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 Jobs API
 """
@@ -33,6 +34,7 @@ from collections import OrderedDict
 from functools import partial
 from string import Template
 
+import json
 import time
 import yaml
 from flask import jsonify, request, current_app
@@ -155,18 +157,18 @@ class V2BaseJobResource(Resource):
 
         k8s_client = client.ApiClient()
         new_job.kubernetes_namespace = self.default_ims_job_namespace
+        root_template_path = os.environ.get("IMS_JOB_TEMPLATE_PATH", "/mnt/ims/v2/job_templates")
         for resource in ("configmap", "service", "job"):
             resource_field = "kubernetes_%s" % resource
             fd, output_file_name = tempfile.mkstemp(suffix=".yaml")
             try:
                 if new_job.job_type == JOB_TYPE_CREATE:
-                    input_file_name = "/mnt/ims/v2/job_templates/create/{0}/image_{1}_create.yaml.template".format(
-                        recipe_type,
-                        resource
+                    input_file_name = os.path.join(
+                        root_template_path, f"create/{recipe_type}/image_{resource}_create.yaml.template"
                     )
                 elif new_job.job_type == JOB_TYPE_CUSTOMIZE:
-                    input_file_name = "/mnt/ims/v2/job_templates/customize/image_{0}_customize.yaml.template".format(
-                        resource
+                    input_file_name = os.path.join(
+                        root_template_path, f"customize/image_{resource}_customize.yaml.template"
                     )
 
                 with open(input_file_name, 'r') as inf, open(output_file_name, 'w') as outf:
@@ -634,6 +636,8 @@ class V2JobCollection(V2BaseJobResource):
         }
 
         if new_job.job_type == JOB_TYPE_CREATE:
+            template_params["template_dictionary"] = \
+                json.dumps({r['key']: r['value'] for r in artifact_record.template_dictionary})
             template_params["recipe_type"] = artifact_record.recipe_type
 
         new_job, problem = self.create_kubernetes_resources(
