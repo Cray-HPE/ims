@@ -351,7 +351,7 @@ class IMSImageUpload(AnsibleModule):
         finally:
             self.umount()
 
-        # Propogate forward any results
+        # Propagate forward any results
         self.response['failed'] = False
         self.response['changed'] = True
         for key in ('ims_job_record', 'ims_image_record'):
