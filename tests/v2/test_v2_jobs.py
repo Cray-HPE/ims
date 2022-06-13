@@ -294,7 +294,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
 
         # verify that all the jobs were deleted
         response = self.app.get(self.test_uri)
-        self.assertThat(json.loads(response.data), HasLength(0), 'collection should be emtpy')
+        self.assertThat(json.loads(response.data), HasLength(0), 'collection should be empty')
 
     def test_delete_jobs_status_error(self, utils_mock, config_mock, client_mock):
 

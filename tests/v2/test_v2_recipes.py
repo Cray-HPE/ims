@@ -472,7 +472,7 @@ class TestV2RecipesCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
         self.assertIn("linux_distribution", response.json["errors"],
-                      "Expected linux_distrobution to be listed in error detail")
+                      "Expected linux_distribution to be listed in error detail")
 
 
 if __name__ == '__main__':
