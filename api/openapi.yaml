@@ -2010,7 +2010,7 @@ components:
           example: f04af5f34635ae7c507322985e60c00c-131
           type: string
         type:
-          description: Identifer specifing the artifact repository where the artifact is located
+          description: Identifier specifying the artifact repository where the artifact is located
           example: s3
           type: string
     RecipeKeyValuePair:

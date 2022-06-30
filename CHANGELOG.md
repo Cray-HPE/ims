@@ -9,3 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add support for storing IMS recipes that have template variables
 - Add support for passing IMS recipe template values to IMS create jobs
+
+### Changed
+- CASMCMS-8041: Spelling corrections
+
+[1.0.0] - (no date)
