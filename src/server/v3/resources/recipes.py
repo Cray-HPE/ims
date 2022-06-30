@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 Recipe API
 """
@@ -128,6 +129,7 @@ class V3RecipeCollection(V3BaseRecipeCollection):
 
                 deleted_recipe = V3DeletedRecipeRecord(name=recipe.name, recipe_type=recipe.recipe_type,
                                                        linux_distribution=recipe.linux_distribution,
+                                                       template_dictionary=recipe.template_dictionary,
                                                        id=recipe.id, created=recipe.created, link=recipe.link)
                 if deleted_recipe.link:
                     try:
@@ -182,6 +184,7 @@ class V3RecipeResource(V3BaseRecipeCollection):
             recipe = current_app.data[self.recipes_table][recipe_id]
             deleted_recipe = V3DeletedRecipeRecord(name=recipe.name, recipe_type=recipe.recipe_type,
                                                    linux_distribution=recipe.linux_distribution,
+                                                   template_dictionary=recipe.template_dictionary,
                                                    id=recipe.id, created=recipe.created, link=recipe.link)
             if deleted_recipe.link:
                 try:
@@ -328,6 +331,7 @@ class V3DeletedRecipeCollection(V3BaseRecipeCollection):
 
                 recipe = V2RecipeRecord(name=deleted_recipe.name, recipe_type=deleted_recipe.recipe_type,
                                         linux_distribution=deleted_recipe.linux_distribution,
+                                        template_dictionary=deleted_recipe.template_dictionary,
                                         id=deleted_recipe.id, created=deleted_recipe.created,
                                         link=deleted_recipe.link)
                 for key, value in list(json_data.items()):
@@ -426,6 +430,7 @@ class V3DeletedRecipeResource(V3BaseRecipeCollection):
         deleted_recipe = current_app.data[self.deleted_recipes_table][deleted_recipe_id]
         recipe = V2RecipeRecord(name=deleted_recipe.name, recipe_type=deleted_recipe.recipe_type,
                                 linux_distribution=deleted_recipe.linux_distribution,
+                                template_dictionary=deleted_recipe.template_dictionary,
                                 id=deleted_recipe.id, created=deleted_recipe.created,
                                 link=deleted_recipe.link)
         for key, value in list(json_data.items()):

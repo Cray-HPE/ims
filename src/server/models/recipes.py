@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 Recipe Models
 """
@@ -43,16 +44,23 @@ RECIPE_TYPES = (RECIPE_TYPE_KIWI_NG, RECIPE_TYPE_PACKER)
 LINUX_DISTRIBUTIONS = (LINUX_DISTRIBUTION_SLES12, LINUX_DISTRIBUTION_SLES15, LINUX_DISTRIBUTION_CENTOS)
 
 
+class RecipeKeyValuePair(Schema):
+    """ A schema specifically for defining and validating user input of SSH Containers """
+    key = fields.String(description="Template Key", required=True)
+    value = fields.String(description="Template Value", required=True)
+
+
 class V2RecipeRecord:
     """ The RecipeRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None):
+    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None, template_dictionary=None):
         # Supplied
         self.name = name
         self.link = link
         self.recipe_type = recipe_type
         self.linux_distribution = linux_distribution
+        self.template_dictionary = template_dictionary
 
         # derived
         self.id = id or uuid.uuid4()
@@ -78,9 +86,12 @@ class V2RecipeRecordInputSchema(Schema):
                                                    LINUX_DISTRIBUTION_CENTOS),
                                     validate=OneOf(LINUX_DISTRIBUTIONS, error="Recipe type must be one of: {choices}."))
 
+    template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)
+
     @post_load
     def make_recipe(self, data):
         """ Marshall an object out of the individual data components """
+        data['template_dictionary'] = data.get('template_dictionary', [])
         return V2RecipeRecord(**data)
 
     class Meta:  # pylint: disable=missing-docstring

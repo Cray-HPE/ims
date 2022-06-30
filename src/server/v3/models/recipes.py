@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 import datetime
 
 from marshmallow import Schema, fields, post_load, RAISE
@@ -34,11 +35,12 @@ class V3DeletedRecipeRecord(V2RecipeRecord):
     """ The V3DeletedRecipeRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None, deleted=None):
+    def __init__(self, name, recipe_type, linux_distribution,
+                 link=None, id=None, created=None, deleted=None, template_dictionary=None):
         # Supplied
         self.deleted = deleted or datetime.datetime.now()
         super().__init__(name, recipe_type=recipe_type, linux_distribution=linux_distribution,
-                         link=link, id=id, created=created)
+                         link=link, id=id, created=created, template_dictionary=template_dictionary)
 
     def __repr__(self):
         return '<V3DeletedRecipeRecord(id={self.id!r})>'.format(self=self)

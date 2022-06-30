@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 Unit tests for resources/recipes.py
 """
@@ -65,6 +66,7 @@ class TestV2RecipeEndpoint(TestCase):
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
         }
@@ -73,6 +75,7 @@ class TestV2RecipeEndpoint(TestCase):
             'link': None,
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
         }
@@ -325,8 +328,8 @@ class TestV2RecipesCollectionEndpoint(TestCase):
                              r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
             self.assertIsNotNone(response_data['created'], 'recipe creation date/time was not set properly')
             self.assertItemsEqual(response_data.keys(),
-                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution', 'id'],
-                                  'returned keys not the same')
+                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution',
+                                   'template_dictionary', 'id'], 'returned keys not the same')
             if link:
                 self.assertEqual(response_data['link'], link, "artifact link values do not match")
 
@@ -473,7 +476,7 @@ class TestV2RecipesCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
         self.assertIn("linux_distribution", response.json["errors"],
-                      "Expected linux_distrobution to be listed in error detail")
+                      "Expected linux_distribution to be listed in error detail")
 
 
 if __name__ == '__main__':

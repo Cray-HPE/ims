@@ -39,9 +39,22 @@ spec:
         image: {{ .Values.alpine.image.repository }}:{{ .Values.alpine.image.tag }}
         imagePullPolicy: {{ .Values.alpine.image.pullPolicy }}
         command:
-          - bin/sh
+          - /bin/sh
           - -c
-          - chown -Rv 65534:65534 /var/ims/data
+          - |-
+            set -x
+
+            if [[ -f /var/ims/data/v2_recipes.json ]] && [[ ! -f /var/ims/data/v2.1_recipes.json ]]
+            then
+              cp /var/ims/data/v2_recipes.json /var/ims/data/v2.1_recipes.json
+            fi
+
+            if [[ -f /var/ims/data/v3_deleted_recipes.json ]] && [[ ! -f /var/ims/data/v3.1_deleted_recipes.json ]]
+            then
+              cp /var/ims/data/v3_deleted_recipes.json /var/ims/data/v3.1_deleted_recipes.json
+            fi
+
+            chown -Rv 65534:65534 /var/ims/data
         volumeMounts:
           - mountPath: /var/ims/data
             name: cray-ims-data
