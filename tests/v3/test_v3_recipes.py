@@ -21,6 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 Unit tests for resources/recipes.py
 """
@@ -61,6 +62,7 @@ class TestV3RecipeBase(TestCase):
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
         }
@@ -69,6 +71,7 @@ class TestV3RecipeBase(TestCase):
             'link': None,
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
+            'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
         }
@@ -362,8 +365,8 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
                              r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
             self.assertIsNotNone(response_data['created'], 'recipe creation date/time was not set properly')
             self.assertItemsEqual(response_data.keys(),
-                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution', 'id'],
-                                  'returned keys not the same')
+                                  ['created', 'name', 'link', 'recipe_type', 'linux_distribution',
+                                   'template_dictionary', 'id'], 'returned keys not the same')
             if link:
                 self.assertEqual(response_data['link'], link, "artifact link values do not match")
 
