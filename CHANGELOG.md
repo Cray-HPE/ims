@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Build valid unstable charts
 
+### Removed
+- Stopped building nonfunctional, outdated test RPM.
+
 ## [3.5.0] - 2022-06-30
 ### Added
 - Add support for storing IMS recipes that have template variables

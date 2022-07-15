@@ -32,29 +32,14 @@ CHART_VERSION ?= $(shell head -1 .chart_version)
 
 HELM_UNITTEST_IMAGE ?= quintush/helm-unittest:3.3.0-0.2.5
 
-SPEC_NAME ?= cray-ims-crayctldeploy-test
-RPM_NAME ?= cray-ims-crayctldeploy-test
-SPEC_FILE ?= ${SPEC_NAME}.spec
-SPEC_VERSION ?= $(shell head -1 .version | tr '-' '_')
-BUILD_METADATA ?= "1~development~$(shell git rev-parse --short HEAD)"
-SOURCE_NAME ?= ${RPM_NAME}-${SPEC_VERSION}
-BUILD_DIR ?= $(PWD)/dist/rpmbuild
-SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
-
-all : runbuildprep lint prepare unittests image chart rpm
+all : runbuildprep lint unittests image chart
 chart: chart_setup chart_package
-rpm: rpm_package_source rpm_build_source rpm_build
 
 runbuildprep:
 		./cms_meta_tools/scripts/runBuildPrep.sh
 
 lint:
 		./cms_meta_tools/scripts/runLint.sh
-
-prepare:
-		rm -rf $(BUILD_DIR)
-		mkdir -p $(BUILD_DIR)/SPECS $(BUILD_DIR)/SOURCES
-		cp $(SPEC_FILE) $(BUILD_DIR)/SPECS/
 
 image:
 		docker build --pull ${DOCKER_ARGS} --tag '${DOCKER_NAME}:${DOCKER_VERSION}' .
@@ -72,12 +57,3 @@ chart_package:
 chart_test:
 		helm lint "${CHART_PATH}/${NAME}"
 		docker run --rm -v ${PWD}/${CHART_PATH}:/apps ${HELM_UNITTEST_IMAGE} -3 ${NAME}
-
-rpm_package_source:
-		tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude .git --exclude ./dist --exclude ./cms_meta_tools -cvjf $(SOURCE_PATH) .
-
-rpm_build_source:
-		BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(SOURCE_PATH) --define "_topdir $(BUILD_DIR)"
-
-rpm_build:
-		BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(BUILD_DIR)"
