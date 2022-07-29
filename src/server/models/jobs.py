@@ -58,7 +58,7 @@ STATUS_TYPES = (JOB_STATUS_CREATING,
 
 DEFAULT_INITRD_FILE_NAME = 'initrd'
 DEFAULT_KERNEL_FILE_NAME = 'vmlinuz'
-DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", 10)
+DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", 15)
 DEFAULT_KERNEL_PARAMETERS_FILE_NAME = 'kernel-parameters'
 
 
@@ -122,7 +122,7 @@ class V2JobRecordInputSchema(Schema):
                                                          error="image_root_archive_name field must not be blank"))
     enable_debug = fields.Boolean(default=False,
                                   Description="Whether to enable debugging of the job")
-    build_env_size = fields.Integer(Default=10,
+    build_env_size = fields.Integer(Default=15,
                                     Description="approximate disk size in GiB to reserve for the image build"
                                                 "environment (usually 2x final image size)",
                                     validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))

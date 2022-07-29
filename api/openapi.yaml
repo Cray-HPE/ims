@@ -2296,8 +2296,8 @@ components:
           type: string
           readOnly: true
         build_env_size:
-          description: Size (in Gb) to allocate for the image root. Default = 10
-          example: 10
+          description: Size (in Gb) to allocate for the image root. Default = 15
+          example: 15
           type: integer
           minimum: 1
         kubernetes_namespace:
