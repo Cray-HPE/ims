@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Build valid unstable charts
+- CASMCMS-7970 - update dev.cray.com addressess.
 
 ### Removed
 - Stopped building nonfunctional, outdated test RPM.
