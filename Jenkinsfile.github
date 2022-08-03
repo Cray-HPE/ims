@@ -41,8 +41,6 @@ pipeline {
         DESCRIPTION = "Cray Management Image Management Service"
         IS_STABLE = getBuildIsStable()
         DOCKER_NAME = "cray-ims-service"
-        RPM_NAME = "cray-ims-crayctldeploy-test"
-        BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
     }
 
     stages {
@@ -69,19 +67,6 @@ pipeline {
         stage("Lint") {
             steps {
                 sh "make lint"
-            }
-        }
-
-        stage("Add RPM Metadata") {
-            steps {
-                echo "RPM build metadata is ${env.BUILD_METADATA}"
-                runLibraryScript("addRpmMetaData.sh", "")
-            }
-        }
-
-        stage("Prepare RPM") {
-            steps {
-                sh "make prepare"
             }
         }
 

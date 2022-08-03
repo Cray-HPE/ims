@@ -92,7 +92,7 @@ cray-service:
     cray-ims:
       name: cray-ims
       image:
-        repository: artifactory.algol60.net/csm-docker/stable/cray-ims-service
+        repository: artifactory.algol60.net/csm-docker/S-T-A-B-L-E/cray-ims-service
         # tag defaults to chart appVersion
       ports:
         - name: http

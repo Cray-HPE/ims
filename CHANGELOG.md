@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.0] - 2022-08-03
+### Changed
+- Build valid unstable charts
+- CASMCMS-7970 - update dev.cray.com addressess.
+- CASMCMS-8015 - increase the default ims job size to handle larger images.
+
+### Removed
+- Stopped building nonfunctional, outdated test RPM.
 
 ## [3.5.0] - 2022-06-30
 ### Added
