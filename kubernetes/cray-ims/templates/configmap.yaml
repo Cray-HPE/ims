@@ -42,3 +42,5 @@ data:
   S3_BOOT_IMAGES_BUCKET: "{{ .Values.s3.boot_images_bucket }}"
   S3_CONNECT_TIMEOUT: "{{ .Values.s3.connect_timeout }}"
   S3_READ_TIMEOUT: "{{ .Values.s3.read_timeout }}"
+
+  GUNICORN_WORKER_TIMEOUT: "{{ .Values.gunicorn.worker_timeout }}"

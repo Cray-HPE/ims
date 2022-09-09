@@ -30,6 +30,9 @@
 #   tag: "" (default = "latest")
 #   pullPolicy: "" (default = "IfNotPresent")
 
+gunicorn:
+  worker_timeout: "3600"
+
 s3:
   endpoint: ~
   ims_bucket: "ims"
@@ -138,16 +141,18 @@ cray-service:
           path: /healthz/live
         initialDelaySeconds: 5
         periodSeconds: 60
-        timeoutSeconds: 5
-        failureThreshold: 3
+        timeoutSeconds: 45
+        failureThreshold: 5
+        successThreshold: 1
       readinessProbe:
         httpGet:
           port: 9000
           path: /healthz/ready
         initialDelaySeconds: 5
-        periodSeconds: 10
-        timeoutSeconds: 5
-        failureThreshold: 3
+        periodSeconds: 60
+        timeoutSeconds: 45
+        failureThreshold: 5
+        successThreshold: 1
   volumes:
     cray-ims-data:
       name: cray-ims-data
