@@ -30,7 +30,9 @@ bind = "0.0.0.0:9000"
 # Worker
 # http://docs.gunicorn.org/en/stable/settings.html#worker-class
 # worker_class = os.environ.get('WORKER_CLASS', 'gevent')
-# timeout = int(os.environ.get('WORKER_TIMEOUT', 3600))  # seconds
+
+# Long s3 operations (with large files) can take more than the 30 sec default timeout
+timeout = int(os.environ.get('GUNICORN_WORKER_TIMEOUT', 3600))  # seconds
 
 # Logging
 accesslog = "-"  # stdout
