@@ -306,7 +306,7 @@ docker build --target debug -t ims-service:debug -f Dockerfile .
 Then run by exposing port 5678 on your local machine so the container can remote attach using debugpy. Make sure you are running the `ims-service:debug` tag from the previous command. This will put
 the flask app in standby until a remote connection is made. Once connected the flask app will boot in debug mode.
 ```
-docker run -p 5678:5678 -d ims-service:debug
+docker run -p 5678:5678 -p 5000:5000 -d ims-service:debug
 ```
 
 Below is a remote debug configuration from VSCode, but any IDE should
