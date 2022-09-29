@@ -114,8 +114,8 @@ class DataStoreHACK(collections.MutableMapping):
             raise error
 
         if self.current_retries < self.MAX_RECOVERY_RETRIES:
-            self._read()
             self.current_retries += 1
+            self._read()
 
     def save(self):
         """Save the data to disk"""
