@@ -145,7 +145,7 @@ The following are required:
    ```
    $ docker pull minio/minio
    
-   $ docker run -p 9000:9000,9001:9001 -d minio/minio server /data --console-address :9001
+   $ docker run -p 9000:9000 -p 9001:9001 -d minio/minio server data --console-address :9001
    941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
    
    $ docker logs 941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
@@ -179,10 +179,10 @@ The image can be run with the following command:
 
 ```bash
 $ docker run --rm --name ims-service \
-  -p 9000:9000 \
+  -p 8080:9000 \
   -e "S3_ACCESS_KEY=minioadmin" \
   -e "S3_SECRET_KEY=minioadmin" \
-  -e "S3_ENDPOINT=172.17.0.2:9000" \
+  -e "S3_ENDPOINT=http://localhost:9000" \
   -e "S3_IMS_BUCKET=ims" \
   -e "S3_BOOT_IMAGES_BUCKET=boot-images" \
   -e "FLASK_ENV=staging" \
@@ -295,6 +295,45 @@ on github, the cloneCMSMetaTools() function clones the cms-meta-tools repo into 
 For a local build, you will also need to manually write the .version, .docker_version (if this repo
 builds a docker image), and .chart_version (if this repo builds a helm chart) files. When building
 on github, this is done by the setVersionFiles() function.
+
+### Debug Mode ###
+If you wish to run flask app locally through the container with breakpoints, build the image using the
+`Dockerfile.debug` stage.
+```
+docker build --target debug -t ims-service:debug -f Dockerfile .
+```
+
+Then run by exposing port 5678 on your local machine so the container can remote attach using debugpy. Make sure you are running the `ims-service:debug` tag from the previous command. This will put
+the flask app in standby until a remote connection is made. Once connected the flask app will boot in debug mode.
+```
+docker run -p 5678:5678 -d ims-service:debug
+```
+
+Below is a remote debug configuration from VSCode, but any IDE should
+have similar remote configurations.
+```
+   "configurations": [
+        {
+            "name": "Python: Remote Attach",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "127.0.0.1",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": true
+        }
+    ]
+```
+
+If code changes are made, make sure you rebuild the container since currently we do not use docker-compose for hot-reloading source code in the containers.
+
 
 ## Versioning
 

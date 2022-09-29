@@ -35,10 +35,11 @@ from botocore.stub import Stubber
 from testtools import TestCase
 from testtools.matchers import HasLength
 
+from tests.v2.ims_fixtures import V2FlaskTestClientFixture, V2ImagesDataFixture
+from tests.utils import check_error_responses
+
 from src.server import app
 from src.server.helper import S3Url
-from tests.utils import check_error_responses
-from tests.v2.ims_fixtures import V2FlaskTestClientFixture, V2ImagesDataFixture
 
 
 class TestV2ImageEndpoint(TestCase):
@@ -82,7 +83,6 @@ class TestV2ImageEndpoint(TestCase):
             self.data_record_link_none,
             self.data_record_no_link
         ]
-
         self.useFixture(V2ImagesDataFixture(initial_data=self.data))
         self.test_uri_with_link = '/images/{}'.format(self.test_id)
         self.test_uri_with_link_cascade_false = '/images/{}?cascade=False'.format(self.test_id)

@@ -60,6 +60,15 @@ COPY tests /app/tests
 ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
+# Run app as debug
+# Can use any IDE remote debugger attach to use breakpoints in the IDE
+FROM base as debug
+
+RUN pip3 install debugpy
+ENV FLASK_APP=/app/src/server/app
+EXPOSE 5678 5000
+CMD python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m flask run -h 0.0.0.0 -p 5000
+
 # Run openapi validation on openapi.yaml
 FROM artifactory.algol60.net/csm-docker/stable/docker.io/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
 RUN mkdir /tmp/api

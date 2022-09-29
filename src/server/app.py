@@ -50,31 +50,31 @@ from src.server.models.jobs import V2JobRecordSchema
 
 
 def load_datastore(_app):
-    """ Utility function to load IMS data files. """
+    """ Utility function to load IMS data files. """ 
 
     _app.data['public_keys'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_public_keys.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v2_public_keys.json'),
         V2PublicKeyRecordSchema(), 'id')
     _app.data['deleted_public_keys'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_public_keys.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_public_keys.json'),
         V3DeletedPublicKeyRecordSchema(), 'id')
 
     _app.data['recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_recipes.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_recipes.json'),
         V2RecipeRecordSchema(), 'id')
     _app.data['deleted_recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3.1_deleted_recipes.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v3.1_deleted_recipes.json'),
         V3DeletedRecipeRecordSchema(), 'id')
 
     _app.data['images'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_images.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v2_images.json'),
         V2ImageRecordSchema(), 'id')
     _app.data['deleted_images'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_images.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_images.json'),
         V3DeletedImageRecordSchema(), 'id')
 
     _app.data['jobs'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_jobs.json'),
+    os.path.join(_app.config['HACK_DATA_STORE'], 'v2_jobs.json'),
         V2JobRecordSchema(), 'id')
 
 
