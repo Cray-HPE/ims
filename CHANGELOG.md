@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.7.1] - 2022-09-30
+### Changed
+- CASMTRIAGE-4288 - increase readiness/liveness times to allow for operations with larger images.
+
+## [3.7.0] - 2022-09-28
+### Changed
+- CASMTRIAGE-4268 - pull in new ims-utils that fixes file download performance issue.
+
+## [3.6.1] - 2022-09-09
 ### Changed
 - CASMTRIAGE-4091 - make gunicorn worker timeout configurable to handle larger image sizes
 
