@@ -65,6 +65,7 @@ data:
           labels:
             app: ims-$id-customize
         spec:
+          runtimeClassName: kata-qemu
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
           # Step 1: Download and extract the image root filesystem
@@ -219,11 +220,9 @@ data:
               readOnly: true
           volumes:
           - name: image-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: ims-config-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: ca-pubkey
             configMap:
               name: cray-configmap-ca-public-key
