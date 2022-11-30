@@ -67,6 +67,7 @@ data:
           labels:
             app: ims-$id-create
         spec:
+          runtimeClassName: kata-qemu
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
           # Step 1: Download and extract the image recipe archive
@@ -335,8 +336,7 @@ data:
                 cpu: "8"
           volumes:
           - name: image-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: recipe-vol
             emptyDir: {}
           - name: specfile-vol
@@ -345,8 +345,7 @@ data:
           - name: ca-rpm-vol
             emptyDir: {}
           - name: ims-config-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: ca-pubkey
             configMap:
               name: cray-configmap-ca-public-key
