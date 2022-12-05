@@ -84,6 +84,10 @@ class V3BaseJobResource(Resource):
         # {job.id}.ims.{job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
         self.job_customer_access_subnet_name = os.environ.get("JOB_CUSTOMER_ACCESS_SUBNET_NAME", "cmn")
         self.job_customer_access_network_domain = os.environ.get("JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN", "shasta.local")
+        self.job_enable_dkms = os.getenv("JOB_ENABLE_DKMS", 'False').lower() in ('true', '1', 't')
+        
+        # NOTE: make sure this isn't a non-zero length string of spaces
+        self.job_kata_runtime = os.getenv("JOB_KATA_RUNTIME", "kata-qemu").strip()
 
     def _create_namespaced_destination_rule(self, namespace):
         """ Helper routine to create a partial function to create a new ISTIO destination rule. """
@@ -617,6 +621,20 @@ class V3JobCollection(V3BaseJobResource):
 
         external_dns_hostname = f"{str(new_job.id).lower()}.ims.{self.job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
 
+        # switch the set of values depending on if the kata-qemu runtime class is used
+        job_enable_dkms = "False"
+        job_runtime_class = ""
+        job_service_account = ""
+        job_security_privilege = "false"
+        job_security_capabilities = ""
+        if self.job_enable_dkms:
+            job_enable_dkms = "True"
+            job_runtime_class = self.job_kata_runtime if "kata" in self.job_kata_runtime else "kata-qemu"
+            job_service_account = "ims-service-job-mount"
+            job_security_privilege = "true"
+            job_security_capabilities = "SYS_ADMIN"
+
+        # set up the template params to feed into the job template
         template_params = {
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
@@ -633,9 +651,16 @@ class V3JobCollection(V3BaseJobResource):
             "address_pool": self.job_customer_access_network_access_pool,
             "hostname": external_dns_hostname,
             "namespace": self.default_ims_job_namespace,
-            "s3_bucket": current_app.config["S3_BOOT_IMAGES_BUCKET"]
+            "s3_bucket": current_app.config["S3_BOOT_IMAGES_BUCKET"],
+            "job_enable_dkms": job_enable_dkms,
+            "runtime_class": job_runtime_class,
+            "service_account": job_service_account,
+            "security_privilege": job_security_privilege,
+            "security_capabilites": job_security_capabilities
         }
 
+        current_app.logger.info(f"Job template param: {template_params}")
+        
         if new_job.job_type == JOB_TYPE_CREATE:
             template_params["template_dictionary"] = \
                 json.dumps({r['key']: r['value'] for r in artifact_record.template_dictionary})

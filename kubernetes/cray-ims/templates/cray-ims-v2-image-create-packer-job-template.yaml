@@ -65,7 +65,8 @@ data:
           labels:
             app: ims-$id-create
         spec:
-          runtimeClassName: kata-qemu
+          runtimeClassName: $runtime_class
+          serviceAccountName: $service_account
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
           # Step 1: Pull the image recipe from the configmap location
@@ -218,6 +219,10 @@ data:
           # sshd container
           - image: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
             imagePullPolicy:  {{ .Values.cray_ims_sshd.image.imagePullPolicy }}
+            securityContext:
+              privileged: $security_privilege
+              capabilities:
+                add: [$security_capabilites]
             name: sshd
             ports:
             - containerPort: 22
