@@ -42,6 +42,14 @@ rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
     verbs: ["get", "create", "delete", "patch"]
+  - apiGroups:
+    - policy
+    resourceNames:
+    - privileged
+    resources:
+    - podsecuritypolicies
+    verbs:
+    - use
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -54,4 +62,23 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: ims-service-launch-job
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: ims-service-job-mount
+  namespace: {{ .Values.ims_config.cray_ims_job_namespace }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ims-service-job-mount
+subjects:
+  - kind: ServiceAccount
+    name: ims-service-job-mount
+    namespace: {{ .Values.ims_config.cray_ims_job_namespace }}
+roleRef:
+  kind: ClusterRole
+  name: privileged-psp
   apiGroup: rbac.authorization.k8s.io
