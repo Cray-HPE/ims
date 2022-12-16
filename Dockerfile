@@ -42,9 +42,7 @@ ENV VIRTUAL_ENV=/app/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN PIP_INDEX_URL=https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple \
-    PIP_TRUSTED_HOST=arti.dev.cray.com \
-    pip3 install --no-cache-dir -U pip && \
+RUN pip3 install --no-cache-dir -U pip && \
     pip3 install --no-cache-dir -U wheel && \
     pip3 install --no-cache-dir -r requirements.txt
 
@@ -63,7 +61,7 @@ ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
 # Run openapi validation on openapi.yaml
-FROM arti.dev.cray.com/third-party-docker-stable-local/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
 RUN mkdir /tmp/api
 COPY api/openapi.yaml /tmp/api/
 ARG FORCE_OPENAPI_VALIDATION_CHECK=null

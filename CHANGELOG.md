@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Add support for IMS jobs using kata-qemu runtime
 - CASMTRIAGE-4680: Use authentication credentials to validate to artifactory
+
+
+## [3.7.1] - 2022-09-30
+### Changed
+- CASMTRIAGE-4288 - increase readiness/liveness times to allow for operations with larger images.
+
+## [3.7.0] - 2022-09-28
+### Changed
+- CASMTRIAGE-4268 - pull in new ims-utils that fixes file download performance issue.
+
+## [3.6.1] - 2022-09-09
+### Changed
+- CASMTRIAGE-4091 - make gunicorn worker timeout configurable to handle larger image sizes
+
+## [3.6.0] - 2022-08-03
+### Changed
+- Build valid unstable charts
+- CASMCMS-7970 - update dev.cray.com addressess.
+- CASMCMS-8015 - increase the default ims job size to handle larger images.
+
+### Removed
+- Stopped building nonfunctional, outdated test RPM.
 
 ## [3.5.0] - 2022-06-30
 ### Added

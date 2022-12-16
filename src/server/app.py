@@ -144,6 +144,10 @@ def create_app():
 
     _app.data = {}
 
+    # log the gunicorn worker timeout on startup
+    _app.logger.info(f"Gunicorn worker timeout: {os.getenv('GUNICORN_WORKER_TIMEOUT', '-1')}")
+    _app.logger.info(f"DKMS enabled: {os.getenv('JOB_ENABLE_DKMS', 'Not Set')}")
+
     load_datastore(_app)
     load_v2_api(_app)
     load_v3_api(_app)

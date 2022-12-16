@@ -31,4 +31,5 @@
 # We want to make sure to check these Ansible files as well
 also_include_files:
     - "cray_ims_upload_test.yml"
+    - "generate_test_data"
     - "roles/test_image_upload/tasks/main.yml"

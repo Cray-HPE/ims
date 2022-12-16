@@ -31,14 +31,18 @@ metadata:
 data:
   API_GATEWAY_HOSTNAME: "{{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local"
   CA_CERT: "/mnt/ca-vol/certificate_authority.crt"
-  DEFAULT_IMS_IMAGE_SIZE: "10"
+  DEFAULT_IMS_IMAGE_SIZE: "15"
   DEFAULT_IMS_JOB_NAMESPACE: "{{ .Values.ims_config.cray_ims_job_namespace }}"
 
   JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN: "{{ .Values.customer_access.shasta_domain }}"
   JOB_CUSTOMER_ACCESS_SUBNET_NAME: "{{ .Values.customer_access.subnet_name }}"
   JOB_CUSTOMER_ACCESS_NETWORK_ACCESS_POOL: "{{ .Values.customer_access.access_pool }}"
+  JOB_ENABLE_DKMS: "{{ .Values.jobs.enable_dkms }}"
+  JOB_KATA_RUNTIME: "{{ .Values.jobs.kata_runtime }}"
 
   S3_IMS_BUCKET: "{{ .Values.s3.ims_bucket }}"
   S3_BOOT_IMAGES_BUCKET: "{{ .Values.s3.boot_images_bucket }}"
   S3_CONNECT_TIMEOUT: "{{ .Values.s3.connect_timeout }}"
   S3_READ_TIMEOUT: "{{ .Values.s3.read_timeout }}"
+
+  GUNICORN_WORKER_TIMEOUT: "{{ .Values.gunicorn.worker_timeout }}"
