@@ -65,6 +65,8 @@ data:
           labels:
             app: ims-$id-create
         spec:
+          runtimeClassName: $runtime_class
+          serviceAccountName: $service_account
           restartPolicy: Never  # Don't ever restart this job
           initContainers:
           # Step 1: Pull the image recipe from the configmap location
@@ -217,6 +219,10 @@ data:
           # sshd container
           - image: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
             imagePullPolicy:  {{ .Values.cray_ims_sshd.image.imagePullPolicy }}
+            securityContext:
+              privileged: $security_privilege
+              capabilities:
+                add: [$security_capabilites]
             name: sshd
             ports:
             - containerPort: 22
@@ -257,8 +263,7 @@ data:
                 cpu: "8"
           volumes:
           - name: image-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: recipe-vol
             emptyDir: {}
           - name: specfile-vol
@@ -267,8 +272,7 @@ data:
           - name: ca-rpm-vol
             emptyDir: {}
           - name: ims-config-vol
-            emptyDir:
-              medium: Memory
+            emptyDir: {}
           - name: ca-pubkey
             configMap:
               name: cray-configmap-ca-public-key
