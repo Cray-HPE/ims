@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Add support for IMS jobs using kata-qemu runtime
+
 ## [3.7.1] - 2022-09-30
 ### Changed
 - CASMTRIAGE-4288 - increase readiness/liveness times to allow for operations with larger images.

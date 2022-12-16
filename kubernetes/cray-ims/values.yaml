@@ -87,6 +87,10 @@ customer_access:
   access_pool: "customer-management"
   subnet_name: "cmn"
 
+jobs:
+  enable_dkms: False
+  kata_runtime: "kata-qemu"
+
 cray-service:
   type: Deployment
   nameOverride: cray-ims
