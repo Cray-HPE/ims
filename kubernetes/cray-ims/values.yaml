@@ -88,7 +88,7 @@ customer_access:
   subnet_name: "cmn"
 
 jobs:
-  enable_dkms: False
+  enable_dkms: false
   kata_runtime: "kata-qemu"
 
 cray-service:
