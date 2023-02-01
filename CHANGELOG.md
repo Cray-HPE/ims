@@ -6,8 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- CASMCMS-8227 - Add platform support to image, recipe, and job objects.
+- CASMCMS-8370 - Add argument to recipe patch to allow changing template-parameters values.
+
 ### Changed
 - CASMCMS-8382 - Correct openapi.yaml to match actual API behavior. Linting of language and formatting of same.
+
+## [3.8.3] - 2023-01-06
+### Changed
+- Correct authentication
 
 ## [3.8.2] - 2022-12-22
 ### Changed

@@ -145,9 +145,11 @@ The following are required:
    ```
    $ docker pull minio/minio
    
-   $ docker run -p 9000:9000,9001:9001 -d minio/minio server /data --console-address :9001
+   $ docker run -p 9000:9000 -p 9001:9001 -d minio/minio server /data --console-address :9001
    941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
    
+   NOTE: may need to run 'docker run -p 9000:9000,9001:9001 -d minio/minio server /data --console-address :9001' instead
+
    $ docker logs 941dbec66ecd9fe062a0fc99a2ac1e998e89abc72293d001dc4a484f7a9bc67a
    Endpoint:  http://172.17.0.2:9000  http://127.0.0.1:9000
    
@@ -170,34 +172,44 @@ The following are required:
 
 ## Building
 ```
-$ docker build -t ims-service:dev -f Dockerfile .
+$ docker build -t cray-ims-service:dev -f Dockerfile .
 ```
+
+NOTE: if base images are in artifactory.algol60.net, be sure to authenticate against the docker repo
+before trying to build:
+```
+$ docker login artifactory.algol60.net
+```
+See more information on authetication here:
+https://rndwiki-pro.its.hpecorp.net/display/CSMTemp/Client+Authentication#ClientAuthentication-SecurityConsiderations
 
 ## Running Locally
 
 The image can be run with the following command:
 
 ```bash
-$ docker run --rm --name ims-service \
-  -p 9000:9000 \
+$ docker run --rm --name cray-ims-service \
+  -p 9100:9000 \
   -e "S3_ACCESS_KEY=minioadmin" \
   -e "S3_SECRET_KEY=minioadmin" \
-  -e "S3_ENDPOINT=172.17.0.2:9000" \
+  -e "S3_CONNECT_TIMEOUT=30" \
+  -e "S3_READ_TIMEOUT=30" \
+  -e "S3_ENDPOINT=http://172.17.0.2:9000" \
   -e "S3_IMS_BUCKET=ims" \
   -e "S3_BOOT_IMAGES_BUCKET=boot-images" \
   -e "FLASK_ENV=staging" \
   -v ~/tmp/datastore:/var/ims/data \
-  ims-service:dev
+  cray-ims-service:dev
 ```
 
-This will start the IMS server on `http://localhost:9000`. An S3 instance is
+This will start the IMS server on `http://localhost:9100`. An S3 instance is
 required for the IMS server to do anything meaningful. See the [Configuration Options](#Configuration-Options)
 section for more information and further configuration possibilities.
 
 ```
-$ curl http://127.0.0.1:9000/images
+$ curl http://127.0.0.1:9100/images
 []
-$ curl http://127.0.0.1:9000/recipes
+$ curl http://127.0.0.1:9100/recipes
 []
 ```
 

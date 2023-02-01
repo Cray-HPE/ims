@@ -246,6 +246,12 @@ class V3RecipeResource(V3BaseRecipeCollection):
                         validate_artifact(value)
                     except ImsArtifactValidationException as exc:
                         return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
+            elif key == 'platform':
+                recipe.platform = value
+            elif key == 'require_dkms':
+                recipe.require_dkms = value
+            elif key == 'template_dictionary':
+                recipe.template_dictionary = dict(value)
             else:
                 current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
                 return generate_data_validation_failure(errors=[])
@@ -450,7 +456,7 @@ class V3DeletedRecipeResource(V3BaseRecipeCollection):
                     current_app.logger.info("%s Unsupported patch operation value %s.", log_id, value)
                     return generate_data_validation_failure(errors=[])
             else:
-                current_app.logger.info('%s Unsupported patch request key="%s" value="%s"', log_id, key, value)
+                current_app.logger.info(f"{log_id} Unsupported patch request key={key} value={value}")
                 return generate_data_validation_failure(errors=[])
 
         return None, 204

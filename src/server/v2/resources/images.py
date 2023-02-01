@@ -226,8 +226,11 @@ class V2ImageResource(V2BaseImageResource):
                     if problem:
                         current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                         return problem
+            elif key == "platform":
+                current_app.logger.info(f"Patching platform with {value}")
+                image.platform = value
             else:
-                current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
+                current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)

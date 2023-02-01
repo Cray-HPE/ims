@@ -39,6 +39,7 @@ data:
   JOB_CUSTOMER_ACCESS_NETWORK_ACCESS_POOL: "{{ .Values.customer_access.access_pool }}"
   JOB_ENABLE_DKMS: "{{ .Values.jobs.enable_dkms }}"
   JOB_KATA_RUNTIME: "{{ .Values.jobs.kata_runtime }}"
+  JOB_AARCH64_RUNTIME: "{{ .Values.jobs.aarch64_runtime }}"
 
   S3_IMS_BUCKET: "{{ .Values.s3.ims_bucket }}"
   S3_BOOT_IMAGES_BUCKET: "{{ .Values.s3.boot_images_bucket }}"

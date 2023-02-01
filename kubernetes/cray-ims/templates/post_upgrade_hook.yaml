@@ -49,9 +49,34 @@ spec:
               cp /var/ims/data/v2_recipes.json /var/ims/data/v2.1_recipes.json
             fi
 
+            if [[ -f /var/ims/data/v2.1_recipes.json ]] && [[ ! -f /var/ims/data/v2.2_recipes.json ]]
+            then
+              cp /var/ims/data/v2.1_recipes.json /var/ims/data/v2.2_recipes.json
+            fi
+
             if [[ -f /var/ims/data/v3_deleted_recipes.json ]] && [[ ! -f /var/ims/data/v3.1_deleted_recipes.json ]]
             then
               cp /var/ims/data/v3_deleted_recipes.json /var/ims/data/v3.1_deleted_recipes.json
+            fi
+
+            if [[ -f /var/ims/data/v3.1_deleted_recipes.json ]] && [[ ! -f /var/ims/data/v3.2_deleted_recipes.json ]]
+            then
+              cp /var/ims/data/v3.1_deleted_recipes.json /var/ims/data/v3.2_deleted_recipes.json
+            fi
+
+            if [[ -f /var/ims/data/v2_images.json ]] && [[ ! -f /var/ims/data/v2.1_images.json ]]
+            then
+              cp /var/ims/data/v2_images.json /var/ims/data/v2.1_images.json
+            fi
+
+            if [[ -f /var/ims/data/v3_deleted_images.json ]] && [[ ! -f /var/ims/data/v3.1_deleted_images.json ]]
+            then
+              cp /var/ims/data/v3_deleted_images.json /var/ims/data/v3.1_deleted_images.json
+            fi
+
+            if [[ -f /var/ims/data/v2_jobs.json ]] && [[ ! -f /var/ims/data/v2.1_jobs.json ]]
+            then
+              cp /var/ims/data/v2_jobs.json /var/ims/data/v2.1_jobs.json
             fi
 
             chown -Rv 65534:65534 /var/ims/data

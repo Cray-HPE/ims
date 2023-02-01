@@ -90,6 +90,7 @@ customer_access:
 jobs:
   enable_dkms: false
   kata_runtime: "kata-qemu"
+  aarch64_runtime: "kata-qeum-aarch64"
 
 cray-service:
   type: Deployment

@@ -63,6 +63,8 @@ class TestV2JobEndpoint(TestCase):
         super(TestV2JobEndpoint, self).setUp()
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
         self.test_job_id = str(uuid.uuid4())
+        self.test_platform = "x86_64"
+        self.test_require_dkms = False
         self.data = {
             'job_type': "create",
             'artifact_id': str(uuid.uuid4()),
@@ -76,6 +78,8 @@ class TestV2JobEndpoint(TestCase):
             'kubernetes_job': 'cray-ims-%s-create' % self.test_job_id,
             'kubernetes_service': 'cray-ims-%s-service' % self.test_job_id,
             'kubernetes_configmap': 'cray-ims-%s-configmap' % self.test_job_id,
+            'platform': self.test_platform,
+            'require_dkms': self.test_require_dkms,
         }
         self.useFixture(V2JobsDataFixture(initial_data=self.data))
         self.test_uri = '/jobs/{}'.format(self.data['id'])
@@ -185,6 +189,8 @@ class TestV2JobsCollectionEndpoint(TestCase):
         self.test_recipe_id = str(uuid.uuid4())
         self.test_image_id = str(uuid.uuid4())
         self.test_public_key_id = str(uuid.uuid4())
+        self.test_platform = "x86_64"
+        self.test_require_dkms = False
         self.today = datetime.datetime.now().replace(microsecond=0)
         self.week_ago = self.today - datetime.timedelta(days=7)
         self.recipe_data = {
@@ -198,6 +204,8 @@ class TestV2JobsCollectionEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_recipe_id,
+            'platform': self.test_platform,
+            'require_dkms': self.test_require_dkms,
         }
         self.image_data = {
             'name': 'cray_sles12sp3_barebones',
@@ -208,6 +216,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_image_id,
+            'platform': self.test_platform,
         }
         self.job_data = {
             'job_type': "create",
@@ -219,6 +228,8 @@ class TestV2JobsCollectionEndpoint(TestCase):
             'initrd_file_name': self.getUniqueString(),
             'created': self.week_ago.isoformat(),
             'id': str(uuid.uuid4()),
+            'platform': self.test_platform,
+            'require_dkms': self.test_require_dkms,
         }
         self.public_key_data = {
             'name': str(uuid.uuid4()),
@@ -415,7 +426,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name'],
+                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
@@ -480,7 +491,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name'],
+                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
@@ -529,7 +540,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name'],
+                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
                               'returned keys not the same')
 
     def test_post_create_with_ssh_container(self, utils_mock, config_mock, client_mock):
@@ -627,7 +638,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name'],
+                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
                               'returned keys not the same')
 
     @responses.activate
@@ -731,7 +742,7 @@ class TestV2JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name'],
+                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
                               'returned keys not the same')
 
     def test_post_create_with_multiple_ssh_containers(self, utils_mock, config_mock, client_mock):

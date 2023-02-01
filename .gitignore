@@ -5,3 +5,5 @@ myimage.yaml
 /.venv
 /ansible.cfg
 *.pyc
+.version
+.env
