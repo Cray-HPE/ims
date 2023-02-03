@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.6.1] - 2022-09-09
 ### Changed
 - CASMTRIAGE-4091 - make gunicorn worker timeout configurable to handle larger image sizes
+- CASMCMS-8202 - log and handle DB recovery.
+- Dockerfile stage for starting service in debug mode for debugability.
 
 ## [3.6.0] - 2022-08-03
 ### Changed
