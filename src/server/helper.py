@@ -27,7 +27,7 @@ import uuid
 from io import BytesIO
 from pprint import pformat
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError
 from flask import current_app as app
 
 from src.server.errors import problemify
@@ -58,6 +58,8 @@ ARTIFACT_LINK_TYPES = [
     ARTIFACT_LINK_TYPE_S3,
 ]
 
+PLATFORM_X86_64 = 'x86_64'
+PLATFORM_ARM64 = 'aarch64'
 
 def get_log_id():
     """ Return a unique string id that can be used to help tie related log entries together. """
@@ -165,6 +167,14 @@ def get_download_url(artifact_link):
                                     detail='Unable to generate a download url for the s3 artifact {}. Please determine '
                                            'the specific information that is missing or invalid and then '
                                            're-run the request with valid information.'.format(str(artifact_link)))
+        except EndpointConnectionError as error:
+            app.logger.error(f"Unable to connect to s3 for {str(artifact_link)}.")
+            app.logger.debug(error)
+            return None, problemify(status=http.client.BAD_REQUEST,
+                                    detail='Unable to generate a download url for the s3 artifact {}. Please determine '
+                                           'the specific information that is missing or invalid and then '
+                                           're-run the request with valid information.'.format(str(artifact_link)))
+
         return url, None
 
     return {

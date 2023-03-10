@@ -209,8 +209,14 @@ class V2RecipeResource(Resource):
                         validate_artifact(value)
                     except ImsArtifactValidationException as exc:
                         return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
+            elif key == 'platform':
+                recipe.platform = value
+            elif key == 'require_dkms':
+                recipe.require_dkms = value
+            elif key == 'template_dictionary':
+                recipe.template_dictionary = dict(value)
             else:
-                current_app.logger.info("%s Not able to patch record field {} with value {}", log_id, key, value)
+                current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
 
             setattr(recipe, key, value)

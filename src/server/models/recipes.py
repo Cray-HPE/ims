@@ -32,6 +32,7 @@ import uuid
 from marshmallow import Schema, fields, post_load, RAISE
 from marshmallow.validate import OneOf, Length
 from src.server.models import ArtifactLink
+from src.server.helper import PLATFORM_X86_64, PLATFORM_ARM64
 
 RECIPE_TYPE_KIWI_NG = 'kiwi-ng'
 RECIPE_TYPE_PACKER = 'packer'
@@ -54,13 +55,16 @@ class V2RecipeRecord:
     """ The RecipeRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None, template_dictionary=None):
+    def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None,
+                 template_dictionary=None, require_dkms=False, platform=PLATFORM_X86_64):
         # Supplied
         self.name = name
         self.link = link
         self.recipe_type = recipe_type
         self.linux_distribution = linux_distribution
         self.template_dictionary = template_dictionary
+        self.require_dkms = require_dkms
+        self.platform = platform
 
         # derived
         self.id = id or uuid.uuid4()
@@ -72,6 +76,7 @@ class V2RecipeRecord:
 
 class V2RecipeRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input """
+    # v2.0
     name = fields.Str(required=True, description="the name of the recipe",
                       validate=Length(min=1, error="name field must not be blank"))
     link = fields.Nested(ArtifactLink, required=False, allow_none=True,
@@ -86,7 +91,14 @@ class V2RecipeRecordInputSchema(Schema):
                                                    LINUX_DISTRIBUTION_CENTOS),
                                     validate=OneOf(LINUX_DISTRIBUTIONS, error="Recipe type must be one of: {choices}."))
 
+    # v2.1
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)
+
+    # v2.2
+    require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
+                                  description="Recipe requires the use of dkms")
+    platform = fields.Str(required=False, description="Architecture of the recipe", default=PLATFORM_X86_64,
+                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
 
     @post_load
     def make_recipe(self, data):
@@ -113,5 +125,10 @@ class V2RecipeRecordPatchSchema(Schema):
     """
     Schema for a updating a RecipeRecord object.
     """
-    link = fields.Nested(ArtifactLink, required=True, allow_none=False,
+    link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          description="the location of the recipe archive")
+    platform = fields.Str(required=False, description="Architecture of the recipe", default=PLATFORM_X86_64,
+                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
+                                  description="Recipe requires the use of dkms")
+    template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)

@@ -49,6 +49,7 @@ class TestV3ImageBase(TestCase):
         self.s3resource_stub = Stubber(app.app.s3resource.meta.client)
 
         self.test_with_link_id = str(uuid.uuid4())
+        self.test_platform = "x86_64"
         self.test_with_link_uri = '/v3/images/{}'.format(self.test_with_link_id)
         self.test_with_link_record = {
             'name': self.getUniqueString(),
@@ -59,6 +60,7 @@ class TestV3ImageBase(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_with_link_id,
+            'platform': self.test_platform,
         }
 
         self.test_link_none_id = str(uuid.uuid4())
@@ -68,6 +70,7 @@ class TestV3ImageBase(TestCase):
             'link': None,
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_link_none_id,
+            'platform': self.test_platform,
         }
 
         self.test_no_link_id = str(uuid.uuid4())
@@ -76,6 +79,7 @@ class TestV3ImageBase(TestCase):
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_no_link_id,
+            'platform': self.test_platform,
         }
 
         self.data = [
@@ -327,6 +331,33 @@ class TestV3ImageEndpoint(TestV3ImageBase):
         self.assertEqual(response.status_code, 200, 'status code was not 200')
         self.assertThat(json.loads(response.data), HasLength(0), 'collection does not match expected result')
 
+    def test_patch_change_platform(self):
+        """ Test that we're able to patch a record with a new platform"""
+        
+        platforms = ['x86_64','aarch64','x86_64']
+        for platform in platforms:
+            patch_data = {'platform': platform}
+            response = self.app.patch(self.test_link_none_uri, content_type='application/json', data=json.dumps(patch_data))
+
+            self.assertEqual(response.status_code, 200, 'status code was not 200')
+            response_data = json.loads(response.data)
+            self.assertEqual(set(self.test_link_none_record.keys()).difference(response_data.keys()), set(),
+                            'returned keys not the same')
+            for key in response_data:
+                if key == 'created':
+                    # microseconds don't always match up
+                    self.assertAlmostEqual(datetime.datetime.strptime(self.test_link_none_record[key],
+                                                                    '%Y-%m-%dT%H:%M:%S'),
+                                        datetime.datetime.strptime(response_data['created'],
+                                                                    '%Y-%m-%dT%H:%M:%S+00:00'),
+                                        delta=datetime.timedelta(seconds=5))
+                elif key == 'platform':
+                    self.assertEqual(response_data[key], patch_data['platform'],
+                                    'resource field "{}" returned was not equal'.format(key))
+                else:
+                    self.assertEqual(response_data[key], self.test_link_none_record[key],
+                                    'resource field "{}" returned was not equal'.format(key))
+
     def test_patch(self):
         """ Test that we're able to patch a record """
 
@@ -428,7 +459,6 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertEqual(response_data[key], self.test_with_link_record[key],
                                  'resource field "{}" returned was not equal'.format(key))
 
-
 class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
     """
     Test the /v3/images/ collection endpoint (ims.v3.resources.images.ImagesCollection)
@@ -506,7 +536,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id'],
+                              ['created', 'name', 'link', 'id', 'platform'],
                               'returned keys not the same')
 
     def test_post_link_none(self):
@@ -525,7 +555,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id'],
+                              ['created', 'name', 'link', 'id', 'platform'],
                               'returned keys not the same')
 
     def test_post_no_link(self):
@@ -543,7 +573,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id'],
+                              ['created', 'name', 'link', 'id', 'platform'],
                               'returned keys not the same')
 
     def test_post_400_no_input(self):
