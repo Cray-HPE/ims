@@ -690,7 +690,8 @@ class V3JobCollection(V3BaseJobResource):
             "runtime_class": job_runtime_class,
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
-            "security_capabilites": job_security_capabilities
+            "security_capabilites": job_security_capabilities,
+            "job_platform": new_job.platform
         }
 
         current_app.logger.info(f"Job template param: {template_params}")
