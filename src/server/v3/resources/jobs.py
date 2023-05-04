@@ -47,7 +47,7 @@ from src.server.errors import problemify, generate_missing_input_response, gener
     generate_resource_not_found_response
 from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
     IMAGE_MANIFEST_VERSION_1_0, IMAGE_MANIFEST_VERSION, IMAGE_MANIFEST_ARTIFACTS, IMAGE_MANIFEST_ARTIFACT_TYPE, \
-    IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, ARTIFACT_LINK
+    IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, ARTIFACT_LINK, PLATFORM_ARM64, PLATFORM_X86_64
 from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
     JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
 
@@ -88,6 +88,7 @@ class V3BaseJobResource(Resource):
         
         # NOTE: make sure this isn't a non-zero length string of spaces
         self.job_kata_runtime = os.getenv("JOB_KATA_RUNTIME", "kata-qemu").strip()
+        self.job_aarch64_runtime = os.getenv("JOB_AARCH64_RUNTIME", "kata-qemu-aarch64").strip()
 
     def _create_namespaced_destination_rule(self, namespace):
         """ Helper routine to create a partial function to create a new ISTIO destination rule. """
@@ -327,6 +328,7 @@ class V3JobCollection(V3BaseJobResource):
         """
 
         def _retrieve_recipe_record():
+            current_app.logger.info(f"Retrieving recipe info")
             recipe_record = current_app.data['recipes'].get(str(artifact_id))
             if not recipe_record:
                 current_app.logger.info("%s no IMS recipe record matches artifact_id=%s", log_id, artifact_id)
@@ -348,6 +350,7 @@ class V3JobCollection(V3BaseJobResource):
             return recipe_record, None
 
         def _retrieve_image_record():
+            current_app.logger.info(f"Retrieving image info")
             image_record = current_app.data['images'].get(str(artifact_id))
             if not image_record:
                 current_app.logger.info("%s no IMS image record matches artifact_id=%s", log_id, artifact_id)
@@ -556,15 +559,23 @@ class V3JobCollection(V3BaseJobResource):
 
         current_app.logger.info("%s json_data = %s", log_id, json_data)
 
+        # keep track of optional user input values
+        userSpecifiedDKMS = None
+        if 'require_dkms' in json_data:
+            userSpecifiedDKMS = json_data['require_dkms']
+
         # Validate input
+        current_app.logger.info(f"About to validate schema...")
         errors = job_user_input_schema.validate(json_data)
+        current_app.logger.info(f" validated schema")
         if errors:
             current_app.logger.info("%s There was a problem validating the post data: %s", log_id, errors)
             return generate_data_validation_failure(errors)
 
-        # Create a job record if the user input data was valid
+        # Create a job record and populate with user input data
         new_job = job_schema.load(json_data)
 
+        # fill in job information based on job type
         if new_job.job_type == JOB_TYPE_CREATE:
             current_app.logger.debug("%s Processing create request", log_id)
 
@@ -607,13 +618,30 @@ class V3JobCollection(V3BaseJobResource):
                                      'invalid and then re-run the request with valid information.')
 
         # The artifact info consists of the artifact record, a download URL and the md5sum (if available) of the file.
+        # Get the information on the artifact being used for the job
         artifact_info, problem = V3JobCollection.get_artifact_info(new_job.job_type, log_id, new_job.artifact_id)
         if problem:
             current_app.logger.info("%s Could not get download url for artifact", log_id)
             return problem
-
         artifact_record = artifact_info["artifact"]  # pylint: disable=unsubscriptable-object
 
+        current_app.logger.info(f"ARTIFACT_RECORD: {artifact_record}")
+
+        # both images and recipes have a platform specified - shift into the job
+        new_job.platform = artifact_record.platform
+        current_app.logger.info(f"PLATFORM: {new_job.platform}")
+
+        # Determine cases where the dkms security settings are required without user specifying
+        if new_job.platform == PLATFORM_ARM64:
+           # If the platform is aarch64, then the dkms settings are required
+            current_app.logger.info(f" NOTE: aarch64 platform requires dkms")
+            new_job.require_dkms = True
+        elif new_job.job_type == JOB_TYPE_CREATE and artifact_record.require_dkms and userSpecifiedDKMS==None:
+            # Let the setting from the recipe flow through if the user has not specified otherwise
+            current_app.logger.info(f"Overriding require_dkms based on recipe setting")
+            new_job.require_dkms = True
+
+        # get the public key information
         public_key_data, problem = V3JobCollection.get_public_key_data(log_id, new_job.public_key_id)
         if problem:
             current_app.logger.info("%s Could not get download url for artifact", log_id)
@@ -621,18 +649,24 @@ class V3JobCollection(V3BaseJobResource):
 
         external_dns_hostname = f"{str(new_job.id).lower()}.ims.{self.job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
 
+        current_app.logger.info(f"INFORMATION:: new_job: {new_job}")
+
         # switch the set of values depending on if the kata-qemu runtime class is used
         job_enable_dkms = "False"
         job_runtime_class = ""
         job_service_account = ""
         job_security_privilege = "false"
         job_security_capabilities = ""
-        if self.job_enable_dkms:
+        if new_job.require_dkms:
             job_enable_dkms = "True"
             job_runtime_class = self.job_kata_runtime if "kata" in self.job_kata_runtime else "kata-qemu"
             job_service_account = "ims-service-job-mount"
             job_security_privilege = "true"
             job_security_capabilities = "SYS_ADMIN"
+
+        # aarch64 platform needs dkms, plus its own runtime class
+        if new_job.platform == PLATFORM_ARM64:
+            job_runtime_class = self.job_aarch64_runtime
 
         # set up the template params to feed into the job template
         template_params = {
@@ -656,7 +690,8 @@ class V3JobCollection(V3BaseJobResource):
             "runtime_class": job_runtime_class,
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
-            "security_capabilites": job_security_capabilities
+            "security_capabilites": job_security_capabilities,
+            "job_platform": new_job.platform
         }
 
         current_app.logger.info(f"Job template param: {template_params}")
@@ -665,6 +700,8 @@ class V3JobCollection(V3BaseJobResource):
             template_params["template_dictionary"] = \
                 json.dumps({r['key']: r['value'] for r in artifact_record.template_dictionary})
             template_params["recipe_type"] = artifact_record.recipe_type
+
+        current_app.logger.info(f"Template arguments: {template_params}")
 
         new_job, problem = self.create_kubernetes_resources(
             log_id, new_job, template_params,

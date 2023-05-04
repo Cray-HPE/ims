@@ -30,7 +30,6 @@ import collections
 import os
 import os.path
 
-
 class DataStoreHACK(collections.MutableMapping):
     """ A dictionary that reads/writes to a file """
 
@@ -49,8 +48,10 @@ class DataStoreHACK(collections.MutableMapping):
 
     def _read(self):
         """ Read in the data """
+        # Setting 'unknown="Exclude" allows downgrades by just dropping any data
+        # fields that are no longer part of the current schema.
         with open(self.store_file, 'r') as data_file:
-            obj_data = self.schema.loads(data_file.read(), many=True)
+            obj_data = self.schema.loads(data_file.read(), many=True, unknown="EXCLUDE")
             self.store = {str(getattr(obj, self.key_field)): obj for obj in obj_data}
 
     def _write(self):

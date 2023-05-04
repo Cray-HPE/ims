@@ -60,21 +60,21 @@ def load_datastore(_app):
         V3DeletedPublicKeyRecordSchema(), 'id')
 
     _app.data['recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_recipes.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.2_recipes.json'),
         V2RecipeRecordSchema(), 'id')
     _app.data['deleted_recipes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3.1_deleted_recipes.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v3.2_deleted_recipes.json'),
         V3DeletedRecipeRecordSchema(), 'id')
 
     _app.data['images'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_images.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_images.json'),
         V2ImageRecordSchema(), 'id')
     _app.data['deleted_images'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v3_deleted_images.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v3.1_deleted_images.json'),
         V3DeletedImageRecordSchema(), 'id')
 
     _app.data['jobs'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2_jobs.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.1_jobs.json'),
         V2JobRecordSchema(), 'id')
 
 

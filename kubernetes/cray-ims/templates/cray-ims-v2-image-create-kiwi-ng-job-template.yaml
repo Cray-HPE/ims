@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -153,6 +153,8 @@ data:
               value: '/etc/admin-client-auth'
             - name: IMS_JOB_ID
               value: "$id"
+            - name: BUILD_PLATFORM
+              value: "$job_platform"
             volumeMounts:
             - name: ca-rpm-vol
               mountPath: /mnt/ca-rpm
@@ -205,6 +207,10 @@ data:
               value: "$id"
             - name: JOB_ENABLE_DKMS
               value: "$job_enable_dkms"
+            - name: BUILD_PLATFORM
+              value: "$job_platform"
+            - name: IMS_ARM_BUILDER
+              value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}-arm64"
             volumeMounts:
             - name: recipe-vol
               mountPath: /mnt/recipe
@@ -262,6 +268,8 @@ data:
               value: "$id"
             - name: SSH_JAIL
               value: "$ssh_jail"
+            - name: BUILD_PLATFORM
+              value: "$job_platform"
             - name: S3_BUCKET
               value: "$s3_bucket"
             - name: S3_ACCESS_KEY
