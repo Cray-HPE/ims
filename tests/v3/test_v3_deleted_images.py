@@ -78,7 +78,7 @@ class TestV3BaseDeletedImage(TestCase):
         self.test_with_link_record = {
             'id': self.test_with_link_id,
             'name': self.getUniqueString(),
-            'platform': "x86_64",
+            'arch': "x86_64",
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
@@ -93,7 +93,7 @@ class TestV3BaseDeletedImage(TestCase):
         self.test_no_link_record = {
             'id': self.test_no_link_id,
             'name': self.getUniqueString(),
-            'platform': "x86_64",
+            'arch': "x86_64",
             'link': None,
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),

@@ -32,7 +32,7 @@ import uuid
 from marshmallow import Schema, fields, post_load, RAISE
 from marshmallow.validate import OneOf, Length
 from src.server.models import ArtifactLink
-from src.server.helper import PLATFORM_X86_64, PLATFORM_ARM64
+from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 RECIPE_TYPE_KIWI_NG = 'kiwi-ng'
 RECIPE_TYPE_PACKER = 'packer'
@@ -56,7 +56,7 @@ class V2RecipeRecord:
 
     # pylint: disable=W0622
     def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None,
-                 template_dictionary=None, require_dkms=False, platform=PLATFORM_X86_64):
+                 template_dictionary=None, require_dkms=False, arch=ARCH_X86_64):
         # Supplied
         self.name = name
         self.link = link
@@ -64,7 +64,7 @@ class V2RecipeRecord:
         self.linux_distribution = linux_distribution
         self.template_dictionary = template_dictionary
         self.require_dkms = require_dkms
-        self.platform = platform
+        self.arch = arch
 
         # derived
         self.id = id or uuid.uuid4()
@@ -97,8 +97,8 @@ class V2RecipeRecordInputSchema(Schema):
     # v2.2
     require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
                                   description="Recipe requires the use of dkms")
-    platform = fields.Str(required=False, description="Architecture of the recipe", default=PLATFORM_X86_64,
-                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
 
     @post_load
     def make_recipe(self, data):
@@ -127,8 +127,8 @@ class V2RecipeRecordPatchSchema(Schema):
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          description="the location of the recipe archive")
-    platform = fields.Str(required=False, description="Architecture of the recipe", default=PLATFORM_X86_64,
-                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
     require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
                                   description="Recipe requires the use of dkms")
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)

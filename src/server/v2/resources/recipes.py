@@ -209,8 +209,8 @@ class V2RecipeResource(Resource):
                         validate_artifact(value)
                     except ImsArtifactValidationException as exc:
                         return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
-            elif key == 'platform':
-                recipe.platform = value
+            elif key == 'arch':
+                recipe.arch = value
             elif key == 'require_dkms':
                 recipe.require_dkms = value
             elif key == 'template_dictionary':

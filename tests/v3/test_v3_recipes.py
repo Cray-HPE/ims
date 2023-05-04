@@ -53,7 +53,7 @@ class TestV3RecipeBase(TestCase):
         self.test_id_no_link = str(uuid.uuid4())
         self.input_recipe_type = 'kiwi-ng'
         self.input_linux_distribution = 'sles12'
-        self.input_platform = 'x86_64'
+        self.input_arch = 'x86_64'
         self.input_require_dkms = False
         self.data_record_with_link = {
             'name': self.getUniqueString(),
@@ -67,7 +67,7 @@ class TestV3RecipeBase(TestCase):
             'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
         }
         self.data_record_link_none = {
@@ -78,7 +78,7 @@ class TestV3RecipeBase(TestCase):
             'template_dictionary': [],
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
         }
         self.data_record_no_link = {
@@ -88,7 +88,7 @@ class TestV3RecipeBase(TestCase):
             'linux_distribution': self.input_linux_distribution,
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_no_link,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
         }
         self.data = [
@@ -260,14 +260,14 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                 self.assertEqual(response_data[key], self.data_record_link_none[key],
                                  'resource field "{}" returned was not equal'.format(key))
 
-    def test_patch_platform(self):
-        """ Test that we're able to patch a record's platform"""
+    def test_patch_architecture(self):
+        """ Test that we're able to patch a record's architecture"""
 
-        platforms = ['x86_64','aarch64','x86_64']
-        for platform in platforms:
-            platform_data = { 'platform': platform}
+        archs = ['x86_64','aarch64','x86_64']
+        for arch in archs:
+            arch_data = { 'arch': arch}
 
-            response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(platform_data))
+            response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(arch_data))
 
             self.assertEqual(response.status_code, 200, 'status code was not 200')
             response_data = json.loads(response.data)
@@ -281,8 +281,8 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                                         datetime.datetime.strptime(response_data['created'],
                                                                     '%Y-%m-%dT%H:%M:%S+00:00'),
                                         delta=datetime.timedelta(seconds=5))
-                elif key == 'platform':
-                    self.assertEqual(response_data[key], platform_data['platform'],
+                elif key == 'arch':
+                    self.assertEqual(response_data[key], arch_data['arch'],
                                     'resource field "{}" returned was not equal'.format(key))
                 else:
                     self.assertEqual(response_data[key], self.data_record_link_none[key],
@@ -430,7 +430,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
             self.assertIsNotNone(response_data['created'], 'recipe creation date/time was not set properly')
             self.assertItemsEqual(response_data.keys(),
                                   ['created', 'name', 'link', 'recipe_type', 'linux_distribution',
-                                   'template_dictionary', 'id', 'platform', 'require_dkms'], 'returned keys not the same')
+                                   'template_dictionary', 'id', 'arch', 'require_dkms'], 'returned keys not the same')
             if link:
                 self.assertEqual(response_data['link'], link, "artifact link values do not match")
 

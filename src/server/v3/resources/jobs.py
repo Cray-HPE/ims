@@ -47,7 +47,7 @@ from src.server.errors import problemify, generate_missing_input_response, gener
     generate_resource_not_found_response
 from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
     IMAGE_MANIFEST_VERSION_1_0, IMAGE_MANIFEST_VERSION, IMAGE_MANIFEST_ARTIFACTS, IMAGE_MANIFEST_ARTIFACT_TYPE, \
-    IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, ARTIFACT_LINK, PLATFORM_ARM64, PLATFORM_X86_64
+    IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, ARTIFACT_LINK, ARCH_ARM64, ARCH_X86_64
 from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
     JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
 
@@ -627,14 +627,14 @@ class V3JobCollection(V3BaseJobResource):
 
         current_app.logger.info(f"ARTIFACT_RECORD: {artifact_record}")
 
-        # both images and recipes have a platform specified - shift into the job
-        new_job.platform = artifact_record.platform
-        current_app.logger.info(f"PLATFORM: {new_job.platform}")
+        # both images and recipes have a architecture specified - shift into the job
+        new_job.arch = artifact_record.arch
+        current_app.logger.info(f"architecture: {new_job.arch}")
 
         # Determine cases where the dkms security settings are required without user specifying
-        if new_job.platform == PLATFORM_ARM64:
-           # If the platform is aarch64, then the dkms settings are required
-            current_app.logger.info(f" NOTE: aarch64 platform requires dkms")
+        if new_job.arch == ARCH_ARM64:
+           # If the architecture is aarch64, then the dkms settings are required
+            current_app.logger.info(f" NOTE: aarch64 architecture requires dkms")
             new_job.require_dkms = True
         elif new_job.job_type == JOB_TYPE_CREATE and artifact_record.require_dkms and userSpecifiedDKMS==None:
             # Let the setting from the recipe flow through if the user has not specified otherwise
@@ -664,8 +664,8 @@ class V3JobCollection(V3BaseJobResource):
             job_security_privilege = "true"
             job_security_capabilities = "SYS_ADMIN"
 
-        # aarch64 platform needs dkms, plus its own runtime class
-        if new_job.platform == PLATFORM_ARM64:
+        # aarch64 architecture needs dkms, plus its own runtime class
+        if new_job.arch == ARCH_ARM64:
             job_runtime_class = self.job_aarch64_runtime
 
         # set up the template params to feed into the job template
@@ -691,7 +691,7 @@ class V3JobCollection(V3BaseJobResource):
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
             "security_capabilites": job_security_capabilities,
-            "job_platform": new_job.platform
+            "job_arch": new_job.arch
         }
 
         current_app.logger.info(f"Job template param: {template_params}")

@@ -32,19 +32,19 @@ from marshmallow import Schema, fields, post_load, RAISE
 from marshmallow.validate import Length, OneOf
 
 from src.server.models import ArtifactLink
-from src.server.helper import PLATFORM_X86_64, PLATFORM_ARM64
+from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 class V2ImageRecord:
     """ The ImageRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, link=None, id=None, created=None, platform=PLATFORM_X86_64):
+    def __init__(self, name, link=None, id=None, created=None, arch=ARCH_X86_64):
         # Supplied
         self.name = name
         self.link = link
         
         # v2.1
-        self.platform = platform
+        self.arch = arch
 
         # derived
         self.id = id or uuid.uuid4()
@@ -60,8 +60,8 @@ class V2ImageRecordInputSchema(Schema):
                       validate=Length(min=1, error="name field must not be blank"))
     link = fields.Nested(ArtifactLink, required=False, allow_none=True,
                          description="the location of the image manifest")
-    platform = fields.Str(required=False, default = PLATFORM_X86_64, description="Architecture of the image",
-                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(required=False, default = ARCH_X86_64, description="Architecture of the image",
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
 
     @post_load
     def make_image(self, data):
@@ -89,6 +89,6 @@ class V2ImageRecordPatchSchema(Schema):
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          description="the location of the image manifest")
-    platform = fields.Str(required=False, description="Architecture of the recipe", default=PLATFORM_X86_64,
-                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
 
