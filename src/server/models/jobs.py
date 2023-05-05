@@ -32,7 +32,7 @@ import uuid
 from marshmallow import Schema, fields, post_load, RAISE
 from marshmallow.validate import OneOf, Length, Range
 
-from src.server.helper import PLATFORM_X86_64, PLATFORM_ARM64
+from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 JOB_TYPE_CREATE = 'create'
 JOB_TYPE_CUSTOMIZE = 'customize'
@@ -75,7 +75,7 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
-                 platform=PLATFORM_X86_64):
+                 arch=ARCH_X86_64):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -104,7 +104,7 @@ class V2JobRecord:
         self.kubernetes_namespace = kubernetes_namespace
 
         # v2.1
-        self.platform = platform
+        self.arch = arch
 
     def __repr__(self):
         return '<v2JobRecord(id={self.id!r})>'.format(self=self)
@@ -204,8 +204,8 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     resultant_image_id = fields.UUID(allow_none=True,
                                      description="the unique id of the resultant image record")
     ssh_containers = fields.List(fields.Nested(SshContainerSchema()), allow_none=True)
-    platform = fields.Str(required=False, description="Architecture of the job", default=PLATFORM_X86_64,
-                          validate=OneOf([PLATFORM_ARM64,PLATFORM_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(required=False, description="Architecture of the job", default=ARCH_X86_64,
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
 
 class V2JobRecordPatchSchema(Schema):
     """

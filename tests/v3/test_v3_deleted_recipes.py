@@ -50,7 +50,7 @@ class TestV3DeletedRecipeBase(TestCase):
 
         self.input_recipe_type = 'kiwi-ng'
         self.input_linux_distribution = 'sles12'
-        self.input_platform = 'x86_64'
+        self.input_arch = 'x86_64'
         self.input_require_dkms = False
 
         self.test_with_link_id = str(uuid4())
@@ -64,7 +64,7 @@ class TestV3DeletedRecipeBase(TestCase):
             },
             'recipe_type': self.input_recipe_type,
             'linux_distribution': self.input_linux_distribution,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
             'template_dictionary': [],
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
@@ -83,7 +83,7 @@ class TestV3DeletedRecipeBase(TestCase):
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_link_none_id,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
         }
 
@@ -98,7 +98,7 @@ class TestV3DeletedRecipeBase(TestCase):
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_no_link_id,
-            'platform': self.input_platform,
+            'arch': self.input_arch,
             'require_dkms': self.input_require_dkms,
         }
         self.data = [

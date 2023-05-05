@@ -373,9 +373,9 @@ class V3ImageResource(V3BaseImageResource):
                         current_app.logger.info(f"The artifact {value} is not in S3 and "
                                                 f"was not soft-deleted. Ignoring")
                         current_app.logger.info(str(exc))
-            elif key == "platform":
-                current_app.logger.info(f"Patching platform with {value}")
-                image.platform = value
+            elif key == "arch":
+                current_app.logger.info(f"Patching architecture with {value}")
+                image.arch = value
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])

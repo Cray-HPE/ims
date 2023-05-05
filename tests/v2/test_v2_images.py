@@ -55,7 +55,7 @@ class TestV2ImageEndpoint(TestCase):
         self.test_id = str(uuid.uuid4())
         self.test_id_link_none = str(uuid.uuid4())
         self.test_id_no_link = str(uuid.uuid4())
-        self.test_platform = "x86_64"
+        self.test_arch = "x86_64"
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
         self.data_record_with_link = {
             'name': self.getUniqueString(),
@@ -66,20 +66,20 @@ class TestV2ImageEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
-            'platform': self.test_platform,
+            'arch': self.test_arch,
         }
         self.data_record_link_none = {
             'name': self.getUniqueString(),
             'link': None,
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
-            'platform': self.test_platform,
+            'arch': self.test_arch,
         }
         self.data_record_no_link = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_no_link,
-            'platform': self.test_platform,
+            'arch': self.test_arch,
         }
         self.data = [
             self.data_record_with_link,
@@ -337,12 +337,12 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertEqual(response_data[key], self.data_record_with_link[key],
                                  'resource field "{}" returned was not equal'.format(key))
 
-    def test_patch_change_platform(self):
-        """ Test that we're able to patch a record with a new platform"""
+    def test_patch_change_arch(self):
+        """ Test that we're able to patch a record with a new architecture"""
         
-        platforms = ['x86_64','aarch64','x86_64']
-        for platform in platforms:
-            patch_data = {'platform': platform}
+        test_archs = ['x86_64','aarch64','x86_64']
+        for arch in test_archs:
+            patch_data = {'arch': arch}
             response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(patch_data))
 
             self.assertEqual(response.status_code, 200, 'status code was not 200')
@@ -357,8 +357,8 @@ class TestV2ImageEndpoint(TestCase):
                                         datetime.datetime.strptime(response_data['created'],
                                                                     '%Y-%m-%dT%H:%M:%S+00:00'),
                                         delta=datetime.timedelta(seconds=5))
-                elif key == 'platform':
-                    self.assertEqual(response_data[key], patch_data['platform'],
+                elif key == 'arch':
+                    self.assertEqual(response_data[key], patch_data['arch'],
                                     'resource field "{}" returned was not equal'.format(key))
                 else:
                     self.assertEqual(response_data[key], self.data_record_link_none[key],
@@ -378,7 +378,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
         self.test_uri = '/images'
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
         self.test_id = str(uuid.uuid4())
-        self.test_platform = "x86_64"
+        self.test_arch = "x86_64"
         self.data = {
             'name': self.getUniqueString(),
             'link': {
@@ -388,7 +388,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
-            'platform': self.test_platform,
+            'arch': self.test_arch,
         }
         self.test_images = self.useFixture(V2ImagesDataFixture(initial_data=self.data)).datastore
         self.test_domain = 'https://api-gw-service-nmn.local'
@@ -469,7 +469,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'platform'],
+                              ['created', 'name', 'link', 'id', 'arch'],
                               'returned keys not the same')
 
     def test_post_link_none(self):
@@ -488,7 +488,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'platform'],
+                              ['created', 'name', 'link', 'id', 'arch'],
                               'returned keys not the same')
 
     def test_post_no_link(self):
@@ -506,7 +506,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'platform'],
+                              ['created', 'name', 'link', 'id', 'arch'],
                               'returned keys not the same')
 
     def test_post_400_no_input(self):
