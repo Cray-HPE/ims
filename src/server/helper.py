@@ -58,8 +58,8 @@ ARTIFACT_LINK_TYPES = [
     ARTIFACT_LINK_TYPE_S3,
 ]
 
-PLATFORM_X86_64 = 'x86_64'
-PLATFORM_ARM64 = 'aarch64'
+ARCH_X86_64 = 'x86_64'
+ARCH_ARM64 = 'aarch64'
 
 def get_log_id():
     """ Return a unique string id that can be used to help tie related log entries together. """

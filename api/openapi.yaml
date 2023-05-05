@@ -2026,8 +2026,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecipeKeyValuePair'
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2073,8 +2073,8 @@ components:
             - packer
           example: kiwi-ng
           type: string
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2102,8 +2102,8 @@ components:
       properties:
         link:
           $ref: '#/components/schemas/ArtifactLinkRecord'
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2143,8 +2143,8 @@ components:
           minLength: 1
         link:
           $ref: '#/components/schemas/ArtifactLinkRecord'
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2182,8 +2182,8 @@ components:
           minLength: 1
         link:
           $ref: '#/components/schemas/ArtifactLinkRecord'
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2195,8 +2195,8 @@ components:
       properties:
         link:
           $ref: '#/components/schemas/ArtifactLinkRecord'
-        platform:
-          description: Target platform for the recipe.
+        arch:
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64
@@ -2303,9 +2303,9 @@ components:
           default: default
           type: string
           readOnly: true
-        platform:
+        arch:
           readOnly: true
-          description: Target platform for the recipe.
+          description: Target architecture for the recipe.
           example: aarch64
           enum:
             - aarch64

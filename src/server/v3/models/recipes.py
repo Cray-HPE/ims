@@ -29,7 +29,7 @@ from marshmallow.validate import OneOf
 
 from src.server.models.recipes import V2RecipeRecordInputSchema, V2RecipeRecord
 from src.server.v3.models import PATCH_OPERATIONS
-from src.server.helper import PLATFORM_X86_64, PLATFORM_ARM64
+from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 
 class V3DeletedRecipeRecord(V2RecipeRecord):
@@ -38,12 +38,12 @@ class V3DeletedRecipeRecord(V2RecipeRecord):
     # pylint: disable=W0622
     def __init__(self, name, recipe_type, linux_distribution,
                  link=None, id=None, created=None, deleted=None,
-                 template_dictionary=None, require_dkms=False, platform=PLATFORM_X86_64):
+                 template_dictionary=None, require_dkms=False, arch=ARCH_X86_64):
         # Supplied
         self.deleted = deleted or datetime.datetime.now()
         super().__init__(name, recipe_type=recipe_type, linux_distribution=linux_distribution,
                          link=link, id=id, created=created, template_dictionary=template_dictionary,
-                         require_dkms=require_dkms, platform=platform)
+                         require_dkms=require_dkms, arch=arch)
 
     def __repr__(self):
         return '<V3DeletedRecipeRecord(id={self.id!r})>'.format(self=self)

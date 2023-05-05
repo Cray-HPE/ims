@@ -76,7 +76,7 @@ class TestV3JobEndpoint(TestCase):
             'kubernetes_job': 'cray-ims-%s-create' % self.test_job_id,
             'kubernetes_service': 'cray-ims-%s-service' % self.test_job_id,
             'kubernetes_configmap': 'cray-ims-%s-configmap' % self.test_job_id,
-            'platform': "x86_64",
+            'arch': "x86_64",
             'require_dkms': False,
         }
         self.useFixture(V2JobsDataFixture(initial_data=self.data))
@@ -200,7 +200,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_recipe_id,
-            'platform': "x86_64",
+            'arch': "x86_64",
             'require_dkms': False,
         }
         self.image_data = {
@@ -212,7 +212,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             },
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_image_id,
-            'platform': "x86_64",
+            'arch': "x86_64",
         }
         self.job_data = {
             'job_type': "create",
@@ -224,7 +224,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'initrd_file_name': self.getUniqueString(),
             'created': self.week_ago.isoformat(),
             'id': str(uuid.uuid4()),
-            'platform': "x86_64",
+            'arch': "x86_64",
             'require_dkms': False,
         }
         self.public_key_data = {
@@ -422,7 +422,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name','platform', 'require_dkms'],
+                               'kernel_parameters_file_name','arch', 'require_dkms'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
@@ -487,7 +487,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name','platform', 'require_dkms'],
+                               'kernel_parameters_file_name','arch', 'require_dkms'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
@@ -536,7 +536,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
+                               'kernel_parameters_file_name', 'arch', 'require_dkms'],
                               'returned keys not the same')
 
     def test_post_create_with_ssh_container(self, utils_mock, config_mock, client_mock):
@@ -634,7 +634,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
+                               'kernel_parameters_file_name', 'arch', 'require_dkms'],
                               'returned keys not the same')
 
     @responses.activate
@@ -738,7 +738,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'public_key_id', 'kubernetes_job', 'kubernetes_service', 'kubernetes_configmap',
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
-                               'kernel_parameters_file_name', 'platform', 'require_dkms'],
+                               'kernel_parameters_file_name', 'arch', 'require_dkms'],
                               'returned keys not the same')
 
     def test_post_create_with_multiple_ssh_containers(self, utils_mock, config_mock, client_mock):
