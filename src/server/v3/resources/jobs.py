@@ -627,7 +627,7 @@ class V3JobCollection(V3BaseJobResource):
 
         current_app.logger.info(f"ARTIFACT_RECORD: {artifact_record}")
 
-        # both images and recipes have a architecture specified - shift into the job
+        # both images and recipes have an architecture specified - shift into the job
         new_job.arch = artifact_record.arch
         current_app.logger.info(f"architecture: {new_job.arch}")
 
