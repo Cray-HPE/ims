@@ -210,7 +210,7 @@ data:
             - name: BUILD_ARCH
               value: "$job_arch"
             - name: IMS_ARM_BUILDER
-              value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}-arm64"
+              value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}"
             volumeMounts:
             - name: recipe-vol
               mountPath: /mnt/recipe
