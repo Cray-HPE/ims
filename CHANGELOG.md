@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CASMCMS-8227 - Add platform support to image, recipe, and job objects.
 - CASMCMS-8370 - Add argument to recipe patch to allow changing template-parameters values.
 - CASMCMS-8459 - Add platform argument through job templates, fixes for arm64 builds.
-- CASMCMS-8595 - rename platform to arch
+- CASMCMS-8595 - rename platform to arch, fix kiwi env var.
 
 ## [3.8.3] - 2023-01-06
 ### Changed
