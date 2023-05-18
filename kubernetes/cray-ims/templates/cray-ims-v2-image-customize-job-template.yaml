@@ -210,6 +210,8 @@ data:
               value: "$ssh_jail"
             - name: JOB_ENABLE_DKMS
               value: "$job_enable_dkms"
+            - name: BUILD_ARCH
+              value: "$job_arch"
             resources:
               requests:
                 memory: "$size_gb"
