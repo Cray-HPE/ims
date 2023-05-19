@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [3.9.2] - 2023-05-19
+### Changed
+- CASMCMS-8566 - Set default arm64 runtime to kata
+
 ## [3.9.1] - 2023-05-17
 ### Changed
 - CASMCMS-8567 - Support arm64 image customization.
