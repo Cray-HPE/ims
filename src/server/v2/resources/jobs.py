@@ -27,29 +27,39 @@ Jobs API
 """
 import datetime
 import http.client
+import json
 import os
 import re
 import tempfile
+import time
 from collections import OrderedDict
 from functools import partial
 from string import Template
 
-import json
-import time
 import yaml
-from flask import jsonify, request, current_app
+from flask import current_app, jsonify, request
 from flask_restful import Resource
-from kubernetes import client, config, utils
 from kubernetes.client.rest import ApiException
 
+from kubernetes import client, config, utils
+from src.server.errors import (generate_data_validation_failure,
+                               generate_missing_input_response,
+                               generate_resource_not_found_response,
+                               problemify)
+from src.server.helper import (ARCH_ARM64, ARCH_X86_64,
+                               IMAGE_MANIFEST_ARTIFACT_TYPE,
+                               IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS,
+                               IMAGE_MANIFEST_ARTIFACTS,
+                               IMAGE_MANIFEST_VERSION,
+                               IMAGE_MANIFEST_VERSION_1_0, get_download_url,
+                               get_log_id, read_manifest_json,
+                               validate_artifact)
 from src.server.ims_exceptions import ImsArtifactValidationException
-from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
-    generate_resource_not_found_response
-from src.server.helper import validate_artifact, get_log_id, get_download_url, read_manifest_json, \
-    IMAGE_MANIFEST_VERSION_1_0, IMAGE_MANIFEST_VERSION, IMAGE_MANIFEST_ARTIFACTS, IMAGE_MANIFEST_ARTIFACT_TYPE_SQUASHFS, \
-    IMAGE_MANIFEST_ARTIFACT_TYPE, ARCH_ARM64, ARCH_X86_64
-from src.server.models.jobs import V2JobRecordInputSchema, V2JobRecordSchema, V2JobRecordPatchSchema, \
-    JOB_TYPE_CREATE, JOB_TYPE_CUSTOMIZE, JOB_TYPES, STATUS_TYPES, JOB_STATUS_ERROR, JOB_STATUS_SUCCESS
+from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
+                                    JOB_STATUS_SUCCESS, JOB_TYPE_CREATE,
+                                    JOB_TYPE_CUSTOMIZE, JOB_TYPES,
+                                    STATUS_TYPES, V2JobRecordInputSchema,
+                                    V2JobRecordPatchSchema, V2JobRecordSchema)
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
@@ -625,6 +635,14 @@ class V2JobCollection(V2BaseJobResource):
         # both images and recipes have an architecture specified - shift into the job
         new_job.arch = artifact_record.arch
         current_app.logger.info(f"architecture: {new_job.arch}")
+
+        # change the file name to match the architecture of the image and recipe, if passed in by user do nothing.
+        if new_job.kernel_file_name is None or len(new_job.kernel_file_name) == 0:
+            default_file_name = ARCH_TO_KERNEL_FILE_NAME.get(new_job.arch)
+            if default_file_name:
+                new_job.kernel_file_name = default_file_name
+
+        current_app.logger.info(f"kernel file name: {new_job.kernel_file_name}")
 
         # Determine cases where the dkms security settings are required without user specifying
         if new_job.arch == ARCH_ARM64:

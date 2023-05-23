@@ -31,8 +31,9 @@ from botocore.exceptions import ClientError, EndpointConnectionError
 from flask import current_app as app
 
 from src.server.errors import problemify
-from src.server.ims_exceptions import ImsArtifactValidationException, ImsReadManifestJsonException, \
-    ImsSoftUndeleteArtifactException
+from src.server.ims_exceptions import (ImsArtifactValidationException,
+                                       ImsReadManifestJsonException,
+                                       ImsSoftUndeleteArtifactException)
 
 try:
     from urllib.parse import urlparse
