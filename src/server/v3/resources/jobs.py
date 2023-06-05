@@ -58,7 +58,8 @@ from src.server.ims_exceptions import ImsArtifactValidationException
 from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
                                     JOB_STATUS_SUCCESS, JOB_TYPE_CREATE,
                                     JOB_TYPE_CUSTOMIZE, JOB_TYPES,
-                                    STATUS_TYPES, V2JobRecordInputSchema,
+                                    KERNEL_FILE_NAME_X86, STATUS_TYPES,
+                                    V2JobRecordInputSchema,
                                     V2JobRecordPatchSchema, V2JobRecordSchema)
 
 job_user_input_schema = V2JobRecordInputSchema()
@@ -643,9 +644,8 @@ class V3JobCollection(V3BaseJobResource):
 
         # change the file name to match the architecture of the image and recipe, if passed in by user do nothing.
         if new_job.kernel_file_name is None or len(new_job.kernel_file_name) == 0:
-            default_file_name = ARCH_TO_KERNEL_FILE_NAME.get(new_job.arch)
-            if default_file_name:
-                new_job.kernel_file_name = default_file_name
+            default_file_name = ARCH_TO_KERNEL_FILE_NAME.get(new_job.arch, KERNEL_FILE_NAME_X86) # default to x86 if some failure occurs
+            new_job.kernel_file_name = default_file_name
 
         current_app.logger.info(f"kernel file name: {new_job.kernel_file_name}")
 
