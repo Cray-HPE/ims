@@ -25,14 +25,15 @@
 Jobs Models
 """
 
-import os
-
 import datetime
+import os
 import uuid
-from marshmallow import Schema, fields, post_load, RAISE
-from marshmallow.validate import OneOf, Length, Range
+from typing import Literal
 
-from src.server.helper import ARCH_X86_64, ARCH_ARM64
+from marshmallow import RAISE, Schema, fields, post_load
+from marshmallow.validate import Length, OneOf, Range
+
+from src.server.helper import ARCH_ARM64, ARCH_X86_64
 
 JOB_TYPE_CREATE = 'create'
 JOB_TYPE_CUSTOMIZE = 'customize'
@@ -58,11 +59,18 @@ STATUS_TYPES = (JOB_STATUS_CREATING,
                 JOB_STATUS_ERROR,
                 JOB_STATUS_SUCCESS)
 
+KERNEL_FILE_NAME_ARM = 'Image'
+KERNEL_FILE_NAME_X86 = 'vmlinuz'
+KERNEL_TYPES = (KERNEL_FILE_NAME_ARM, KERNEL_FILE_NAME_X86)
+ARCH_TO_KERNEL_FILE_NAME = dict({
+    ARCH_ARM64: KERNEL_FILE_NAME_ARM,
+    ARCH_X86_64: KERNEL_FILE_NAME_X86
+})
+
+
 DEFAULT_INITRD_FILE_NAME = 'initrd'
-DEFAULT_KERNEL_FILE_NAME = 'vmlinuz'
 DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", 15)
 DEFAULT_KERNEL_PARAMETERS_FILE_NAME = 'kernel-parameters'
-
 
 # pylint: disable=R0902
 class V2JobRecord:
@@ -75,7 +83,7 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
-                 arch=ARCH_X86_64):
+                 arch=None):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -83,7 +91,7 @@ class V2JobRecord:
         self.public_key_id = public_key_id
         self.enable_debug = enable_debug
         self.image_root_archive_name = image_root_archive_name
-        self.kernel_file_name = kernel_file_name or DEFAULT_KERNEL_FILE_NAME
+        self.kernel_file_name = kernel_file_name
         self.initrd_file_name = initrd_file_name or DEFAULT_INITRD_FILE_NAME
         self.kernel_parameters_file_name = kernel_parameters_file_name or DEFAULT_KERNEL_PARAMETERS_FILE_NAME
         self.resultant_image_id = resultant_image_id
@@ -137,9 +145,8 @@ class V2JobRecordInputSchema(Schema):
                                     Description="approximate disk size in GiB to reserve for the image build"
                                                 "environment (usually 2x final image size)",
                                     validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
-    kernel_file_name = fields.Str(default="vmlinuz",
-                                  description="Name of the kernel file to extract and upload",
-                                  validate=Length(min=1, error="kernel_file_name field must not be blank"))
+    kernel_file_name = fields.Str(description="Name of the kernel file to extract and upload")
+
     initrd_file_name = fields.Str(default="initrd",
                                   description="Name of the initrd file to extract and upload",
                                   validate=Length(min=1, error="initrd_file_name field must not be blank"))

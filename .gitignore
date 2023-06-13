@@ -7,3 +7,4 @@ myimage.yaml
 *.pyc
 .version
 .env
+.vscode
