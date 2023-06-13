@@ -99,7 +99,7 @@ class V3BaseJobResource(Resource):
         
         # NOTE: make sure this isn't a non-zero length string of spaces
         self.job_kata_runtime = os.getenv("JOB_KATA_RUNTIME", "kata-qemu").strip()
-        self.job_aarch64_runtime = os.getenv("JOB_AARCH64_RUNTIME", "kata-qemu-aarch64").strip()
+        self.job_aarch64_runtime = os.getenv("JOB_AARCH64_RUNTIME", "kata-qemu").strip()
 
     def _create_namespaced_destination_rule(self, namespace):
         """ Helper routine to create a partial function to create a new ISTIO destination rule. """
