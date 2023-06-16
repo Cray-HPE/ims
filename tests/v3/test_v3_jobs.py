@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -40,17 +40,21 @@ from testtools import TestCase
 from testtools.matchers import HasLength
 
 from src.server import app
-from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
-from src.server.models.jobs import STATUS_TYPES
+from src.server.helper import ARTIFACT_LINK_TYPE_S3, S3Url
+from src.server.models.jobs import (KERNEL_FILE_NAME_ARM, KERNEL_FILE_NAME_X86,
+                                    STATUS_TYPES)
 from tests.utils import check_error_responses
-from tests.v2.ims_fixtures import \
-    V2FlaskTestClientFixture, \
-    V2JobsDataFixture, \
-    V2PublicKeysDataFixture, \
-    V2RecipesDataFixture, \
-    V2ImagesDataFixture
+from tests.v2.ims_fixtures import (V2FlaskTestClientFixture,
+                                   V2ImagesDataFixture, V2JobsDataFixture,
+                                   V2PublicKeysDataFixture,
+                                   V2RecipesDataFixture)
+from tests.v3.ims_fixtures import (V3FlaskTestClientFixture,
+                                   V3ImagesDataFixture, V3JobsDataFixture,
+                                   V3PublicKeysDataFixture,
+                                   V3RecipesDataFixture)
 
 
+# TODO: This tests v2 change to v3
 @mock.patch("src.server.v2.resources.jobs.client")
 @mock.patch("src.server.v2.resources.jobs.config")
 @mock.patch("src.server.v2.resources.jobs.utils")
@@ -68,7 +72,7 @@ class TestV3JobEndpoint(TestCase):
             'artifact_id': str(uuid.uuid4()),
             'public_key_id': str(uuid.uuid4()),
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
+            
             'initrd_file_name': self.getUniqueString(),
             'kernel_parameters_file_name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
@@ -81,6 +85,9 @@ class TestV3JobEndpoint(TestCase):
         }
         self.useFixture(V2JobsDataFixture(initial_data=self.data))
         self.test_uri = '/jobs/{}'.format(self.data['id'])
+        
+    def tearDown(self):
+        super(TestV3JobEndpoint, self).tearDown()
 
     def test_get(self, client_mock, config_mock, utils_mock):
         """ Test the jobs/{job_id} resource retrieval """
@@ -167,7 +174,7 @@ class TestV3JobEndpoint(TestCase):
             self.assertEqual(response_data['status'], input_data['status'],
                              'resource field "status" returned was not equal')
 
-
+# TODO: This tests v2 change to v3
 @mock.patch("src.server.v2.resources.jobs.client")
 @mock.patch("src.server.v2.resources.jobs.config")
 @mock.patch("src.server.v2.resources.jobs.utils")
@@ -176,14 +183,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
     Test the jobs/ collection endpoint (ims.v2.resources.jobs.JobsCollection)
     """
 
-    @classmethod
-    def setUpClass(cls):
-        cls.stubber = Stubber(app.app.s3)
-
     def setUp(self):
         super(TestV3JobsCollectionEndpoint, self).setUp()
+        
+        self.s3_stub = Stubber(app.app.s3)
         self.test_uri = '/jobs'
-        self.app = self.useFixture(V2FlaskTestClientFixture()).client
+        self.app = app.app.test_client()
         self.test_recipe_id = str(uuid.uuid4())
         self.test_image_id = str(uuid.uuid4())
         self.test_public_key_id = str(uuid.uuid4())
@@ -220,7 +225,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'artifact_id': str(uuid.uuid4()),
             'public_key_id': self.test_public_key_id,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
             'created': self.week_ago.isoformat(),
             'id': str(uuid.uuid4()),
@@ -274,6 +278,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.recipes = self.useFixture(V2RecipesDataFixture(initial_data=self.recipe_data)).datastore
         self.images = self.useFixture(V2ImagesDataFixture(initial_data=self.image_data)).datastore
         self.test_domain = 'https://api-gw-service-nmn.local'
+        
+    def tearDown(self):
+        super(TestV3JobsCollectionEndpoint, self).tearDown()
 
     def test_delete_jobs_all(self, utils_mock, config_mock, client_mock):
         response = self.app.delete(self.test_uri)
@@ -395,19 +402,18 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         s3url = S3Url(self.recipe_data['link']['path'])
         expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
-        self.stubber.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 201, 'status code was not 201')
@@ -442,19 +448,18 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': True,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         s3url = S3Url(self.recipe_data['link']['path'])
         expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
-        self.stubber.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 201, 'status code was not 201')
@@ -506,20 +511,19 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         s3url = S3Url(self.recipe_data['link']['path'])
         expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
-        self.stubber.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         with mock.patch.dict('os.environ', {'DEFAULT_IMS_JOB_NAMESPACE': job_namespace}):
-            self.stubber.activate()
+            self.s3_stub.activate()
             response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-            self.stubber.deactivate()
+            self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 201, 'status code was not 201')
@@ -550,7 +554,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'artifact_id': input_artifact_id,
             'public_key_id': public_key_id,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
+            
             'initrd_file_name': self.getUniqueString(),
             'ssh_containers': [
                 {'name': 'post-build', 'jail': False}
@@ -577,21 +581,20 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'artifact_id': input_artifact_id,
             'public_key_id': public_key_id,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
         )
 
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
@@ -605,7 +608,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": rootfs_manifest_info[0]["link"]["etag"]},
             {'Bucket': rootfs_s3_info.bucket, 'Key': rootfs_s3_info.key}
@@ -613,9 +616,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 201, 'status code was not 201')
@@ -654,7 +657,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'artifact_id': input_artifact_id,
             'public_key_id': public_key_id,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
             'ssh_containers': [
                 {'name': ssh_container_name, 'jail': ssh_container_jail}
@@ -670,14 +672,14 @@ class TestV3JobsCollectionEndpoint(TestCase):
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
         )
 
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
@@ -691,7 +693,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {
                 "ETag": rootfs_manifest_info[0]["link"]["etag"],
@@ -704,9 +706,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 201, 'status code was not 201')
@@ -741,6 +743,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'kernel_parameters_file_name', 'arch', 'require_dkms'],
                               'returned keys not the same')
 
+
     def test_post_create_with_multiple_ssh_containers(self, utils_mock, config_mock, client_mock):
         """ Post Job Create with multiple ssh_containers requested """
         input_job_type = "create"
@@ -752,7 +755,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'artifact_id': input_artifact_id,
             'public_key_id': public_key_id,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
             'ssh_containers': [
                 {'name': 'pre-cfs', 'jail': False},
@@ -816,7 +818,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             # 'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
@@ -839,7 +840,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': "",
-            'kernel_file_name': self.getUniqueString(),
+            
             'initrd_file_name': self.getUniqueString(),
         }
 
@@ -847,29 +848,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
         self.assertIn("image_root_archive_name", response.json["errors"],
                       "Expected image_root_archive_name to be listed in error detail")
-
-    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
-                read_data='{"metadata":{"name":"foo"}}')
-    def test_post_422_kernel_file_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
-        """ Test case where kernel_file_name is blank """
-        input_job_type = "create"
-        input_artifact_id = self.test_recipe_id
-        public_key_id = self.test_public_key_id
-
-        input_data = {
-            'job_type': input_job_type,
-            'artifact_id': input_artifact_id,
-            'public_key_id': public_key_id,
-            'enable_debug': False,
-            'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': "",
-            'initrd_file_name': self.getUniqueString(),
-        }
-
-        response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
-        check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
-        self.assertIn("kernel_file_name", response.json["errors"],
-                      "Expected kernel_file_name to be listed in error detail")
 
     @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
@@ -885,7 +863,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': "",
         }
 
@@ -907,7 +884,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': "",
         }
 
@@ -929,7 +905,6 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
@@ -951,15 +926,14 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
-        self.stubber.add_client_error('head_object')
+        self.s3_stub.add_client_error('head_object')
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
@@ -978,15 +952,14 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
-        self.stubber.add_client_error('head_object')
+        self.s3_stub.add_client_error('head_object')
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
@@ -1005,14 +978,13 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
@@ -1035,7 +1007,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         }
 
         s3_manifest_json_no_rootfs = json.dumps(s3_manifest_data_no_rootfs).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_rootfs), len(s3_manifest_json_no_rootfs)),
@@ -1044,9 +1016,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
             manifest_expected_params
         )
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
@@ -1065,14 +1037,13 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
@@ -1083,7 +1054,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         }
 
         s3_manifest_json_bad_version = json.dumps(s3_manifest_data_bad_version).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json_bad_version), len(s3_manifest_json_bad_version)),
@@ -1092,9 +1063,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
             manifest_expected_params
         )
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
@@ -1113,14 +1084,13 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
@@ -1131,7 +1101,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         }
 
         s3_manifest_json_no_version = json.dumps(s3_manifest_data_no_version).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json_no_version), len(s3_manifest_json_no_version)),
@@ -1140,9 +1110,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
             manifest_expected_params
         )
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
@@ -1161,21 +1131,20 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
         )
 
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
@@ -1184,11 +1153,11 @@ class TestV3JobsCollectionEndpoint(TestCase):
             manifest_expected_params
         )
 
-        self.stubber.add_client_error('head_object')
+        self.s3_stub.add_client_error('head_object')
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
@@ -1208,21 +1177,20 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': public_key_id,
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         manifest_s3_info = S3Url(self.image_data["link"]["path"])
         manifest_expected_params = {'Bucket': manifest_s3_info.bucket, 'Key': manifest_s3_info.key}
 
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": self.image_data["link"]["etag"]},
             manifest_expected_params
         )
 
         s3_manifest_json = json.dumps(self.s3_manifest_data).encode()
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'get_object',
             {
                 'Body': StreamingBody(io.BytesIO(s3_manifest_json), len(s3_manifest_json)),
@@ -1236,7 +1204,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertEqual(len(rootfs_manifest_info), 1)
 
         rootfs_s3_info = S3Url(rootfs_manifest_info[0]["link"]["path"])
-        self.stubber.add_response(
+        self.s3_stub.add_response(
             'head_object',
             {"ETag": rootfs_manifest_info[0]["link"]["etag"]},
             {'Bucket': rootfs_s3_info.bucket, 'Key': rootfs_s3_info.key}
@@ -1245,9 +1213,9 @@ class TestV3JobsCollectionEndpoint(TestCase):
         parsed_response = {'Error': {'Code': '500', 'Message': 'Error'}}
         s3_mock.side_effect = ClientError(parsed_response, "generate_presigned_url")
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
@@ -1265,21 +1233,481 @@ class TestV3JobsCollectionEndpoint(TestCase):
             'public_key_id': str(uuid.uuid4()),
             'enable_debug': False,
             'image_root_archive_name': self.getUniqueString(),
-            'kernel_file_name': self.getUniqueString(),
             'initrd_file_name': self.getUniqueString(),
         }
 
         s3url = S3Url(self.recipe_data['link']['path'])
         expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
-        self.stubber.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
 
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
-        self.stubber.activate()
+        self.s3_stub.activate()
         response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
-        self.stubber.deactivate()
+        self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
+
+@mock.patch("src.server.v3.resources.jobs.client")
+@mock.patch("src.server.v3.resources.jobs.config")
+@mock.patch("src.server.v3.resources.jobs.utils")
+class TestV3JobsCollectionEndpointArchArm(TestCase):
+    """
+    Test the jobs/ collection endpoint (ims.v3.resources.jobs.JobsCollection)
+    """
+
+    def setUp(self):
+        super(TestV3JobsCollectionEndpointArchArm, self).setUp()
+        self.s3_stub = Stubber(app.app.s3)
+        self.app = app.app.test_client()
+        self.test_recipe_id = str(uuid.uuid4())
+        self.test_image_id = str(uuid.uuid4())
+        self.test_public_key_id = str(uuid.uuid4())
+        self.today = datetime.datetime.now().replace(microsecond=0)
+        self.week_ago = self.today - datetime.timedelta(days=7)
+        self.arch = 'aarch64'
+        self.recipe_data = {
+            'recipe_type': 'kiwi-ng',
+            'linux_distribution': 'sles12',
+            'name': 'cray_sles12sp3_barebones',
+            'link': {
+                'path': 's3://ims/{}/recipe.tgz'.format(self.test_recipe_id),
+                'etag': self.getUniqueString(self.test_recipe_id),
+                'type': ARTIFACT_LINK_TYPE_S3
+            },
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_recipe_id,
+            'arch': self.arch,
+            'require_dkms': False,
+        }
+        self.image_data = {
+            'name': 'cray_sles12sp3_barebones',
+            'link': {
+                'path': 's3://ims/{}/manifest.json'.format(self.test_image_id),
+                'etag': self.getUniqueString(),
+                'type': ARTIFACT_LINK_TYPE_S3
+            },
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_image_id,
+            'arch': self.arch,
+        }
+        self.job_data = {
+            'job_type': "create",
+            'status': 'success',
+            'artifact_id': str(uuid.uuid4()),
+            'public_key_id': self.test_public_key_id,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'created': self.week_ago.isoformat(),
+            'id': str(uuid.uuid4()),
+            'arch': self.arch,
+            'require_dkms': False,
+        }
+        self.public_key_data = {
+            'name': str(uuid.uuid4()),
+            'public_key': str(uuid.uuid4()),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_public_key_id,
+        }
+        self.manifest_rootfs_mime_type = "application/vnd.cray.image.rootfs.squashfs"
+        self.manifest_initrd_mime_type = "application/vnd.cray.image.initrd"
+        self.manifest_kernel_mime_type = "application/vnd.cray.image.kernel"
+        self.s3_manifest_data = {
+            "version": "1.0",
+            "created": "2020-01-14 03:17:14",
+            "artifacts": [
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/rootfs",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_rootfs_mime_type,
+                    "md5": self.getUniqueString()
+                },
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/initrd",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_initrd_mime_type,
+                    "md5": self.getUniqueString()
+                },
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/kernel",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_kernel_mime_type,
+                    "md5": self.getUniqueString()
+                }
+            ]
+        }
+        self.test_jobs = self.useFixture(V3JobsDataFixture(initial_data=self.job_data)).datastore
+        self.test_public_keys = self.useFixture(V3PublicKeysDataFixture(initial_data=self.public_key_data)).datastore
+        self.recipes = self.useFixture(V3RecipesDataFixture(initial_data=self.recipe_data)).datastore
+        self.images = self.useFixture(V3ImagesDataFixture(initial_data=self.image_data)).datastore
+        self.test_domain = 'https://api-gw-service-nmn.local'
+        
+    def tearDown(self):
+        super(TestV3JobsCollectionEndpointArchArm, self).tearDown()
+
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_no_kernel_file_name_arm(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test happy path POST for passing arm kernel file name """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = KERNEL_FILE_NAME_ARM
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'kernel_file_name': expected_kernel_file_name
+        }
+        
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response(
+            method='head_object',
+            service_response={"ETag": self.recipe_data['link']["etag"]},
+            expected_params={
+                'Bucket': s3url.bucket,
+                'Key': s3url.key,
+            }
+        )
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_custom_kernel_file_name_arm(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test path POST with custom kernel_file_name, should default to the correct filename """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = self.getUniqueString()
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'kernel_file_name': expected_kernel_file_name
+        }
+
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_kernel_file_name_none(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test path POST with none kernel_file_name, should default to the correct filename """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = KERNEL_FILE_NAME_ARM
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+        }
+
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+        
+        
+@mock.patch("src.server.v3.resources.jobs.client")
+@mock.patch("src.server.v3.resources.jobs.config")
+@mock.patch("src.server.v3.resources.jobs.utils")
+class TestV3JobsCollectionEndpointArchX86(TestCase):
+    """
+    Test the jobs/ collection endpoint (ims.v3.resources.jobs.JobsCollection)
+    """
+
+    def setUp(self):
+        super(TestV3JobsCollectionEndpointArchX86, self).setUp()
+        self.s3_stub = Stubber(app.app.s3)
+        self.app = app.app.test_client()
+        self.test_recipe_id = str(uuid.uuid4())
+        self.test_image_id = str(uuid.uuid4())
+        self.test_public_key_id = str(uuid.uuid4())
+        self.today = datetime.datetime.now().replace(microsecond=0)
+        self.week_ago = self.today - datetime.timedelta(days=7)
+        self.arch = "x86_64"
+        self.recipe_data = {
+            'recipe_type': 'kiwi-ng',
+            'linux_distribution': 'sles12',
+            'name': 'cray_sles12sp3_barebones',
+            'link': {
+                'path': 's3://ims/{}/recipe.tgz'.format(self.test_recipe_id),
+                'etag': self.getUniqueString(self.test_recipe_id),
+                'type': ARTIFACT_LINK_TYPE_S3
+            },
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_recipe_id,
+            'arch': self.arch,
+            'require_dkms': False,
+        }
+        self.image_data = {
+            'name': 'cray_sles12sp3_barebones',
+            'link': {
+                'path': 's3://ims/{}/manifest.json'.format(self.test_image_id),
+                'etag': self.getUniqueString(),
+                'type': ARTIFACT_LINK_TYPE_S3
+            },
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_image_id,
+            'arch': self.arch,
+        }
+        self.job_data = {
+            'job_type': "create",
+            'status': 'success',
+            'artifact_id': str(uuid.uuid4()),
+            'public_key_id': self.test_public_key_id,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'created': self.week_ago.isoformat(),
+            'id': str(uuid.uuid4()),
+            'arch': self.arch,
+            'require_dkms': False,
+        }
+        self.public_key_data = {
+            'name': str(uuid.uuid4()),
+            'public_key': str(uuid.uuid4()),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_public_key_id,
+        }
+        self.manifest_rootfs_mime_type = "application/vnd.cray.image.rootfs.squashfs"
+        self.manifest_initrd_mime_type = "application/vnd.cray.image.initrd"
+        self.manifest_kernel_mime_type = "application/vnd.cray.image.kernel"
+        self.s3_manifest_data = {
+            "version": "1.0",
+            "created": "2020-01-14 03:17:14",
+            "artifacts": [
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/rootfs",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_rootfs_mime_type,
+                    "md5": self.getUniqueString()
+                },
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/initrd",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_initrd_mime_type,
+                    "md5": self.getUniqueString()
+                },
+                {
+                    "link": {
+                        "path": "s3://boot-artifacts/F6C1CC79-9A5B-42B6-AD3F-E7EFCF22CAE8/kernel",
+                        "etag": self.getUniqueString(),
+                        "type": ARTIFACT_LINK_TYPE_S3
+                    },
+                    "type": self.manifest_kernel_mime_type,
+                    "md5": self.getUniqueString()
+                }
+            ]
+        }
+        self.test_jobs = self.useFixture(V3JobsDataFixture(initial_data=self.job_data)).datastore
+        self.test_public_keys = self.useFixture(V3PublicKeysDataFixture(initial_data=self.public_key_data)).datastore
+        self.recipes = self.useFixture(V3RecipesDataFixture(initial_data=self.recipe_data)).datastore
+        self.images = self.useFixture(V3ImagesDataFixture(initial_data=self.image_data)).datastore
+        self.test_domain = 'https://api-gw-service-nmn.local'
+        
+    def tearDown(self):
+        super(TestV3JobsCollectionEndpointArchX86, self).tearDown()
+
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_kernel_file_name_none(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test path POST with incorrect kernel_file_name, should default to the correct filename """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = KERNEL_FILE_NAME_X86
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'kernel_file_name': None,
+        }
+        
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_kernel_file_name_match_user_passed(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test path POST with incorrect default kernel_file_name """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = "Some random name user provided"
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'kernel_file_name': expected_kernel_file_name
+        }
+        
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_kernel_file_name_x86(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test happy path POST for passing x86 kernel file name """
+
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = KERNEL_FILE_NAME_X86
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+            'kernel_file_name': expected_kernel_file_name
+        }
+
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
+
+    @responses.activate
+    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+                read_data='{"metadata":{"name":"foo"}}')
+    @mock.patch("src.server.app.app.s3.generate_presigned_url")
+    def test_post_kernel_file_name_none(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
+        """ Test path POST with none kernel_file_name, should default to the correct filename """
+        input_job_type = "create"
+        input_artifact_id = self.test_recipe_id
+        public_key_id = self.test_public_key_id
+        expected_kernel_file_name = KERNEL_FILE_NAME_X86
+
+        input_data = {
+            'job_type': input_job_type,
+            'artifact_id': input_artifact_id,
+            'public_key_id': public_key_id,
+            'enable_debug': False,
+            'image_root_archive_name': self.getUniqueString(),
+            'initrd_file_name': self.getUniqueString(),
+        }
+
+        s3url = S3Url(self.recipe_data['link']['path'])
+        expected_params = {'Bucket': s3url.bucket, 'Key': s3url.key}
+        self.s3_stub.add_response('head_object', {"ETag": self.recipe_data['link']["etag"]}, expected_params)
+
+        s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
+
+        self.s3_stub.activate()
+        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        self.s3_stub.deactivate()
+
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['kernel_file_name'], expected_kernel_file_name)
 
 
 if __name__ == '__main__':

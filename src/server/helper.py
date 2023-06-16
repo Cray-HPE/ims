@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -31,8 +31,9 @@ from botocore.exceptions import ClientError, EndpointConnectionError
 from flask import current_app as app
 
 from src.server.errors import problemify
-from src.server.ims_exceptions import ImsArtifactValidationException, ImsReadManifestJsonException, \
-    ImsSoftUndeleteArtifactException
+from src.server.ims_exceptions import (ImsArtifactValidationException,
+                                       ImsReadManifestJsonException,
+                                       ImsSoftUndeleteArtifactException)
 
 try:
     from urllib.parse import urlparse
