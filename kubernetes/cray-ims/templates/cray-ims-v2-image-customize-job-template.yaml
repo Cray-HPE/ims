@@ -254,7 +254,7 @@ data:
               - ReadWriteOnce
               resources:
                 requests:
-                  storage: 100Gi
+                  storage: "$pvc_size"
 kind: ConfigMap
 metadata:
   name: cray-configmap-ims-v2-image-customize
