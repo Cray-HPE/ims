@@ -233,7 +233,7 @@ data:
           - name: ca-pubkey
             configMap:
               name: cray-configmap-ca-public-key
-          - name: ssh-pubkeys
+          - name: ssh-pubkey
             configMap:
               name: cray-ims-$id-configmap
               items:
