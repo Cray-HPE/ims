@@ -685,6 +685,7 @@ class V2JobCollection(V2BaseJobResource):
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
             "limit_gb": str(int(new_job.build_env_size) * 3) + "Gi",
+            "pvc_size": str(int(new_job.build_env_size) * 5) + "Gi",
             "download_url": artifact_info["url"],  # pylint: disable=unsubscriptable-object
             "download_md5sum": artifact_info["md5sum"],  # pylint: disable=unsubscriptable-object
             "public_key": public_key_data,

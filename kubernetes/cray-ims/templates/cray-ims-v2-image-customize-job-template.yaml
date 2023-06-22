@@ -228,8 +228,6 @@ data:
               mountPath: /etc/cray/ca
               readOnly: true
           volumes:
-          - name: image-vol
-            emptyDir: {}
           - name: ims-config-vol
             emptyDir: {}
           - name: ca-pubkey
@@ -244,6 +242,19 @@ data:
           - name: admin-client-auth
             secret:
               secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"
+          - name: image-vol
+            image-vol:
+              name: image-vol
+              persistentVolumeClaim: 
+                claimName: image-vol-data-claim
+          persistentVolumeClaims:
+            data-claim:
+              name: data-claim
+              accessModes:
+              - ReadWriteOnce
+              resources:
+                requests:
+                  storage: "$pvc_size"
 kind: ConfigMap
 metadata:
   name: cray-configmap-ims-v2-image-customize
