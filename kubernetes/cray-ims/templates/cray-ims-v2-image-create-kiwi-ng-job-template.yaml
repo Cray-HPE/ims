@@ -64,6 +64,8 @@ data:
       backoffLimit: 0
       template:
         metadata:
+          annotations:
+            io.katacontainers.config.hypervisor.virtio_fs_extra_args: '["-o", "xattr"]'
           labels:
             app: ims-$id-create
         spec:
