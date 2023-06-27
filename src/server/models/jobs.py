@@ -211,8 +211,15 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     resultant_image_id = fields.UUID(allow_none=True,
                                      description="the unique id of the resultant image record")
     ssh_containers = fields.List(fields.Nested(SshContainerSchema()), allow_none=True)
-    arch = fields.Str(required=False, description="Architecture of the job", default=ARCH_X86_64,
+    arch = fields.Str(description="Architecture of the job", default=ARCH_X86_64,
                           validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
+
+    # after reading in the data, make sure there is an arch defined - default to x86
+    @post_load(pass_original=False)
+    def fill_arch(self, data, **kwargs):
+        if not "arch" in data or data["arch"] is None:
+            data["arch"] = ARCH_X86_64
+        return data
 
 class V2JobRecordPatchSchema(Schema):
     """

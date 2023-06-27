@@ -649,10 +649,15 @@ class V2JobCollection(V2BaseJobResource):
             # If the architecture is aarch64, then the dkms settings are required
             current_app.logger.info(f" NOTE: aarch64 architecture requires dkms")
             new_job.require_dkms = True
-        elif new_job.job_type == JOB_TYPE_CREATE and artifact_record.require_dkms and userSpecifiedDKMS==None:
-            # Let the setting from the recipe flow through if the user has not specified otherwise
-            current_app.logger.info(f"Overriding require_dkms based on recipe setting")
-            new_job.require_dkms = True
+        elif userSpecifiedDKMS==None:
+            if self.job_enable_dkms:
+                # use the default from the ims-config config map
+                current_app.logger.info(f"Setting require_dkms based on ims-config setting")
+                new_job.require_dkms = True
+            elif new_job.job_type == JOB_TYPE_CREATE and artifact_record.require_dkms:
+                # Let the setting from the recipe flow through if the user has not specified otherwise
+                current_app.logger.info(f"Overriding require_dkms based on recipe setting")
+                new_job.require_dkms = True
 
         # get the public key information
         public_key_data, problem = V2JobCollection.get_public_key_data(log_id, new_job.public_key_id)
@@ -685,7 +690,6 @@ class V2JobCollection(V2BaseJobResource):
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
             "limit_gb": str(int(new_job.build_env_size) * 3) + "Gi",
-            "pvc_size": str(int(new_job.build_env_size) * 5) + "Gi",
             "download_url": artifact_info["url"],  # pylint: disable=unsubscriptable-object
             "download_md5sum": artifact_info["md5sum"],  # pylint: disable=unsubscriptable-object
             "public_key": public_key_data,
