@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.8] - 2023-07-18
+### Dependencies
+- Bump `PyYAML` from 5.4.1 to 6.0.1 to avoid build issue caused by https://github.com/yaml/pyyaml/issues/601
+
 ## [3.9.7] - 2023-07-07
 ### Changed
 - CASMCMS-8707 - push arch env vars to all containers in IMS jobs.
