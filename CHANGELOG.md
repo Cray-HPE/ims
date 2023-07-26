@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Dependencies
+Bumped dependency patch versions:
+| Package                  | From     | To       |
+|--------------------------|----------|----------|
+| `aniso8601`              | 3.0.0    | 3.0.2    |
+| `boto3`                  | 1.12.9   | 1.12.49  |
+| `botocore`               | 1.15.9   | 1.15.49  |
+| `Flask`                  | 1.1.1    | 1.1.4    |
+| `Flask-RESTful`          | 0.3.6    | 0.3.10   |
+| `google-auth`            | 1.6.1    | 1.6.3    |
+| `Jinja2`                 | 2.10.1   | 2.10.3   |
+| `jmespath`               | 0.9.4    | 0.9.5    |
+| `pyasn1-modules`         | 0.2.2    | 0.2.8    |
+| `python-dateutil`        | 2.8.1    | 2.8.2    |
+| `rsa`                    | 4.7      | 4.7.2    |
+| `s3transfer`             | 0.3.0    | 0.3.7    |
+| `urllib3`                | 1.25.10  | 1.25.11  |
+| `Werkzeug`               | 0.15.5   | 0.15.6   |
+
 ## [3.9.8] - 2023-07-18
 ### Dependencies
 - Bump `PyYAML` from 5.4.1 to 6.0.1 to avoid build issue caused by https://github.com/yaml/pyyaml/issues/601
