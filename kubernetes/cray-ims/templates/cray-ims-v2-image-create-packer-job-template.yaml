@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -51,6 +51,19 @@ data:
       - port: 22
         protocol: TCP
         targetPort: 22
+  image_pvc_create.yaml.template: |
+    ---
+    kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: cray-ims-$id-job-claim
+      namespace: $namespace
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "$pvc_gb"
   image_job_create.yaml.template: |
     ---
     apiVersion: batch/v1
@@ -88,21 +101,21 @@ data:
             - configMapRef:
                 name: cray-ims-$id-configmap
             volumeMounts:
-            - name: recipe-vol
-              mountPath: /mnt/recipe
+            - name: image-vol
+              mountPath: /mnt/image
             - name: ca-pubkey
               mountPath: /etc/cray/ca
               readOnly: true
             - name: admin-client-auth
               mountPath: '/etc/admin-client-auth'
               readOnly: true
-            command: [ "sh", "-ce", "/scripts/fetch-recipe.sh /mnt/recipe \"$download_url\"" ]
+            command: [ "sh", "-ce", "/scripts/fetch-recipe.sh /mnt/image/recipe \"$download_url\"" ]
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "8"
           # Step 4: Build the image
           - image: {{ .Values.cray_ims_packer_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_packer_opensuse_x86_64_builder.image.tag }}
@@ -110,10 +123,10 @@ data:
             name: build-image
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "48"
             securityContext:
               privileged: true
@@ -127,15 +140,12 @@ data:
             - name: ENABLE_DEBUG
               value: '$enable_debug'
             - name: RECIPE_ROOT_PARENT
-              value: /mnt/recipe
+              value: /mnt/image/recipe
             - name: IMAGE_ROOT_PARENT
               value: /mnt/image
             - name: IMS_JOB_ID
               value: "$id"
             volumeMounts:
-            - name: recipe-vol
-              mountPath: /mnt/recipe
-              readOnly: true
             - name: ca-rpm-vol
               mountPath: /mnt/ca-rpm
             - name: image-vol
@@ -153,10 +163,10 @@ data:
             command: ["sh", "-ce", "/scripts/buildenv-sidecar.sh /mnt/image"]
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "48"
             envFrom:
             - configMapRef:
@@ -256,16 +266,15 @@ data:
               readOnly: true
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "8"
           volumes:
           - name: image-vol
-            emptyDir: {}
-          - name: recipe-vol
-            emptyDir: {}
+            persistentVolumeClaim:
+              claimName: cray-ims-$id-job-claim
           - name: specfile-vol
             configMap:
               name: ims-ca-rpm-specfile

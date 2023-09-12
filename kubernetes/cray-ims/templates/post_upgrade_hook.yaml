@@ -79,6 +79,11 @@ spec:
               cp /var/ims/data/v2_jobs.json /var/ims/data/v2.1_jobs.json
             fi
 
+            if [[ -f /var/ims/data/v2.1_jobs.json ]] && [[ ! -f /var/ims/data/v2.2_jobs.json ]]
+            then
+              cp /var/ims/data/v2.1_jobs.json /var/ims/data/v2.2_jobs.json
+            fi
+
             chown -Rv 65534:65534 /var/ims/data
         volumeMounts:
           - mountPath: /var/ims/data

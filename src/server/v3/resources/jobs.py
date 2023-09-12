@@ -168,13 +168,13 @@ class V3BaseJobResource(Resource):
 
     def create_kubernetes_resources(self, log_id, new_job, template_params, recipe_type):
         """
-        Create kubernetes resources (configmap, service, job and destination_rule) for the current job
+        Create kubernetes resources (configmap, service, job, pvc, and destination_rule) for the current job
         """
 
         k8s_client = client.ApiClient()
         new_job.kubernetes_namespace = self.default_ims_job_namespace
         job_template_path = os.environ.get("IMS_JOB_TEMPLATE_PATH", "/mnt/ims/v2/job_templates")
-        for resource in ("configmap", "service", "job"):
+        for resource in ("configmap", "service", "job", "pvc"):
             resource_field = "kubernetes_%s" % resource
             fd, output_file_name = tempfile.mkstemp(suffix=".yaml")
             try:
@@ -259,11 +259,18 @@ class V3BaseJobResource(Resource):
         if delete_job:
             resources['job'] = k8s_batchv1api.delete_namespaced_job
             resources['configmap'] = k8s_v1api.delete_namespaced_config_map
+            resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
 
-        # Delete the underlying kubernetes service, job and configmap resources
+        # Delete the underlying kubernetes resources
         for resource, delete_fn in resources.items():
+            # PVC's were added to the job in v2.2 of the schema - they may not exist
+            # for jobs created before an upgrade.
             name = getattr(job, "kubernetes_%s" % resource)
-            current_app.logger.info("%s Deleting k8s %s %s.", log_id, resource, name)
+            if name != None:
+                current_app.logger.info(f"{log_id} Deleting k8s {resource} {name}.")
+            else:
+                current_app.logger.info(f"{log_id} k8s resource does not exist for job {resource}.")
+                continue
 
             try:
                 delete_fn(body=k8s_delete_options, namespace=namespace, name=name)
@@ -696,6 +703,9 @@ class V3JobCollection(V3BaseJobResource):
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
             "limit_gb": str(int(new_job.build_env_size) * 3) + "Gi",
+            "pvc_gb": str(int(new_job.build_env_size) * 5) + "Gi",
+            "job_mem_size": str(new_job.job_mem_size) + "Gi",
+            "job_mem_limit": str(int(new_job.job_mem_size) * 3) + "Gi",
             "download_url": artifact_info["url"],  # pylint: disable=unsubscriptable-object
             "download_md5sum": artifact_info["md5sum"],  # pylint: disable=unsubscriptable-object
             "public_key": public_key_data,
