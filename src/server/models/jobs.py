@@ -70,6 +70,7 @@ ARCH_TO_KERNEL_FILE_NAME = dict({
 
 DEFAULT_INITRD_FILE_NAME = 'initrd'
 DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", 15)
+DEFAULT_JOB_MEM_SIZE = os.environ.get("DEFAULT_IMS_JOB_MEM_SIZE", 1)
 DEFAULT_KERNEL_PARAMETERS_FILE_NAME = 'kernel-parameters'
 
 # pylint: disable=R0902
@@ -83,7 +84,7 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
-                 arch=None):
+                 arch=None, job_mem_size=None, kubernetes_pvc=None):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -113,6 +114,10 @@ class V2JobRecord:
 
         # v2.1
         self.arch = arch
+
+        # v2.2
+        self.kubernetes_pvc = kubernetes_pvc
+        self.job_mem_size = job_mem_size or DEFAULT_JOB_MEM_SIZE
 
     def __repr__(self):
         return '<v2JobRecord(id={self.id!r})>'.format(self=self)
@@ -158,8 +163,15 @@ class V2JobRecordInputSchema(Schema):
 
     ssh_containers = fields.List(fields.Nested(SshContainerInputSchema()), allow_none=True)
 
+    # v2.1
     require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
                                   description="Job requires the use of dkms")
+
+    # v2.2
+    job_mem_size = fields.Integer(Default=1,
+                                    Description="approximate working memory in GiB to reserve for the build job "
+                                                "environment (loosely proporational to the final image size)",
+                                    validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
 
     @post_load
     def make_job(self, data):
@@ -211,8 +223,14 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     resultant_image_id = fields.UUID(allow_none=True,
                                      description="the unique id of the resultant image record")
     ssh_containers = fields.List(fields.Nested(SshContainerSchema()), allow_none=True)
+    
+    # v2.1
     arch = fields.Str(description="Architecture of the job", default=ARCH_X86_64,
                           validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
+
+    # v2.2
+    kubernetes_pvc = fields.Str(allow_none=True,
+                                      description="PVC name for the underlying Kubernetes image pvc")
 
     # after reading in the data, make sure there is an arch defined - default to x86
     @post_load(pass_original=False)
