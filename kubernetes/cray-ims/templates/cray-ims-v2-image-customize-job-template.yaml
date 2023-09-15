@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -51,6 +51,19 @@ data:
       - port: 22
         protocol: TCP
         targetPort: 22
+  image_pvc_customize.yaml.template: |
+    ---
+    kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: cray-ims-$id-job-claim
+      namespace: $namespace
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "$pvc_gb"
   image_job_customize.yaml.template: |
     ---
     apiVersion: batch/v1
@@ -102,10 +115,10 @@ data:
             command: [ "sh", "-ce", "/scripts/prep-env.sh /mnt/image \"$download_url\"" ]
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "8"
           # User customization of image root
           containers:
@@ -115,10 +128,10 @@ data:
             command: ["sh", "-ce", "/scripts/buildenv-sidecar.sh /mnt/image"]
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "48"
             env:
             - name: API_GATEWAY_HOSTNAME
@@ -222,10 +235,10 @@ data:
               value: "$job_arch"
             resources:
               requests:
-                memory: "$size_gb"
+                memory: "$job_mem_size"
                 cpu: "500m"
               limits:
-                memory: "$limit_gb"
+                memory: "$job_mem_limit"
                 cpu: "8"
             volumeMounts:
             - name: image-vol
@@ -237,7 +250,8 @@ data:
               readOnly: true
           volumes:
           - name: image-vol
-            emptyDir: {}
+            persistentVolumeClaim:
+              claimName: cray-ims-$id-job-claim
           - name: ims-config-vol
             emptyDir: {}
           - name: ca-pubkey
