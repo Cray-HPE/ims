@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.1] - 2023-10-05
+### Changed
+- CASMCMS-8828 - increase the default mem requests and limits on jobs.
+
 ## [3.10.0] - 2023-09-15
 ### Changed
 - Disabled concurrent Jenkins builds on same branch/commit
