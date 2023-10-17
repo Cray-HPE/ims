@@ -84,7 +84,7 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
-                 arch=None, job_mem_size=None, kubernetes_pvc=None):
+                 arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node=""):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -118,6 +118,9 @@ class V2JobRecord:
         # v2.2
         self.kubernetes_pvc = kubernetes_pvc
         self.job_mem_size = job_mem_size or DEFAULT_JOB_MEM_SIZE
+
+        # v2.3
+        self.remote_build_node = remote_build_node or ""
 
     def __repr__(self):
         return '<v2JobRecord(id={self.id!r})>'.format(self=self)
@@ -231,6 +234,10 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     # v2.2
     kubernetes_pvc = fields.Str(allow_none=True,
                                       description="PVC name for the underlying Kubernetes image pvc")
+
+    # v2.3
+    remote_build_node = fields.Str(allow_none=False, default="",
+                                        description="XName of remote job if running on a remote node")
 
     # after reading in the data, make sure there is an arch defined - default to x86
     @post_load(pass_original=False)

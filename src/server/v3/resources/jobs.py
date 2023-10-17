@@ -61,10 +61,41 @@ from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
                                     KERNEL_FILE_NAME_X86, STATUS_TYPES,
                                     V2JobRecordInputSchema,
                                     V2JobRecordPatchSchema, V2JobRecordSchema)
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecord
+from src.server.models.jobs import V2JobRecordSchema
+from flask import Flask
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
 job_schema = V2JobRecordSchema()
+
+#NOTE: this can't live in helper.py due to a circular dependency
+def find_remote_node_for_job(job: V2JobRecordSchema) -> str:
+    """Find a remote node that can run this job.
+
+    Args:
+        job (V2JobRecordSchema): job that is going to be run
+
+    Returns:
+        str: xname of remote node or ""
+    """
+    
+    # For the time being this is only set up for 'create' jobs
+    if job.job_type == JOB_TYPE_CUSTOMIZE:
+        return ""
+
+    best_node = ""
+    best_node_job_count = 10000
+    for xname, remote_node in current_app.data['remote_build_nodes'].items():
+        current_app.logger.info(f"Node: {xname} - getting status")
+        arch, numJobs = remote_node.getStatus()
+        current_app.logger.info(f"    arch:{arch}, numJobs:{numJobs}")
+        if arch != None and arch == job.arch:
+            # matching arch - can use the node, now pick the best
+            if best_node == "" or numJobs < best_node_job_count:
+                best_node = remote_node.xname
+                best_node_job_count = numJobs
+    return best_node
 
 
 class V3BaseJobResource(Resource):
@@ -520,7 +551,7 @@ class V3JobCollection(V3BaseJobResource):
             try:
                 s3obj_rootfs_md5sum = validate_artifact(rootfs_artifact[ARTIFACT_LINK])
             except ImsArtifactValidationException as exc:
-                return problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
+                return None, problemify(status=http.client.UNPROCESSABLE_ENTITY, detail=str(exc))
 
             if manifest_rootfs_md5sum and s3obj_rootfs_md5sum and manifest_rootfs_md5sum != s3obj_rootfs_md5sum:
                 current_app.logger.info("%s The rootfs md5sum from the manifest.json does not match the md5sum "
@@ -583,9 +614,7 @@ class V3JobCollection(V3BaseJobResource):
             userSpecifiedDKMS = json_data['require_dkms']
 
         # Validate input
-        current_app.logger.info(f"About to validate schema...")
         errors = job_user_input_schema.validate(json_data)
-        current_app.logger.info(f" validated schema")
         if errors:
             current_app.logger.info("%s There was a problem validating the post data: %s", log_id, errors)
             return generate_data_validation_failure(errors)
@@ -698,6 +727,11 @@ class V3JobCollection(V3BaseJobResource):
         if new_job.arch == ARCH_ARM64:
             job_runtime_class = self.job_aarch64_runtime
 
+        # Find if there is a remote node that can run this job 
+        remoteNode = find_remote_node_for_job(new_job)
+        if remoteNode != "":
+            new_job.remote_build_node = remoteNode
+
         # set up the template params to feed into the job template
         template_params = {
             "id": str(new_job.id).lower(),
@@ -724,7 +758,8 @@ class V3JobCollection(V3BaseJobResource):
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
             "security_capabilites": job_security_capabilities,
-            "job_arch": new_job.arch
+            "job_arch": new_job.arch,
+            "remote_build_node": new_job.remote_build_node
         }
 
         current_app.logger.info(f"Job template param: {template_params}")

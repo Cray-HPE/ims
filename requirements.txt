@@ -1,6 +1,7 @@
 -c constraints.txt
 
 # Application requirements for cms-ims
+fabric
 flask
 flask-restful
 flask_marshmallow
