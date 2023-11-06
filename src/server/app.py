@@ -47,6 +47,7 @@ from src.server.v3.models.recipes import V3DeletedRecipeRecordSchema
 from src.server.models.images import V2ImageRecordSchema
 from src.server.v3.models.images import V3DeletedImageRecordSchema
 from src.server.models.jobs import V2JobRecordSchema
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordSchema
 
 
 def load_datastore(_app):
@@ -76,6 +77,10 @@ def load_datastore(_app):
     _app.data['jobs'] = DataStoreHACK(
         os.path.join(_app.config['HACK_DATA_STORE'], 'v2.2_jobs.json'),
         V2JobRecordSchema(), 'id')
+
+    _app.data['remote_build_nodes'] = DataStoreHACK(
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.0_remote_build_nodes.json'),
+        V3RemoteBuildNodeRecordSchema(), 'xname')
 
 
 def load_v2_api(_app):
@@ -142,7 +147,11 @@ def create_app():
     _app.logger.setLevel(_app.config['LOG_LEVEL'])
     _app.logger.info('Image management service configured in {} mode'.format(os.getenv('FLASK_ENV', 'production')))
 
+    # dictionary to all the data store objects
     _app.data = {}
+
+    #dictionary to all the remote build node status objects
+    _app.remoteNodes = {}
 
     # log the gunicorn worker timeout on startup
     _app.logger.info(f"Gunicorn worker timeout: {os.getenv('GUNICORN_WORKER_TIMEOUT', '-1')}")

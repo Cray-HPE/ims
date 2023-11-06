@@ -61,11 +61,39 @@ from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
                                     KERNEL_FILE_NAME_X86, STATUS_TYPES,
                                     V2JobRecordInputSchema,
                                     V2JobRecordPatchSchema, V2JobRecordSchema)
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecord
+from src.server.models.jobs import V2JobRecordSchema
+from flask import Flask
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
 job_schema = V2JobRecordSchema()
 
+#NOTE: this can't live in helper.py due to a circular dependency
+def find_remote_node_for_job(job: V2JobRecordSchema) -> str:
+    """Find a remote node that can run this job.
+
+    Args:
+        job (V2JobRecordSchema): job that is going to be run
+
+    Returns:
+        str: xname of remote node or ""
+    """
+    
+    # For the time being this is only set up for 'create' jobs
+    if job.job_type == JOB_TYPE_CUSTOMIZE:
+        return ""
+
+    best_node = ""
+    best_node_job_count = 10000
+    for xname, remote_node in current_app.data['remote_build_nodes'].items():
+        arch, numJobs = remote_node.getStatus()
+        if arch != None and arch == job.arch:
+            # matching arch - can use the node, now pick the best
+            if best_node == "" or numJobs < best_node_job_count:
+                best_node = remote_node.xname
+                best_node_job_count = numJobs
+    return best_node
 
 class V2BaseJobResource(Resource):
     """
@@ -693,6 +721,11 @@ class V2JobCollection(V2BaseJobResource):
         if new_job.arch == ARCH_ARM64:
             job_runtime_class = self.job_aarch64_runtime
 
+        # Find if there is a remote node that can run this job 
+        remoteNode = find_remote_node_for_job(new_job)
+        if remoteNode != "":
+            new_job.remote_build_node = remoteNode
+
         template_params = {
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
@@ -718,7 +751,8 @@ class V2JobCollection(V2BaseJobResource):
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
             "security_capabilites": job_security_capabilities,
-            "job_arch": new_job.arch
+            "job_arch": new_job.arch,
+            "remote_build_node": new_job.remote_build_node
         }
 
         if new_job.job_type == JOB_TYPE_CREATE:
@@ -860,6 +894,7 @@ class V2JobResource(V2BaseJobResource):
 
         try:
             job = current_app.data['jobs'][job_id]
+
             status, errors = self.delete_kubernetes_resources(log_id, job)
 
             if not status:

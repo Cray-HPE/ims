@@ -211,6 +211,8 @@ data:
               value: '/etc/admin-client-auth'
             - name: ENABLE_DEBUG
               value: '$enable_debug'
+            - name: REMOTE_BUILD_NODE
+              value: '$remote_build_node'
             - name: RECIPE_ROOT_PARENT
               value: /mnt/image/recipe
             - name: IMAGE_ROOT_PARENT
