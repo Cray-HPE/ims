@@ -705,7 +705,7 @@ class V3JobCollection(V3BaseJobResource):
             "limit_gb": str(int(new_job.build_env_size) * 3) + "Gi",
             "pvc_gb": str(int(new_job.build_env_size) * 5) + "Gi",
             "job_mem_size": str(new_job.job_mem_size) + "Gi",
-            "job_mem_limit": str(int(new_job.job_mem_size) * 3) + "Gi",
+            "job_mem_limit": str(int(new_job.job_mem_size) * 5) + "Gi",
             "download_url": artifact_info["url"],  # pylint: disable=unsubscriptable-object
             "download_md5sum": artifact_info["md5sum"],  # pylint: disable=unsubscriptable-object
             "public_key": public_key_data,
