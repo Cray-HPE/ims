@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.12.0] - 2023-12-13
+### Changed
+- CASMTRIAGE-6426 Increased default IMS pvc size
+
+## [3.11.0] - 2023-10-05
+### Changed
+- CASMTRIAGE-6368 - include ims-sshd fix for sftp access to customize jobs.
+- CASMTRIAGE-6292 - increase default mem request/limits yet again.
+
 ## [3.10.1] - 2023-10-05
 ### Changed
 - CASMCMS-8828 - increase the default mem requests and limits on jobs.
