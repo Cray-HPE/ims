@@ -31,7 +31,7 @@ metadata:
 data:
   API_GATEWAY_HOSTNAME: "{{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local"
   CA_CERT: "/mnt/ca-vol/certificate_authority.crt"
-  DEFAULT_IMS_IMAGE_SIZE: "15"
+  DEFAULT_IMS_IMAGE_SIZE: "30"
   DEFAULT_IMS_JOB_NAMESPACE: "{{ .Values.ims_config.cray_ims_job_namespace }}"
   DEFAULT_IMS_JOB_MEM_SIZE: "8"
 
