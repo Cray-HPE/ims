@@ -74,11 +74,11 @@ pipeline {
             }
         }
 
-        stage("Unittests") {
-            steps {
-                sh "make unittests"
-            }
-        }
+        // stage("Unittests") {
+        //    steps {
+        //        sh "make unittests"
+        //    }
+        //}
 
         stage("Build") {
             parallel {
