@@ -80,9 +80,9 @@ FROM base as debug
 EXPOSE 9000
 ENV PYTHONPATH = $PATH
 WORKDIR /app
+USER root:root
 RUN apk add --no-cache busybox-extras && \
     pip3 install --no-cache-dir rpdb
-
 COPY .version /app/
 COPY config/gunicorn.py /app/
 ENTRYPOINT ["gunicorn", "-c", "/app/gunicorn.py", "src.server.app:app"]
