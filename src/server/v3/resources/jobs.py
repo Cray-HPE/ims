@@ -96,7 +96,7 @@ class V3BaseJobResource(Resource):
         self.job_customer_access_subnet_name = os.environ.get("JOB_CUSTOMER_ACCESS_SUBNET_NAME", "cmn")
         self.job_customer_access_network_domain = os.environ.get("JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN", "shasta.local")
         self.job_enable_dkms = os.getenv("JOB_ENABLE_DKMS", 'False').lower() in ('true', '1', 't')
-        
+
         # NOTE: make sure this isn't a non-zero length string of spaces
         self.job_kata_runtime = os.getenv("JOB_KATA_RUNTIME", "kata-qemu").strip()
         self.job_aarch64_runtime = os.getenv("JOB_AARCH64_RUNTIME", "kata-qemu").strip()
@@ -728,8 +728,9 @@ class V3JobCollection(V3BaseJobResource):
         }
 
         current_app.logger.info(f"Job template param: {template_params}")
-        
+
         if new_job.job_type == JOB_TYPE_CREATE:
+            import rpdb; rpdb.set_trace()
             template_params["template_dictionary"] = \
                 json.dumps({r['key']: r['value'] for r in artifact_record.template_dictionary})
             template_params["recipe_type"] = artifact_record.recipe_type

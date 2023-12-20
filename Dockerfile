@@ -74,11 +74,25 @@ ADD runCodeStyleCheck.sh /app/
 ARG FORCE_STYLE_CHECKS=null
 CMD [ "./runCodeStyleCheck.sh" ]
 
-# Build Application Image
-FROM base as application
+# Build Debug Version
+FROM base as debug
 
 EXPOSE 9000
-# RUN apk add --no-cache py3-gunicorn py3-gevent py3-greenlet
+ENV PYTHONPATH = $PATH
+WORKDIR /app
+RUN apk add --no-cache busybox-extras && \
+    pip3 install --no-cache-dir rpdb
+
 COPY .version /app/
 COPY config/gunicorn.py /app/
 ENTRYPOINT ["gunicorn", "-c", "/app/gunicorn.py", "src.server.app:app"]
+
+# Build Application Image
+#FROM base as application
+
+#EXPOSE 9000
+# RUN apk add --no-cache py3-gunicorn py3-gevent py3-greenlet
+#COPY .version /app/
+#COPY config/gunicorn.py /app/
+#ENTRYPOINT ["gunicorn", "-c", "/app/gunicorn.py", "src.server.app:app"]
+
