@@ -170,6 +170,30 @@ The following are required:
     $ podman run -p 9000:9000,9001:9001 --net cni-podman1 minio/minio server /data --console-address :9001
     ```
 
+## VSCode Setup
+
+This section uses devcontainers which is a Microsoft feature that allows developers to containerize the entire IDE and setup in a docker image using the following.
+
+Requirements:
+* VSCode
+* Extension devcontainers
+* Docker
+
+Once the `devcontainers` extension is installed locally on the VSCode instance upon opening the `ims`
+repo there should be a pop up in the bottom right that detects the `.devcontainers` folder and to launch.
+
+To start the IDE container you can use the command palette to launch:
+1. `CMD+P`
+2. `> Dev Containers: Rebuild and Reopen in container`
+
+At this point the IDE will start building the docker container, and use remote attaching to work in the container.
+
+Specified settings and extensions for the environment will be automatically installed which can be found in the `.devcontainer/devcontainer.json` file
+
+With this new IDE instance opened the following should be configured.
+1. Python intellisense
+2. Pytests / Unittest setup in the IDE (run them locally through this container)
+
 ## Building
 ```
 $ docker build -t cray-ims-service:dev -f Dockerfile .
