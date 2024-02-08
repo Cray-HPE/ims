@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dependencies
+- Bumped `kubernetes` from 11.0.0 to 22.6.0 to match CSM 1.6 Kubernetes version
+
 ## [3.12.0] - 2023-12-13
 ### Changed
 - CASMTRIAGE-6426 Increased default IMS pvc size
