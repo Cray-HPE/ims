@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -91,8 +91,8 @@ class V3RemoteBuildNodeCollection(Resource):
         current_app.logger.info("%s ++ remote_build_nodes.v3.DELETE", log_id)
 
         try:
-            del current_app.data['remote_build_nodes']
-            current_app.data['remote_build_nodes'] = {}
+            # call reset to flush change to disk
+            current_app.data['remote_build_nodes'].reset()
         except KeyError as key_error:
             current_app.logger.info("%s Key not found: %s", log_id, key_error)
             return None, problemify(status=http.client.INTERNAL_SERVER_ERROR,

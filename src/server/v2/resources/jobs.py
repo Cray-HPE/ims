@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -62,38 +62,12 @@ from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
                                     V2JobRecordInputSchema,
                                     V2JobRecordPatchSchema, V2JobRecordSchema)
 from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecord
-from src.server.models.jobs import V2JobRecordSchema
+from src.server.models.jobs import V2JobRecordSchema, find_remote_node_for_job
 from flask import Flask
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
 job_schema = V2JobRecordSchema()
-
-#NOTE: this can't live in helper.py due to a circular dependency
-def find_remote_node_for_job(job: V2JobRecordSchema) -> str:
-    """Find a remote node that can run this job.
-
-    Args:
-        job (V2JobRecordSchema): job that is going to be run
-
-    Returns:
-        str: xname of remote node or ""
-    """
-    
-    # For the time being this is only set up for 'create' jobs
-    if job.job_type == JOB_TYPE_CUSTOMIZE:
-        return ""
-
-    best_node = ""
-    best_node_job_count = 10000
-    for xname, remote_node in current_app.data['remote_build_nodes'].items():
-        arch, numJobs = remote_node.getStatus()
-        if arch != None and arch == job.arch:
-            # matching arch - can use the node, now pick the best
-            if best_node == "" or numJobs < best_node_job_count:
-                best_node = remote_node.xname
-                best_node_job_count = numJobs
-    return best_node
 
 class V2BaseJobResource(Resource):
     """
@@ -722,9 +696,13 @@ class V2JobCollection(V2BaseJobResource):
             job_runtime_class = self.job_aarch64_runtime
 
         # Find if there is a remote node that can run this job 
-        remoteNode = find_remote_node_for_job(new_job)
+        remoteNode = find_remote_node_for_job(current_app, new_job)
         if remoteNode != "":
+            # set the value of the remote node for the job template
             new_job.remote_build_node = remoteNode
+
+            # Since the job is running on a remote node, do not need to isolate in kata VM
+            job_runtime_class = ""
 
         template_params = {
             "id": str(new_job.id).lower(),

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018, 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018, 2021-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -32,7 +32,7 @@ VOLUME ["/var/ims/data", "/results"]
 
 RUN apk add --upgrade --no-cache apk-tools && \
     apk update && \
-    apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev && \
+    apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev openssh-keygen && \
     apk -U upgrade --no-cache
 
 USER 65534:65534

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -66,8 +66,7 @@ class V3RemoteBuildNodeRecord:
         numJobs = None
 
         # connect to the remote node
-        # TODO: need to figure out where the key value is stored and how to use...
-        connect_kwargs = {"key_filename": "/tmp/ssh/id_rsa"}
+        connect_kwargs = {"key_filename": "/app/id_ecdsa"}
         c = Connection(self.xname, user="root", connect_kwargs=connect_kwargs)
 
         # validate the connection
