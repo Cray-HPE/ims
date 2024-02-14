@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -97,12 +97,20 @@ data:
               value: '/etc/admin-client-auth'
             - name: IMS_JOB_ID
               value: "$id"
+            - name: SSH_JAIL
+              value: "$ssh_jail"
             - name: DOWNLOAD_MD5SUM
               value: "$download_md5sum"
             - name: JOB_ENABLE_DKMS
               value: "$job_enable_dkms"
             - name: BUILD_ARCH
               value: "$job_arch"
+            - name: REMOTE_BUILD_NODE
+              value: '$remote_build_node'
+            - name: IMAGE_ROOT_PARENT
+              value: /mnt/image
+            - name: IMS_SSHD_IMAGE
+              value: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -112,6 +120,9 @@ data:
             - name: admin-client-auth
               mountPath: '/etc/admin-client-auth'
               readOnly: true
+            - name: remote-key
+              mountPath: /etc/cray/remote-keys
+              readOnly: true
             command: [ "sh", "-ce", "/scripts/prep-env.sh /mnt/image \"$download_url\"" ]
             resources:
               requests:
@@ -120,6 +131,10 @@ data:
               limits:
                 memory: "$job_mem_limit"
                 cpu: "8"
+            securityContext:
+              privileged: true
+              capabilities:
+                add: [$security_capabilites]
           # User customization of image root
           containers:
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
@@ -162,6 +177,8 @@ data:
               value: "$ssh_jail"
             - name: BUILD_ARCH
               value: "$job_arch"
+            - name: REMOTE_BUILD_NODE
+              value: '$remote_build_node'
             - name: S3_BUCKET
               value: "$s3_bucket"
             - name: S3_ACCESS_KEY
@@ -191,6 +208,9 @@ data:
               mountPath: /etc/cray/ims
             - name: ca-pubkey
               mountPath: /etc/cray/ca
+              readOnly: true
+            - name: remote-key
+              mountPath: /etc/cray/remote-keys
               readOnly: true
             - name: ssh-pubkey
               mountPath: /etc/cray
@@ -233,6 +253,8 @@ data:
               value: "$job_enable_dkms"
             - name: BUILD_ARCH
               value: "$job_arch"
+            - name: REMOTE_BUILD_NODE
+              value: '$remote_build_node'
             resources:
               requests:
                 memory: "$job_mem_size"
@@ -247,6 +269,9 @@ data:
               mountPath: /etc/cray/ims
             - name: ca-pubkey
               mountPath: /etc/cray/ca
+              readOnly: true
+            - name: remote-key
+              mountPath: /etc/cray/remote-keys
               readOnly: true
           volumes:
           - name: image-vol
@@ -263,6 +288,12 @@ data:
               items:
               - key: public_key
                 path: authorized_keys
+          - name: remote-key
+            configMap:
+              name: cray-ims-remote-keys
+              items:
+              - key: private_key
+                path: id_ecdsa
           - name: admin-client-auth
             secret:
               secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"

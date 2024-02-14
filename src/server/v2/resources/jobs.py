@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -61,11 +61,13 @@ from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
                                     KERNEL_FILE_NAME_X86, STATUS_TYPES,
                                     V2JobRecordInputSchema,
                                     V2JobRecordPatchSchema, V2JobRecordSchema)
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecord
+from src.server.models.jobs import V2JobRecordSchema, find_remote_node_for_job
+from flask import Flask
 
 job_user_input_schema = V2JobRecordInputSchema()
 job_patch_input_schema = V2JobRecordPatchSchema()
 job_schema = V2JobRecordSchema()
-
 
 class V2BaseJobResource(Resource):
     """
@@ -693,6 +695,15 @@ class V2JobCollection(V2BaseJobResource):
         if new_job.arch == ARCH_ARM64:
             job_runtime_class = self.job_aarch64_runtime
 
+        # Find if there is a remote node that can run this job 
+        remoteNode = find_remote_node_for_job(current_app, new_job)
+        if remoteNode != "":
+            # set the value of the remote node for the job template
+            new_job.remote_build_node = remoteNode
+
+            # Since the job is running on a remote node, do not need to isolate in kata VM
+            job_runtime_class = ""
+
         template_params = {
             "id": str(new_job.id).lower(),
             "size_gb": str(new_job.build_env_size) + "Gi",
@@ -718,7 +729,8 @@ class V2JobCollection(V2BaseJobResource):
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
             "security_capabilites": job_security_capabilities,
-            "job_arch": new_job.arch
+            "job_arch": new_job.arch,
+            "remote_build_node": new_job.remote_build_node
         }
 
         if new_job.job_type == JOB_TYPE_CREATE:
@@ -860,6 +872,7 @@ class V2JobResource(V2BaseJobResource):
 
         try:
             job = current_app.data['jobs'][job_id]
+
             status, errors = self.delete_kubernetes_resources(log_id, job)
 
             if not status:
