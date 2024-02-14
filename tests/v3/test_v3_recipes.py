@@ -175,7 +175,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
 
     def test_get_404_bad_id(self):
         """ Test the recipes/{recipe_id} resource retrieval with an unknown id """
-        response = self.app.get('/v3/recipes/{}'.format(str(uuid.uuid4())))
+        response = self.app.get('/recipes/{}'.format(str(uuid.uuid4())))
         check_error_responses(self, response, 404, ['status', 'title', 'detail'])
 
     def test_delete(self):
@@ -217,7 +217,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
 
     def test_delete_404_bad_id(self):
         """ Test the recipes/{recipe_id} resource removal with an unknown id """
-        response = self.app.delete('/v3/recipes/{}'.format(str(uuid.uuid4())))
+        response = self.app.delete('/recipes/{}'.format(str(uuid.uuid4())))
         check_error_responses(self, response, 404, ['status', 'title', 'detail'])
 
     def test_patch(self):
@@ -413,7 +413,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
             self.s3_stub.add_response('head_object', {"ETag": link["etag"]}, expected_params)
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/recipes', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/recipes', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -543,7 +543,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
         self.s3_stub.add_client_error('head_object')
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/recipes', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/recipes', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])

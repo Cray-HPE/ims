@@ -44,10 +44,10 @@ from src.server.helper import ARTIFACT_LINK_TYPE_S3, S3Url
 from src.server.models.jobs import (KERNEL_FILE_NAME_ARM, KERNEL_FILE_NAME_X86,
                                     STATUS_TYPES)
 from tests.utils import check_error_responses
-#from tests.v2.ims_fixtures import (V2FlaskTestClientFixture,
-#                                   V2ImagesDataFixture, V2JobsDataFixture,
-#                                   V2PublicKeysDataFixture,
-#                                   V2RecipesDataFixture)
+from tests.v2.ims_fixtures import (V2FlaskTestClientFixture,
+                                   V2ImagesDataFixture, V2JobsDataFixture,
+                                   V2PublicKeysDataFixture,
+                                   V2RecipesDataFixture)
 from tests.v3.ims_fixtures import (V3FlaskTestClientFixture,
                                    V3ImagesDataFixture, V3JobsDataFixture,
                                    V3PublicKeysDataFixture,
@@ -55,9 +55,9 @@ from tests.v3.ims_fixtures import (V3FlaskTestClientFixture,
 
 
 # TODO: This tests v2 change to v3
-@mock.patch("src.server.v3.resources.jobs.client")
-@mock.patch("src.server.v3.resources.jobs.config")
-@mock.patch("src.server.v3.resources.jobs.utils")
+@mock.patch("src.server.v2.resources.jobs.client")
+@mock.patch("src.server.v2.resources.jobs.config")
+@mock.patch("src.server.v2.resources.jobs.utils")
 class TestV3JobEndpoint(TestCase):
     """
     Test the job/{job_id} endpoint (ims.v2.resources.jobs.JobResource)
@@ -65,7 +65,7 @@ class TestV3JobEndpoint(TestCase):
 
     def setUp(self):
         super(TestV3JobEndpoint, self).setUp()
-        self.app = self.useFixture(V3FlaskTestClientFixture()).client
+        self.app = self.useFixture(V2FlaskTestClientFixture()).client
         self.test_job_id = str(uuid.uuid4())
         self.data = {
             'job_type': "create",
@@ -83,8 +83,8 @@ class TestV3JobEndpoint(TestCase):
             'arch': "x86_64",
             'require_dkms': False,
         }
-        self.useFixture(V3JobsDataFixture(initial_data=self.data))
-        self.test_uri = '/v3/jobs/{}'.format(self.data['id'])
+        self.useFixture(V2JobsDataFixture(initial_data=self.data))
+        self.test_uri = '/jobs/{}'.format(self.data['id'])
         
     def tearDown(self):
         super(TestV3JobEndpoint, self).tearDown()
@@ -109,7 +109,7 @@ class TestV3JobEndpoint(TestCase):
 
     def test_get_404_bad_id(self, client_mock, config_mock, utils_mock):
         """ Test the artifacts/{artifact_id} resource retrieval with an unknown id """
-        response = self.app.get('/v3/jobs/{}'.format(str(uuid.uuid4())))
+        response = self.app.get('/jobs/{}'.format(str(uuid.uuid4())))
         check_error_responses(self, response, 404, ['status', 'title', 'detail'])
 
     def test_delete(self, client_mock, config_mock, utils_mock):
@@ -120,7 +120,7 @@ class TestV3JobEndpoint(TestCase):
 
     def test_delete_404_bad_id(self, client_mock, config_mock, utils_mock):
         """ Test the artifacts/{artifact_id} resource removal with an unknown id """
-        response = self.app.delete('/v3/jobs/{}'.format(str(uuid.uuid4())))
+        response = self.app.delete('/jobs/{}'.format(str(uuid.uuid4())))
         check_error_responses(self, response, 404, ['status', 'title', 'detail'])
 
     def test_delete_k8s_job_not_found_ok(self, utils_mock, config_mock, client_mock):
@@ -175,9 +175,9 @@ class TestV3JobEndpoint(TestCase):
                              'resource field "status" returned was not equal')
 
 # TODO: This tests v2 change to v3
-@mock.patch("src.server.v3.resources.jobs.client")
-@mock.patch("src.server.v3.resources.jobs.config")
-@mock.patch("src.server.v3.resources.jobs.utils")
+@mock.patch("src.server.v2.resources.jobs.client")
+@mock.patch("src.server.v2.resources.jobs.config")
+@mock.patch("src.server.v2.resources.jobs.utils")
 class TestV3JobsCollectionEndpoint(TestCase):
     """
     Test the jobs/ collection endpoint (ims.v2.resources.jobs.JobsCollection)
@@ -187,7 +187,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         super(TestV3JobsCollectionEndpoint, self).setUp()
         
         self.s3_stub = Stubber(app.app.s3)
-        self.test_uri = '/v3/jobs'
+        self.test_uri = '/jobs'
         self.app = app.app.test_client()
         self.test_recipe_id = str(uuid.uuid4())
         self.test_image_id = str(uuid.uuid4())
@@ -273,10 +273,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
                 }
             ]
         }
-        self.test_jobs = self.useFixture(V3JobsDataFixture(initial_data=self.job_data)).datastore
-        self.test_public_keys = self.useFixture(V3PublicKeysDataFixture(initial_data=self.public_key_data)).datastore
-        self.recipes = self.useFixture(V3RecipesDataFixture(initial_data=self.recipe_data)).datastore
-        self.images = self.useFixture(V3ImagesDataFixture(initial_data=self.image_data)).datastore
+        self.test_jobs = self.useFixture(V2JobsDataFixture(initial_data=self.job_data)).datastore
+        self.test_public_keys = self.useFixture(V2PublicKeysDataFixture(initial_data=self.public_key_data)).datastore
+        self.recipes = self.useFixture(V2RecipesDataFixture(initial_data=self.recipe_data)).datastore
+        self.images = self.useFixture(V2ImagesDataFixture(initial_data=self.image_data)).datastore
         self.test_domain = 'https://api-gw-service-nmn.local'
         
     def tearDown(self):
@@ -293,7 +293,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_age_2wks(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?age=2w")
+        response = self.app.delete("/jobs?age=2w")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -303,7 +303,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_age_3days(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?age=3d")
+        response = self.app.delete("/jobs?age=3d")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -313,7 +313,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_status_error(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?status=error")
+        response = self.app.delete("/jobs?status=error")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -323,7 +323,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_status_success(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?status=success")
+        response = self.app.delete("/jobs?status=success")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -333,7 +333,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_status_invalid(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?status=invalid")
+        response = self.app.delete("/jobs?status=invalid")
         self.assertEqual(response.status_code, 400, 'status code was not 400')
 
         # verify that all the jobs were deleted
@@ -342,8 +342,8 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_type_customize(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?job_type=customize")
-        response = self.app.delete("/v3/jobs?job_type=customize")
+        response = self.app.delete("/jobs?job_type=customize")
+        response = self.app.delete("/jobs?job_type=customize")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -353,7 +353,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_type_create(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?job_type=create")
+        response = self.app.delete("/jobs?job_type=create")
         self.assertEqual(response.status_code, 204, 'status code was not 204')
         self.assertEqual(response.data, b'', 'resource returned was not empty')
 
@@ -363,7 +363,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
     def test_delete_jobs_type_invalid(self, utils_mock, config_mock, client_mock):
 
-        response = self.app.delete("/v3/jobs?job_type=invalid")
+        response = self.app.delete("/jobs?job_type=invalid")
         self.assertEqual(response.status_code, 400, 'status code was not 400')
 
         # verify that all the jobs were deleted
@@ -387,7 +387,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             else:
                 self.assertEqual(response_data[key], self.job_data[key])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_enable_debug_false(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -412,7 +412,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -429,10 +429,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name','arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size'],
                               'returned keys not the same')
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_enable_debug_true(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -459,7 +459,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -494,10 +494,10 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name','arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size'],
                               'returned keys not the same')
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_ims_job_namespace(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -524,7 +524,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
 
         with mock.patch.dict('os.environ', {'DEFAULT_IMS_JOB_NAMESPACE': job_namespace}):
             self.s3_stub.activate()
-            response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+            response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
             self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -543,7 +543,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size'],
                               'returned keys not the same')
 
     def test_post_create_with_ssh_container(self, utils_mock, config_mock, client_mock):
@@ -564,11 +564,11 @@ class TestV3JobsCollectionEndpoint(TestCase):
             ]
         }
 
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.assertEqual(response.status_code, 400, 'status code was not 400')
 
     @responses.activate
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_customize_with_out_ssh_container(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -620,7 +620,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -641,11 +641,11 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size'],
                               'returned keys not the same')
 
     @responses.activate
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_customize_with_ssh_container(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -711,7 +711,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         response_data = json.loads(response.data)
@@ -745,7 +745,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size'],
                               'returned keys not the same')
 
 
@@ -768,7 +768,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
             ]
         }
 
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         response_data = json.loads(response.data)
         self.assertEqual(response.status_code, 400, 'status code was not 400')
 
@@ -809,7 +809,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_missing_image_root_archive_name(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where image_root_archive_name is missing """
@@ -831,7 +831,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("image_root_archive_name", response.json["errors"],
                       "Expected image_root_archive_name to be listed in error detail")
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_image_root_archive_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where image_root_archive_name is blank """
@@ -854,7 +854,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("image_root_archive_name", response.json["errors"],
                       "Expected image_root_archive_name to be listed in error detail")
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_initrd_file_name_is_blank(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where initrd_file_name is blank """
@@ -876,7 +876,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("initrd_file_name", response.json["errors"],
                       "Expected initrd_file_name to be listed in error detail")
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_invalid_job_type(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where job type is invalid """
@@ -897,7 +897,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.assertIn("job_type", response.json["errors"],
                       "Expected job_type to be listed in error detail")
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_invalid_create_artifact_id(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the artifact_id is invalid for create case """
@@ -916,7 +916,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_422_create_artifact_not_in_s3(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -937,12 +937,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.s3_stub.add_client_error('head_object')
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_customize_manifest_not_in_s3(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json is not in s3  """
@@ -963,12 +963,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.s3_stub.add_client_error('head_object')
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_does_not_have_rootfs(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json does not list a rootfs object  """
@@ -1022,12 +1022,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         )
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_bad_version(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the manifest.json has an unknown version  """
@@ -1069,12 +1069,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         )
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_400_customize_manifest_no_version(self, mock_open, utils_mock, config_mock, client_mock):
 
@@ -1116,12 +1116,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         )
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     def test_post_422_customize_rootfs_not_in_s3(self, mock_open, utils_mock, config_mock, client_mock):
         """ Test case where the rootfs object is not in s3 """
@@ -1161,12 +1161,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         self.s3_stub.add_client_error('head_object')
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 422, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_400_customize_cannot_create_presigned_url(self, s3_mock, mock_open, utils_mock,
@@ -1219,12 +1219,12 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.side_effect = ClientError(parsed_response, "generate_presigned_url")
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])
 
-    @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
+    @mock.patch("src.server.v2.resources.jobs.open", new_callable=mock.mock_open,
                 read_data='{"metadata":{"name":"foo"}}')
     @mock.patch("src.server.app.app.s3.generate_presigned_url")
     def test_post_400_public_key_invalid(self, s3_mock, mock_open, utils_mock, config_mock, client_mock):
@@ -1248,7 +1248,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
         s3_mock.return_value = "http://localhost/path/to/file_abc.tgz"
 
         self.s3_stub.activate()
-        response = self.app.post('/v3/jobs', content_type='application/json', data=json.dumps(input_data))
+        response = self.app.post('/jobs', content_type='application/json', data=json.dumps(input_data))
         self.s3_stub.deactivate()
 
         check_error_responses(self, response, 400, ['status', 'title', 'detail'])

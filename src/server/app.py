@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -47,8 +47,6 @@ from src.server.v3.models.recipes import V3DeletedRecipeRecordSchema
 from src.server.models.images import V2ImageRecordSchema
 from src.server.v3.models.images import V3DeletedImageRecordSchema
 from src.server.models.jobs import V2JobRecordSchema
-from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordSchema
-from src.server.vault import remote_node_key_setup
 
 
 def load_datastore(_app):
@@ -78,10 +76,6 @@ def load_datastore(_app):
     _app.data['jobs'] = DataStoreHACK(
         os.path.join(_app.config['HACK_DATA_STORE'], 'v2.2_jobs.json'),
         V2JobRecordSchema(), 'id')
-
-    _app.data['remote_build_nodes'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.0_remote_build_nodes.json'),
-        V3RemoteBuildNodeRecordSchema(), 'xname')
 
 
 def load_v2_api(_app):
@@ -148,24 +142,16 @@ def create_app():
     _app.logger.setLevel(_app.config['LOG_LEVEL'])
     _app.logger.info('Image management service configured in {} mode'.format(os.getenv('FLASK_ENV', 'production')))
 
-    # dictionary to all the data store objects
     _app.data = {}
-
-    #dictionary to all the remote build node status objects
-    _app.remoteNodes = {}
 
     # log the gunicorn worker timeout on startup
     _app.logger.info(f"Gunicorn worker timeout: {os.getenv('GUNICORN_WORKER_TIMEOUT', '-1')}")
     _app.logger.info(f"DKMS enabled: {os.getenv('JOB_ENABLE_DKMS', 'Not Set')}")
 
-    # load the saved data files
     load_datastore(_app)
     load_v2_api(_app)
     load_v3_api(_app)
     load_boto3(_app)
-
-    # attempt to generate remote node ssh keys
-    remote_node_key_setup(_app)
 
     try:
         with open("/app/.version") as version_file:
@@ -197,6 +183,7 @@ def create_app():
                                  'spelling and try again.')
 
     return _app
+
 
 app = create_app()
 

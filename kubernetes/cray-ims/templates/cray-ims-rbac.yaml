@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,7 @@ metadata:
   name: ims-service-launch-job
 rules:
   - apiGroups: [""]
-    resources: ["services","configmaps","roles","persistentvolumeclaims","secrets"]
+    resources: ["services","configmaps","roles","persistentvolumeclaims"]
     verbs: ["get", "create", "delete"]
   - apiGroups: ["networking.istio.io"]
     resources: ["destinationrules"]

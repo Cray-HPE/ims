@@ -40,8 +40,7 @@ from src.server.v3.resources.public_keys import \
 from src.server.v3.resources.recipes import \
     V3RecipeResource, V3RecipeCollection, \
     V3DeletedRecipeResource, V3DeletedRecipeCollection
-from src.server.v3.resources.remote_build_nodes import V3RemoteBuildNodeResource, \
-    V3RemoteBuildNodeCollection
+
 app_errors = {
     # Custom 405 error format to conform to RFC 7807
     'MethodNotAllowed': json.loads(
@@ -54,13 +53,6 @@ apiv3 = Api(apiv3_blueprint, catch_all_404s=False, errors=app_errors)
 
 # Routes
 for uri_prefix, endpoint_prefix in [('/v3', 'v3')]:
-    apiv3.add_resource(V3RemoteBuildNodeResource,
-                       '/'.join([uri_prefix, 'remote-build-nodes/<remote_build_node_xname>']),
-                       endpoint='_'.join([endpoint_prefix, 'remote_build_node_resource']))
-    apiv3.add_resource(V3RemoteBuildNodeCollection,
-                       '/'.join([uri_prefix, 'remote-build-nodes']),
-                       endpoint='_'.join([endpoint_prefix, 'remote_build_nodes_collection']))
-
     apiv3.add_resource(V3PublicKeyResource,
                        '/'.join([uri_prefix, 'public-keys/<public_key_id>']),
                        endpoint='_'.join([endpoint_prefix, 'public_key_resource']))

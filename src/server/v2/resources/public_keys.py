@@ -96,7 +96,7 @@ class V2PublicKeyCollection(Resource):
         except KeyError as key_error:
             current_app.logger.info("%s Key not found: %s", log_id, key_error)
             return None, problemify(status=http.client.INTERNAL_SERVER_ERROR,
-                                    detail='An error was encountered deleting public keys. Review the errors, '
+                                    detail='An error was encountered deleting recipes. Review the errors, '
                                            'take any corrective action and then re-run the request with valid '
                                            'information.')
 
@@ -113,7 +113,7 @@ class V2PublicKeyResource(Resource):
         current_app.logger.info("%s ++ public_keys.v2.GET %s", log_id, public_key_id)
 
         if public_key_id not in current_app.data["public_keys"]:
-            current_app.logger.info("%s no IMS public_key matches public_key_id=%s", log_id, public_key_id)
+            current_app.logger.info("%s no IMS image public_key matches public_key_id=%s", log_id, public_key_id)
             return generate_resource_not_found_response()
 
         return_json = public_key_schema.dump(current_app.data['public_keys'][public_key_id])
@@ -128,7 +128,7 @@ class V2PublicKeyResource(Resource):
         try:
             del current_app.data['public_keys'][public_key_id]
         except KeyError:
-            current_app.logger.info("%s no IMS public_key matches public_key_id=%s", log_id, public_key_id)
+            current_app.logger.info("%s no IMS image public_key matches public_key_id=%s", log_id, public_key_id)
             return generate_resource_not_found_response()
 
         current_app.logger.info("%s return 204", log_id)

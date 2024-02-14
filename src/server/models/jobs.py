@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -84,7 +84,7 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
-                 arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node=""):
+                 arch=None, job_mem_size=None, kubernetes_pvc=None):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -118,9 +118,6 @@ class V2JobRecord:
         # v2.2
         self.kubernetes_pvc = kubernetes_pvc
         self.job_mem_size = job_mem_size or DEFAULT_JOB_MEM_SIZE
-
-        # v2.3
-        self.remote_build_node = remote_build_node or ""
 
     def __repr__(self):
         return '<v2JobRecord(id={self.id!r})>'.format(self=self)
@@ -235,10 +232,6 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     kubernetes_pvc = fields.Str(allow_none=True,
                                       description="PVC name for the underlying Kubernetes image pvc")
 
-    # v2.3
-    remote_build_node = fields.Str(allow_none=False, default="",
-                                        description="XName of remote job if running on a remote node")
-
     # after reading in the data, make sure there is an arch defined - default to x86
     @post_load(pass_original=False)
     def fill_arch(self, data, **kwargs):
@@ -255,24 +248,3 @@ class V2JobRecordPatchSchema(Schema):
                         validate=OneOf(STATUS_TYPES, error="Job state must be one of: {choices}."))
     resultant_image_id = fields.UUID(required=False,
                                      description="the unique id of the resultant image record")
-
-#NOTE: this can't live in helper.py due to a circular dependency
-def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
-    """Find a remote node that can run this job.
-    Args:
-        job (V2JobRecordSchema): job that is going to be run
-    Returns:
-        str: xname of remote node or ""
-    """
-    app.logger.info(f"Checking for remote build node for job")
-    best_node = ""
-    best_node_job_count = 10000
-    for xname, remote_node in app.data['remote_build_nodes'].items():
-        arch, numJobs = remote_node.getStatus()
-        if arch != None and arch == job.arch:
-            app.logger.info(f"Matching remote node: {xname}, current jobs on node: {numJobs}")
-            # matching arch - can use the node, now pick the best
-            if best_node == "" or numJobs < best_node_job_count:
-                best_node = remote_node.xname
-                best_node_job_count = numJobs
-    return best_node

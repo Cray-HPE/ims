@@ -36,7 +36,7 @@ from src.server.v3.models.public_keys import V3DeletedPublicKeyRecordSchema
 from src.server.models.recipes import V2RecipeRecordSchema
 from src.server.v3.models.recipes import V3DeletedRecipeRecordSchema
 from tests.ims_fixtures import _GenericDataFixture
-from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordSchema
+
 
 class V3FlaskTestClientFixture(Fixture):
     """ Test Fixture for preparing the Flask test client """
@@ -57,12 +57,6 @@ class V3DeletedPublicKeysDataFixture(_GenericDataFixture):
     schema = V3DeletedPublicKeyRecordSchema
     datastore = app.data['deleted_public_keys']
     id_field = 'id'
-
-
-class V3RemoteBuildNodesDataFixture(_GenericDataFixture):
-    schema = V3RemoteBuildNodeRecordSchema
-    datastore = app.data['remote_build_nodes']
-    id_field = 'xname'
 
 
 class V3ImagesDataFixture(_GenericDataFixture):

@@ -30,7 +30,7 @@ import collections
 import os
 import os.path
 
-class DataStoreHACK(collections.abc.MutableMapping):
+class DataStoreHACK(collections.MutableMapping):
     """ A dictionary that reads/writes to a file """
 
     def __init__(self, store_file, schema_obj, key_field, *args, **kwargs):
