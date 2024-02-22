@@ -16,7 +16,8 @@ idna==2.8
 itsdangerous==0.24
 Jinja2==2.10.3
 jmespath==0.9.5
-kubernetes==11.0.0
+# CSM 1.6 uses Kubernetes 1.22, so use client v22.x to ensure compatability
+kubernetes==22.6.0
 MarkupSafe==1.1.1
 marshmallow==3.0.0b16
 oauthlib==2.1.0
