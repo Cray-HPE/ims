@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 """
-Public Keys API
+Remote Build Nodes API
 """
 
 import http.client
@@ -32,35 +32,35 @@ from flask_restful import Resource
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
 from src.server.helper import get_log_id
-from src.server.models.publickeys import V2PublicKeyRecordInputSchema, V2PublicKeyRecordSchema
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordInputSchema, V3RemoteBuildNodeRecordSchema, V3RemoteBuildNodeRecord
+from src.server.v3.models import PATCH_OPERATION_UNDELETE
 
-public_key_user_input_schema = V2PublicKeyRecordInputSchema()
-public_key_schema = V2PublicKeyRecordSchema()
+remote_build_node_user_input_schema = V3RemoteBuildNodeRecordInputSchema()
+remote_build_node_schema = V3RemoteBuildNodeRecordSchema()
 
-
-class V2PublicKeyCollection(Resource):
+class V3RemoteBuildNodeCollection(Resource):
     """
-    Class representing the operations that can be taken on a collection of public keys
+    Class representing the operations that can be taken on a collection of remote builds nodes
     """
 
     def get(self):
-        """ retrieve a list/collection of public keys """
+        """ retrieve a list/collection of remote build nodes """
         log_id = get_log_id()
-        current_app.logger.info("%s ++ public_keys.v2.GET", log_id)
-        return_json = public_key_schema.dump(iter(current_app.data["public_keys"].values()), many=True)
+        current_app.logger.info("%s ++ remote_build_nodes.v3.GET", log_id)
+        return_json = remote_build_node_schema.dump(iter(current_app.data['remote_build_nodes'].values()), many=True)
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
 
     def post(self):
-        """ Add a new public key to the IMS Service.
+        """ Add a new remote build node to the IMS Service.
 
-        A new public key is created from values that passed in via the request body. If the public key already
-        exists, then a 400 is returned. If the public key is created successfully then a 201 is returned.
+        A new remote build node is created from values that passed in via the request body. If the remote build
+        node already exists, then a 400 is returned. If the remote build node is created successfully then a 201
+        is returned.
 
         """
-
         log_id = get_log_id()
-        current_app.logger.info("%s ++ public_keys.v2.POST", log_id)
+        current_app.logger.info("%s ++ remote_build_nodes.v3.POST", log_id)
 
         json_data = request.get_json()
         if not json_data:
@@ -70,33 +70,33 @@ class V2PublicKeyCollection(Resource):
         current_app.logger.info("%s json_data = %s", log_id, json_data)
 
         # Validate input
-        errors = public_key_user_input_schema.validate(json_data)
+        errors = remote_build_node_user_input_schema.validate(json_data)
         if errors:
             current_app.logger.info("%s There was a problem validating the post data: %s", log_id, errors)
             return generate_data_validation_failure(errors)
 
-        # Create a public key record if the user input data was valid
-        new_public_key = public_key_schema.load(json_data)
+        # Create a remote build node record if the user input data was valid
+        new_remote_build_node = remote_build_node_schema.load(json_data)
 
         # Save to datastore
-        current_app.data['public_keys'][str(new_public_key.id)] = new_public_key
+        current_app.data['remote_build_nodes'][str(new_remote_build_node.xname)] = new_remote_build_node
 
-        return_json = public_key_schema.dump(new_public_key)
+        return_json = remote_build_node_schema.dump(new_remote_build_node)
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return return_json, 201
 
     def delete(self):
-        """ Delete all public keys. """
+        """ Delete all remote build nodes. """
         log_id = get_log_id()
-        current_app.logger.info("%s ++ public_keys.v2.DELETE", log_id)
+        current_app.logger.info("%s ++ remote_build_nodes.v3.DELETE", log_id)
 
         try:
-            del current_app.data['public_keys']
-            current_app.data['public_keys'] = {}
+            # call reset to flush change to disk
+            current_app.data['remote_build_nodes'].reset()
         except KeyError as key_error:
             current_app.logger.info("%s Key not found: %s", log_id, key_error)
             return None, problemify(status=http.client.INTERNAL_SERVER_ERROR,
-                                    detail='An error was encountered deleting public keys. Review the errors, '
+                                    detail='An error was encountered deleting remote build nodes. Review the errors, '
                                            'take any corrective action and then re-run the request with valid '
                                            'information.')
 
@@ -104,31 +104,31 @@ class V2PublicKeyCollection(Resource):
         return None, 204
 
 
-class V2PublicKeyResource(Resource):
-    """ Endpoint for the public-keys/{public_key_id} resource. """
+class V3RemoteBuildNodeResource(Resource):
+    """ Endpoint for the remote-build-nodes/{remote_build_node_xname} resource. """
 
-    def get(self, public_key_id):
-        """ Retrieve a public key. """
+    def get(self, remote_build_node_xname):
+        """ Retrieve a remote build node. """
         log_id = get_log_id()
-        current_app.logger.info("%s ++ public_keys.v2.GET %s", log_id, public_key_id)
+        current_app.logger.info("%s ++ remote_build_nodes.v3.GET %s", log_id, remote_build_node_xname)
 
-        if public_key_id not in current_app.data["public_keys"]:
-            current_app.logger.info("%s no IMS public_key matches public_key_id=%s", log_id, public_key_id)
+        if remote_build_node_xname not in current_app.data['remote_build_nodes']:
+            current_app.logger.info("%s no IMS remote bild node matches xname=%s", log_id, remote_build_node_xname)
             return generate_resource_not_found_response()
 
-        return_json = public_key_schema.dump(current_app.data['public_keys'][public_key_id])
+        return_json = remote_build_node_schema.dump(current_app.data['remote_build_nodes'][remote_build_node_xname])
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
 
-    def delete(self, public_key_id):
-        """ Delete a public key. """
+    def delete(self, remote_build_node_xname):
+        """ Delete a remote build node. """
         log_id = get_log_id()
-        current_app.logger.info("%s ++ public_keys.v2.DELETE %s", log_id, public_key_id)
+        current_app.logger.info("%s ++ remote_build_nodes.v3.DELETE %s", log_id, remote_build_node_xname)
 
         try:
-            del current_app.data['public_keys'][public_key_id]
+            del current_app.data['remote_build_nodes'][remote_build_node_xname]
         except KeyError:
-            current_app.logger.info("%s no IMS public_key matches public_key_id=%s", log_id, public_key_id)
+            current_app.logger.info("%s no remote build node record matches xname=%s", log_id, remote_build_node_xname)
             return generate_resource_not_found_response()
 
         current_app.logger.info("%s return 204", log_id)
