@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
- - CASMCMS-8795 - add remote-build-nodes API.
+
+### Added
+- CASMCMS-8795 - add remote-build-nodes API.
 
 ### Dependencies
 - Bumped `kubernetes` from 11.0.0 to 22.6.0 to match CSM 1.6 Kubernetes version
+- Bumped `ims-utils` from 2.11 to 2.12 for CSM 1.6
 
 ## [3.12.0] - 2023-12-13
 ### Changed
