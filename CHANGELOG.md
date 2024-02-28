@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - CASMCMS-8795 - add remote-build-nodes API.
+- CASMCMS-8925 - ims service in CLBO when vault is not accessible.
 
 ## [3.13.0] - 2024-02-22
 ### Dependencies

@@ -44,10 +44,10 @@ def get_kube_token():
         oe = proc.communicate()[0]
     except Exception as e:
         print("Failed reading in service account token")
+        return None
     return oe.decode('utf-8')
 
-
-def generate_public_key():
+def generate_public_key(app):
     try:
         proc = subprocess.Popen(
             ['ssh-keygen', '-y', '-f', '/app/id_ecdsa'],
@@ -55,10 +55,11 @@ def generate_public_key():
             )
         oe, _ = proc.communicate()
         oe = oe.decode('utf-8')
-        export_public_key(oe)
+        export_public_key(app, oe)
         return oe
     except Exception as e:
-        print("Failed generating ssh keys")
+        print(f"Failed generating ssh keys. Error: {e}")
+    return None
 
 def generate_auth_endpoint():
     endpoint = '%s/%s/auth/kubernetes/login' %(VAULT_SERVICE_ENDPOINT_CLUSTER, VAULT_VERSION)
@@ -85,8 +86,8 @@ def vault_authentication(app, kube_token):
         token = json_obj['auth']['client_token']
         return {'X-Vault-Token': token}
     except HTTPError as err:
-        app.logger.info("Failed to authenticate with vault: %s", err)
-        return None
+        app.logger.error("Failed to authenticate with vault: %s", err)
+        raise
 
 def create_exportable_key(app):
     payload = {"type": "ecdsa-p384", "exportable": "true"}
@@ -94,8 +95,8 @@ def create_exportable_key(app):
         response = requests.post(generate_transit_endpoint(), headers=vault_authentication(app, get_kube_token()), json=payload)
         response.raise_for_status()
     except HTTPError as err:
-        app.logger.info(("Failed to create exportable key in vault: %s", err))
-        return None
+        app.logger.error(("Failed to create exportable key in vault: %s", err))
+        raise
 
 def get_exportable_key(app):
     try:
@@ -105,15 +106,25 @@ def get_exportable_key(app):
         key = values['data']['keys']['1']
         return key
     except HTTPError as err:
-        app.logger.info("Failed to get exportable key from vault: %s", err)
-        return None
+        app.logger.error("Failed to get exportable key from vault: %s", err)
+    return None
 
-def export_private_key(private_key):
+def export_private_key(app, private_key):
+    # This will throw an error on attempting to write a null
+    if private_key == None:
+        app.logger.error("Attempting to write an empty private key")
+        return
+    
     with open('id_ecdsa', 'w') as local_private_key:
         local_private_key.write(private_key)
     os.chmod('id_ecdsa', 0o600)
 
-def export_public_key(public_key):
+def export_public_key(app, public_key):
+    # This will throw an error on attempting to write a null
+    if public_key == None:
+        app.logger.error("Attempting to write an empty public key")
+        return
+
     with open('id_ecdsa.pub', 'w') as local_public_key:
         local_public_key.write(public_key)
     os.chmod('id_ecdsa.pub', 0o600)
@@ -133,7 +144,7 @@ def sign_public_key(app, public_key):
         return certificate
     except HTTPError as err:
         app.logger.info("Failed to sign public key: %s", err)
-        return None
+    return None
 
 def export_certificate(certificate):
     with open('id_ecdsa.pub.cert', 'w') as local_certificate:
@@ -161,28 +172,29 @@ def post_config_map(app, config_map, namespace):
 def get_config_map(app):
     config.load_incluster_config()
     client_api = client.CoreV1Api()
-    try: 
+    try:
         cm = client_api.read_namespaced_config_map(name="cray-ims-remote-keys", namespace="services")
         return cm
     except Exception as exception:
         app.logger.info("Remote keys configmap not found")
-        return None
+    return None
 
 def generate_ca(app):
     create_exportable_key(app)
-    export_private_key(get_exportable_key(app))
-    export_certificate(sign_public_key(app, generate_public_key()))
+    export_private_key(app, get_exportable_key(app))
+    export_certificate(sign_public_key(app, generate_public_key(app)))
 
 def remote_node_key_setup(app):
     # do not fail - this key is not essential to the running of IMS
     # NOTE: after this the private key needs to exist at /app/ssh/id_rsa
+    #       for the remote build options to work
     try:
         # if key already exists, do nothing
         keys = get_exportable_key(app)
         cm = get_config_map(app)
         if keys != None and cm != None:
             # Copy the keys into files
-            export_private_key(keys)
+            export_private_key(app, keys)
             app.logger.info("Remote build node ssh keys already exist")
             return 
 
@@ -191,5 +203,6 @@ def remote_node_key_setup(app):
         generate_ca(app)
         post_config_map(app, create_configmap_object('id_ecdsa', 'id_ecdsa.pub.cert', 'id_ecdsa.pub', "services"), "services")
         post_config_map(app, create_configmap_object('id_ecdsa', 'id_ecdsa.pub.cert', 'id_ecdsa.pub', "ims"), "ims")
-    except (HTTPError, ConnectionError) as err:
-        app.logger.info("Unable to generate remote build node ssh keys")
+    except Exception as err:
+        # remote builds are not required, don't let this crash the entire system
+        app.logger.info(f"Unable to generate remote build node ssh keys - remote builds not enabled. Error: {err}")
