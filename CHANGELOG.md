@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.14.0] - 2024-03-01
+### Added
+- CASMCMS-8795 - add remote-build-nodes API.
+- CASMCMS-8925 - ims service in CLBO when vault is not accessible.
+
 ## [3.13.0] - 2024-02-22
 ### Dependencies
 - Bumped `kubernetes` from 11.0.0 to 22.6.0 to match CSM 1.6 Kubernetes version

@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -211,6 +211,8 @@ data:
               value: '/etc/admin-client-auth'
             - name: ENABLE_DEBUG
               value: '$enable_debug'
+            - name: REMOTE_BUILD_NODE
+              value: '$remote_build_node'
             - name: RECIPE_ROOT_PARENT
               value: /mnt/image/recipe
             - name: IMAGE_ROOT_PARENT
@@ -223,6 +225,10 @@ data:
               value: "$job_arch"
             - name: IMS_ARM_BUILDER
               value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}"
+            - name: IMAGE_ROOT_ARCHIVE_NAME
+              value: "$image_root_archive_name"
+            - name: INITRD_FILENAME
+              value: "$initrd_filename"
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -231,6 +237,9 @@ data:
               readOnly: true
             - name: ca-pubkey
               mountPath: /etc/cray/ca
+              readOnly: true
+            - name: remote-key
+              mountPath: /etc/cray/remote-keys
               readOnly: true
             - name: admin-client-auth
               mountPath: '/etc/admin-client-auth'
@@ -390,6 +399,12 @@ data:
               items:
               - key: template_dictionary
                 path: template_dictionary
+          - name: remote-key
+            configMap:
+              name: cray-ims-remote-keys
+              items:
+              - key: private_key
+                path: id_ecdsa
           - name: admin-client-auth
             secret:
               secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"
