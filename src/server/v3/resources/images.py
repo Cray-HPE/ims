@@ -376,6 +376,33 @@ class V3ImageResource(V3BaseImageResource):
             elif key == "arch":
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
+            elif key == 'metadata':
+                current_app.logger.info("Patching metadata annotations.")
+                if 'annotations' not in value:
+                    continue
+                else:
+                    # Even though the API represents Image Metadata Annotations as a list internally, they behave like
+                    # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
+                    # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
+                    # multiple insertions or deletions. We will flatten this back out to a list before setting it within
+                    # the image.
+                    image_annotation_dict = {}
+                    for image_key, image_value in image.metadata.annotations:
+                        image_annotation_dict[image_key] = image_value
+                        
+                    for changeset in value['annotations']:
+                        operation = changeset.get('operation')
+                        if operation not in ['set', 'remove']:
+                            current_app.logger.info(f"Unknown requested operation change '{operation}'")
+                            return generate_data_validation_failure(errors=[])
+                        annotation_key = changeset.get('key')
+                        annotation_value = changeset.get('value', '')
+
+                        if operation == 'set':
+                            # It should not be possible to do so with the API, but there should be at most one
+                        elif operation == 'remove':
+                            pass
+
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
