@@ -119,7 +119,7 @@ class TestV3PublicKeyEndpoint(TestV3PublicKeyBase):
 
     def test_delete_404_bad_id(self):
         """ Test the artifacts/{artifact_id} resource removal with an unknown id """
-        response = self.app.delete('/public-keys/{}'.format(str(uuid.uuid4())))
+        response = self.app.delete('/v3/public-keys/{}'.format(str(uuid.uuid4())))
         check_error_responses(self, response, 404, ['status', 'title', 'detail'])
 
 
