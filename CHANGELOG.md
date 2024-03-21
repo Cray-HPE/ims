@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.14.1] - 2024-03-21
+### Fixed
+- CASMCMS-8950: Fixed loading Kubernetes configuration data in the shasta_s3_creds module
+
 ## [3.14.0] - 2024-03-01
 ### Added
 - CASMCMS-8795 - add remote-build-nodes API.
