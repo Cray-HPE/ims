@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022, 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -31,8 +31,6 @@ import json
 
 from ansible.module_utils.basic import AnsibleModule
 from kubernetes import client, config
-from kubernetes.client.api_client import ApiClient
-from kubernetes.client.configuration import Configuration
 from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
 
@@ -127,9 +125,7 @@ def run_module():
     except ConfigException:
         config.load_kube_config()
 
-    configuration = Configuration()
-    k8sclient = ApiClient(configuration=configuration)
-    coreapi = client.CoreV1Api(k8sclient)
+    coreapi = client.CoreV1Api()
 
     # Read the secret
     try:
