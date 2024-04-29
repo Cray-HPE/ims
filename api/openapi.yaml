@@ -2297,8 +2297,7 @@ components:
           description: A list of metadata change operations to apply to an existing Image Record
           type: array
           items:
-            oneOf:
-              - $ref: '#/components/schemas/ImageMetadataAnnotationPatchOperations'
+            $ref: '#/components/schemas/ImageMetadataAnnotationPatchOperations'
     ImageRecord:
       description: An Image Record
       type: object
