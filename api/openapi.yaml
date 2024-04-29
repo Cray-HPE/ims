@@ -2295,11 +2295,10 @@ components:
           type: string
         metadata:
           description: A list of metadata change operations to apply to an existing Image Record
-          type: object
-          properties:
-            annotations:
-              items:
-                $ref: '#/components/schemas/ImageMetadataAnnotationPatchOperations'
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ImageMetadataAnnotationPatchOperations'
     ImageRecord:
       description: An Image Record
       type: object
