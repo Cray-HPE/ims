@@ -2269,6 +2269,7 @@ components:
       properties:
         operation:
           description: How to update a given key within the context of a patch operation
+          type: string
           enum:
             - set
             - remove
