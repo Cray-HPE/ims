@@ -82,6 +82,11 @@ class V2ImageRecordSchema(V2ImageRecordInputSchema):
     id = fields.UUID(description="the unique id of the image")
     created = fields.DateTime(description="the time the image record was created")
 
+class V2ImageRecordMetadataPatchSchema(Schema):
+    operation = fields.Str(required=True, description="A method for how to change a metadata struct.",
+                           validate=OneOf(['set', 'remove']))
+    key = fields.Str(required=True, description="The metadata key that is to be affected.")
+    value = fields.Str(required=False, description="The value to store for the provided key.")
 
 class V2ImageRecordPatchSchema(Schema):
     """
@@ -91,4 +96,6 @@ class V2ImageRecordPatchSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
                           validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
+    metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()), allow_none=True, required=False,
+                           default=[], description="A list of change operations to perform on Image Metadata.")
 
