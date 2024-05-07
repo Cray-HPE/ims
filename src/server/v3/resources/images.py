@@ -348,6 +348,7 @@ class V3ImageResource(V3BaseImageResource):
         # Validate input
         errors = image_patch_input_schema.validate(json_data)
         if errors:
+            current_app.logger.info("PATCH data: '%s'", json_data)
             current_app.logger.info("%s There was a problem validating the PATCH data: %s", log_id, errors)
             return generate_data_validation_failure(errors)
 
