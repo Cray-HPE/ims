@@ -378,38 +378,33 @@ class V3ImageResource(V3BaseImageResource):
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
             elif key == 'metadata':
-                current_app.logger.info(f"Patching metadata annotations with '{value}'.")
-                if 'annotations' not in value:
-                    continue
-                else:
-                    # Even though the API represents Image Metadata Annotations as a list internally, they behave like
-                    # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
-                    # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
-                    # multiple insertions or deletions. We will flatten this back out to a list before setting it within
-                    # the image.
-                    image_annotation_dict = {}
-                    for image_key, image_value in image.metadata.annotations:
-                        image_annotation_dict[image_key] = image_value
-                    for changeset in value['annotations']:
-                        operation = changeset.get('operation')
-                        if operation not in ['set', 'remove']:
-                            current_app.logger.info(f"Unknown requested operation change '{operation}'")
-                            return generate_data_validation_failure(errors=[])
-                        annotation_key = changeset.get('key')
-                        annotation_value = changeset.get('value', '')
+                current_app.logger.info(f"Patching metadata with '{value}'.")
+                # Even though the API represents Image Metadata Annotations as a list internally, they behave like
+                # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
+                # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
+                # multiple insertions or deletions. We will flatten this back out to a list before setting it within
+                # the image.
+                image_annotation_dict = {}
+                for changeset in value:
+                    operation = changeset.get('operation')
+                    if operation not in ['set', 'remove']:
+                        current_app.logger.info(f"Unknown requested operation change '{operation}'")
+                        return generate_data_validation_failure(errors=[])
+                    annotation_key = changeset.get('key')
+                    annotation_value = changeset.get('value', '')
 
-                        if operation == 'set':
-                            # It should not be possible to do so with the API, but there should be at most one
-                            image_annotation_dict[annotation_key] = annotation_value
-                        elif operation == 'remove':
-                            try:
-                                del image_annotation_dict[annotation_key]
-                            except KeyError:
-                                current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
-                                pass
-                    # With every change made to the image_annotation_dictionary, the last thing that is necessary is
-                    # to convert the temporary dictionary back into a list of key:value pairs.
-                    image.metadata.annotations = list(image_annotation_dict.items())
+                    if operation == 'set':
+                        # It should not be possible to do so with the API, but there should be at most one
+                        image_annotation_dict[annotation_key] = annotation_value
+                    elif operation == 'remove':
+                        try:
+                            del image_annotation_dict[annotation_key]
+                        except KeyError:
+                            current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
+                            pass
+                # With every change made to the image_annotation_dictionary, the last thing that is necessary is
+                # to convert the temporary dictionary back into a list of key:value pairs.
+                image.metadata.annotations = list(image_annotation_dict.items())
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
                 current_app.logger.info(f"{log_id}: '{key}', of type: %s. Is metadata? %s" % (type(key), key == 'metadata'))
