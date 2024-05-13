@@ -378,7 +378,7 @@ class V3ImageResource(V3BaseImageResource):
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
             elif key == 'metadata':
-                current_app.logger.info("Patching metadata annotations.")
+                current_app.logger.info(f"Patching metadata annotations with '{value}'.")
                 if 'annotations' not in value:
                     continue
                 else:
@@ -411,7 +411,8 @@ class V3ImageResource(V3BaseImageResource):
                     # to convert the temporary dictionary back into a list of key:value pairs.
                     image.metadata.annotations = list(image_annotation_dict.items())
             else:
-                current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
+                current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
+                current_app.logger.info(f"{log_id}: '{key}', of type: %s. Is metadata? %s" % (type(key), key == 'metadata'))
                 return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
