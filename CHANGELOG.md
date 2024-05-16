@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.14.2] - 2024-05-16
+### Dependencies
+- Pin `pytest` to 8.1.1 to prevent unit test failures
+
 ## [3.14.1] - 2024-03-21
 ### Fixed
 - CASMCMS-8950: Fixed loading Kubernetes configuration data in the shasta_s3_creds module
