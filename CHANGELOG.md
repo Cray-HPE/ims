@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.15.0] - 2024-05-20
+### Dependencies
+- CASMCMS-8976 - include updated kiwi-builder version that has new DST signing keys.
+
 ## [3.14.2] - 2024-05-16
 ### Dependencies
 - Pin `pytest` to 8.1.1 to prevent unit test failures
