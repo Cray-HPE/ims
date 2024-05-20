@@ -92,7 +92,7 @@ class V2ImageRecordMetadataPatchSchema(Schema):
 
 class V2ImageRecordPatchSchema(Schema):
     """
-    Schema for a updating an ImageRecord object.
+    Schema for updating an ImageRecord object.
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          description="the location of the image manifest")
