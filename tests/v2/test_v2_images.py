@@ -263,7 +263,7 @@ class TestV2ImageEndpoint(TestCase):
         self.stubber.deactivate()
         print(link_data)
         print(response)
-        self.assertEqual(response.status_code, 200, 'status code was not 200: data:%s response: %s' % (json.dumps(link_data), response))
+        self.assertEqual(response.status_code, 200, 'status code was not 200: data:%s response.data: %s' % (json.dumps(link_data), response.data))
         response_data = json.loads(response.data)
         self.assertEqual(set(self.data_record_link_none.keys()).difference(response_data.keys()), set(),
                          'returned keys not the same')
