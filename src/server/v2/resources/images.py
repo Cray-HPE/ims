@@ -230,6 +230,9 @@ class V2ImageResource(V2BaseImageResource):
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
             elif key == 'metadata':
+                if not value:
+                    current_app.logger.info("No metadata values to patch.")
+                    continue
                 current_app.logger.info(f"Patching metadata with '{value}'.")
                 # Even though the API represents Image Metadata Annotations as a list internally, they behave like
                 # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
