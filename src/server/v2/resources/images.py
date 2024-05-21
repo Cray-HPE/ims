@@ -206,10 +206,10 @@ class V2ImageResource(V2BaseImageResource):
             return generate_missing_input_response()
 
         # Validate input
-        print(json_data)
         errors = image_patch_input_schema.validate(json_data)
         if errors:
-            current_app.logger.info("%s There was a problem validating the PATCH data: %s", log_id, errors)
+            current_app.logger.info("%s There was a problem validating the PATCH data: %s, json_data: %s"
+                                    % (log_id, errors, json_data))
             return generate_data_validation_failure(errors)
 
         image = current_app.data["images"][image_id]
