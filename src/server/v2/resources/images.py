@@ -212,6 +212,7 @@ class V2ImageResource(V2BaseImageResource):
             return generate_data_validation_failure(errors)
 
         image = current_app.data["images"][image_id]
+        print(json_data)
         for key, value in list(json_data.items()):
             if key == "link":
                 if image.link and dict(image.link) == value:
