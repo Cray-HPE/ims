@@ -34,21 +34,32 @@ from marshmallow.validate import Length, OneOf
 from src.server.models import ArtifactLink
 from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
+
+class ImageMetadata(Schema):
+    """ A schema specifically for validating artifact links """
+    key = fields.Str(required=True, description="An arbitrary key of metadata given for an image",
+                     validate=Length(min=1, error="name field must not be blank"))
+    value = fields.Str(required=True, default="",
+                       description="A value field given for an associated image metadata key.")
+
+
 class V2ImageRecord:
     """ The ImageRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, link=None, id=None, created=None, arch=ARCH_X86_64):
+    def __init__(self, name, link=None, id=None, created=None, arch=ARCH_X86_64, metadata=None):
         # Supplied
         self.name = name
         self.link = link
-        
+
         # v2.1
         self.arch = arch
 
         # derived
         self.id = id or uuid.uuid4()
         self.created = created or datetime.datetime.now()
+
+        self.metadata = metadata if metadata else {}
 
     def __repr__(self):
         return '<V2ImageRecord(id={self.id!r})>'.format(self=self)
@@ -62,6 +73,8 @@ class V2ImageRecordInputSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, default=ARCH_X86_64, description="Architecture of the image",
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
+    metadata = fields.Nested(ImageMetadata, required=False, allow_none=True, default={},
+                             description="user supplied additional information about an image")
 
     @post_load
     def make_image(self, data):
@@ -100,4 +113,3 @@ class V2ImageRecordPatchSchema(Schema):
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
     metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()), default=[], required=False,
                            description="A list of change operations to perform on Image Metadata.")
-
