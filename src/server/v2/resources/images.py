@@ -213,7 +213,7 @@ class V2ImageResource(V2BaseImageResource):
             return generate_data_validation_failure(errors)
 
         image = current_app.data["images"][image_id]
-        current_app.logger.info("JSL -> json_data: %s" % json_data)
+        current_app.logger.info("JSL -> json_data.items(): %s" % json_data.items())
         for key, value in list(json_data.items()):
             if key == "link":
                 if image.link and dict(image.link) == value:
@@ -263,7 +263,8 @@ class V2ImageResource(V2BaseImageResource):
                 # to convert the temporary dictionary back into a list of key:value pairs.
                 image.metadata.annotations = list(image_annotation_dict.items())
         else:
-            current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
+            current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
+            current_app.logger.info("key: %s, value: %s, equal to link?" %(key, value, key == 'link'))
             return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
