@@ -67,6 +67,7 @@ class TestV2ImageEndpoint(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
         self.data_record_link_none = {
             'name': self.getUniqueString(),
@@ -74,12 +75,14 @@ class TestV2ImageEndpoint(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
             'arch': self.test_arch,
+            'metadata': {}
         }
         self.data_record_no_link = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_no_link,
             'arch': self.test_arch,
+            'metadata': {}
         }
         self.data = [
             self.data_record_with_link,
