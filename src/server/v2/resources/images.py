@@ -262,10 +262,10 @@ class V2ImageResource(V2BaseImageResource):
                 # With every change made to the image_annotation_dictionary, the last thing that is necessary is
                 # to convert the temporary dictionary back into a list of key:value pairs.
                 image.metadata.annotations = list(image_annotation_dict.items())
-        else:
-            current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
-            current_app.logger.info("key: %s, value: %s, equal to link: %s?" %(key, value, key == 'link'))
-            return generate_data_validation_failure(errors=[])
+            else:
+                current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
+                current_app.logger.info("key: %s, value: %s, equal to link: %s?" %(key, value, key == 'link'))
+                return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
         current_app.data['images'][image_id] = image
