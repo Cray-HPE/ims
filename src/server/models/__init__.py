@@ -29,9 +29,10 @@ from src.server.helper import ARTIFACT_LINK_TYPES
 
 class ArtifactLink(Schema):
     """ A schema specifically for validating artifact links """
-    path = fields.Str(required=True, description="URL or path to the artifact",
-                      validate=Length(min=1, error="name field must not be blank"))
-    etag = fields.Str(required=False, default="", description="Artifact entity tag")
+    path = fields.Str(required=True, validate=Length(min=1, error="name field must not be blank"),
+                      metadata={"metadata": {"description": "URL or path to the artifact"}})
+    etag = fields.Str(required=False, dump_default="", load_default="",
+                      metadata={"metadata": {"description": "Artifact entity tag"}})
     type = fields.Str(required=True, allow_none=False,
-                      description="The type of artifact link",
+                      metadata={"metadata": {"description": "The type of artifact link"}},
                       validate=OneOf(ARTIFACT_LINK_TYPES, error="Type must be one of: {choices}."))

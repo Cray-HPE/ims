@@ -53,7 +53,7 @@ class V3DeletedRecipeRecordInputSchema(V2RecipeRecordInputSchema):
     """ A schema specifically for defining and validating user input """
 
     @post_load
-    def make_recipe(self, data):
+    def make_recipe(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V3DeletedRecipeRecord(**data)
 
@@ -68,9 +68,9 @@ class V3DeletedRecipeRecordSchema(V3DeletedRecipeRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     DeletedRecipeRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the recipe")
-    created = fields.DateTime(description="the time the recipe record was created")
-    deleted = fields.DateTime(description="the time the recipe record was deleted")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the recipe"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the recipe record was created"}})
+    deleted = fields.DateTime(metadata={"metadata": {"description": "Time the recipe record was deleted"}})
 
 
 class V3DeletedRecipeRecordPatchSchema(Schema):
@@ -78,6 +78,6 @@ class V3DeletedRecipeRecordPatchSchema(Schema):
     Schema for a updating an RecipeRecord object.
     """
     operation = fields.Str(required=True,
-                           description='The operation or action that should be taken on the recipe record. '
-                                       f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }',
+                           metadata={"metadata": {"description": "The operation or action that should be taken on the recipe record. "
+                                                  f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }'}},
                            validate=OneOf(PATCH_OPERATIONS, error="Recipe type must be one of: {choices}."))

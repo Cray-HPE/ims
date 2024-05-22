@@ -36,7 +36,7 @@ from testtools.matchers import HasLength
 
 from src.server import app
 from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3RecipesDataFixture, V3DeletedRecipesDataFixture
 
 
@@ -167,7 +167,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_with_link[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data_record_with_link[key],
@@ -251,7 +251,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
                 self.assertEqual(response_data[key], link_data['link'],
@@ -279,7 +279,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                     self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                     '%Y-%m-%dT%H:%M:%S'),
                                         datetime.datetime.strptime(response_data['created'],
-                                                                    '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                    DATETIME_STRING),
                                         delta=datetime.timedelta(seconds=5))
                 elif key == 'arch':
                     self.assertEqual(response_data[key], arch_data['arch'],
@@ -307,7 +307,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                     self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                     '%Y-%m-%dT%H:%M:%S'),
                                         datetime.datetime.strptime(response_data['created'],
-                                                                    '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                    DATETIME_STRING),
                                         delta=datetime.timedelta(seconds=5))
                 elif key == 'require_dkms':
                     self.assertEqual(response_data[key], dkms_data['require_dkms'],
@@ -357,7 +357,7 @@ class TestV3RecipeEndpoint(TestV3RecipeBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_with_link[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data_record_with_link[key],
@@ -387,7 +387,7 @@ class TestV3RecipesCollectionEndpoint(TestV3RecipeBase):
                             self.assertAlmostEqual(datetime.datetime.strptime(source_record[key],
                                                                               '%Y-%m-%dT%H:%M:%S'),
                                                    datetime.datetime.strptime(response_record[key],
-                                                                              '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                              DATETIME_STRING),
                                                    delta=datetime.timedelta(seconds=1))
                         else:
                             self.assertEqual(source_record[key], response_record[key])
