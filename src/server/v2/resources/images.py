@@ -264,7 +264,7 @@ class V2ImageResource(V2BaseImageResource):
                 image.metadata.annotations = list(image_annotation_dict.items())
         else:
             current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
-            current_app.logger.info("key: %s, value: %s, equal to link?" %(key, value, key == 'link'))
+            current_app.logger.info("key: %s, value: %s, equal to link: %s?" %(key, value, key == 'link'))
             return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
