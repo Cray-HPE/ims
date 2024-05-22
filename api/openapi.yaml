@@ -2335,9 +2335,7 @@ components:
           description: An object of key/value associated with an Image
           type: object
           properties:
-            annotations:
-              items:
-                $ref: '#/components/schemas/ImageMetadataAnnotationKeyValuePair'
+            $ref: '#/components/schemas/ImageMetadataAnnotationKeyValuePair'
     DeletedImageRecord:
       description: A Deleted Image Record
       type: object
@@ -2381,9 +2379,7 @@ components:
           description: List of key/value pairs to associate with an Image
           type: object
           properties:
-            annotations:
-              items:
-                $ref: '#/components/schemas/ImageMetadataAnnotationKeyValuePair'
+            $ref: '#/components/schemas/ImageMetadataAnnotationKeyValuePair'
     JobRecord:
       description: A Job Record
       type: object
