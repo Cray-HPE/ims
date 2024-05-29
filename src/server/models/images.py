@@ -73,7 +73,7 @@ class V2ImageRecordInputSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, default=ARCH_X86_64, description="Architecture of the image",
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
-    metadata = fields.Nested(ImageMetadata, required=False, allow_none=True, default={},
+    metadata = fields.Nested(ImageMetadata, required=False, allow_none=True,
                              description="user supplied additional information about an image")
 
     @post_load
