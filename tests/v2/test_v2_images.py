@@ -84,10 +84,25 @@ class TestV2ImageEndpoint(TestCase):
             'arch': self.test_arch,
             'metadata': {}
         }
+        self.data_record_with_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_no_link,
+            'arch': self.test_arch,
+            'metadata': {'foo': 'bar'}
+        }
+        self.data_record_with_no_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_no_link,
+            'arch': self.test_arch
+        }
         self.data = [
             self.data_record_with_link,
             self.data_record_link_none,
-            self.data_record_no_link
+            self.data_record_no_link,
+            self.data_record_with_metadata,
+            self.data_record_with_no_metadata
         ]
 
         self.useFixture(V2ImagesDataFixture(initial_data=self.data))

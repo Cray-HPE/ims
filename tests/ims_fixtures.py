@@ -25,9 +25,12 @@
 Test Fixtures
 """
 import os.path
+import logging
 
 from fixtures import Fixture, TempDir
 
+
+LOGGER = logging.getLogger(__name__)
 
 class DataStoreFixture(Fixture):
     """ Test Fixture for preparing an empty data store """
@@ -65,7 +68,7 @@ class _GenericDataFixture(Fixture):
             elif isinstance(self._initial_data, list):
                 data = {}
                 for record in self._initial_data:
-                    print("Record: %s" % record)
+                    LOGGER.info("Record: %s" % record)
                     input_data = self.schema().load(record)
                     data[record[self.id_field]] = input_data
                 self.datastore.store = data

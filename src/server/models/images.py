@@ -111,5 +111,7 @@ class V2ImageRecordPatchSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
-    metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()), default=[], required=False,
+    metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()),
+                           default=[],
+                           required=False,
                            description="A list of change operations to perform on Image Metadata.")
