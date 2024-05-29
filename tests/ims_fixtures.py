@@ -54,7 +54,7 @@ class _GenericDataFixture(Fixture):
 
     def __init__(self, initial_data=None):
         super(_GenericDataFixture, self).__init__()
-        print("Initial Data: %s" % initial_data)
+        LOGGER.info("Initial Data: %s" % initial_data)
         self._initial_data = initial_data
 
     def _setUp(self):
