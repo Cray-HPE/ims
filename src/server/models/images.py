@@ -51,6 +51,7 @@ class V2ImageRecord:
         # Supplied
         self.name = name
         self.link = link
+        self.metadata = metadata
 
         # v2.1
         self.arch = arch
@@ -58,8 +59,6 @@ class V2ImageRecord:
         # derived
         self.id = id or uuid.uuid4()
         self.created = created or datetime.datetime.now()
-
-        self.metadata = metadata if metadata else {}
 
     def __repr__(self):
         return '<V2ImageRecord(id={self.id!r})>'.format(self=self)
@@ -73,7 +72,9 @@ class V2ImageRecordInputSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, default=ARCH_X86_64, description="Architecture of the image",
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
-    metadata = fields.Nested(ImageMetadata, required=False, allow_none=True,
+    metadata = fields.Nested(ImageMetadata,
+                             required=False,
+                             default={},
                              description="user supplied additional information about an image")
 
     @post_load
