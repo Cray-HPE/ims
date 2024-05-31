@@ -51,7 +51,7 @@ class V2ImageRecord:
         # Supplied
         self.name = name
         self.link = link
-        self.metadata = metadata
+        self.metadata = metadata if metadata else {}
 
         # v2.1
         self.arch = arch
