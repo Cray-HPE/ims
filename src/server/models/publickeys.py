@@ -51,13 +51,13 @@ class V2PublicKeyRecord:
 
 class V2PublicKeyRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input """
-    name = fields.Str(required=True, description="A name to identify the public key",
-                      validate=Length(min=1, error="name field must not be blank"))
-    public_key = fields.Str(required=True, description="The raw public key file contents",
-                            validate=Length(min=1, error="public_key field must not be blank"))
+    name = fields.Str(required=True, validate=Length(min=1, error="name field must not be blank"),
+                      metadata={"metadata": {"description": "Name to identify the public key"}})
+    public_key = fields.Str(required=True, validate=Length(min=1, error="public_key field must not be blank"),
+                            metadata={"metadata": {"description": "Raw public key file contents"}})
 
     @post_load
-    def make_public_key(self, data):
+    def make_public_key(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V2PublicKeyRecord(**data)
 
@@ -72,5 +72,5 @@ class V2PublicKeyRecordSchema(V2PublicKeyRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     PublicKeyRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the public key")
-    created = fields.DateTime(description="the time the public key9 record was created")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the public key"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the public key9 record was created"}})

@@ -128,56 +128,50 @@ class V2JobRecord:
 
 class SshContainerInputSchema(Schema):
     """ A schema specifically for defining and validating user input of SSH Containers """
-    name = fields.String(description="SSH Container name")
-    jail = fields.Boolean(description="Whether to use an SSH jail to restrict access to the image root. "
-                                      "Default = False", default=False)
+    name = fields.String(metadata={"metadata": {"description": "SSH Container name"}})
+    jail = fields.Boolean(metadata={"metadata": {"description": "Whether to use an SSH jail to restrict access to the image root. Default = False"}}, 
+                          load_default=False, dump_default=False)
 
 
 class V2JobRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input of Job requests """
     artifact_id = fields.UUID(required=True,
-                              description="IMS record id (either recipe or image depending on job_type)"
-                                          "for the source artifact")
-    public_key_id = fields.UUID(required=True,
-                                description="IMS record id for the public_key record to use.")
-    job_type = fields.Str(required=True,
-                          description="The type of job, either 'create' or 'customize'",
+                              metadata={"metadata": {"description": "IMS record id (either recipe or image depending on job_type) for the source artifact"}},)
+    public_key_id = fields.UUID(required=True,metadata={"metadata": {"description": "IMS record id for the public_key record to use."}})
+    job_type = fields.Str(required=True,metadata={"metadata": {"description": "The type of job, either 'create' or 'customize'"}},
                           validate=OneOf(JOB_TYPES, error="Job type must be one of: {choices}."))
-    image_root_archive_name = fields.Str(required=True,
-                                         description="Name to be given to the image root artifact",
-                                         validate=Length(min=1,
-                                                         error="image_root_archive_name field must not be blank"))
-    enable_debug = fields.Boolean(default=False,
-                                  Description="Whether to enable debugging of the job")
-    build_env_size = fields.Integer(Default=15,
-                                    Description="approximate disk size in GiB to reserve for the image build"
-                                                "environment (usually 2x final image size)",
+    image_root_archive_name = fields.Str(required=True, metadata={"metadata": {"description": "Name to be given to the image root artifact"}},
+                                         validate=Length(min=1, error="image_root_archive_name field must not be blank"))
+    enable_debug = fields.Boolean(load_default=False,dump_default=False,
+                                  metadata={"metadata": {"description": "Whether to enable debugging of the job"}})
+    build_env_size = fields.Integer(load_default=15,dump_default=15,
+                                    metadata={"metadata": {"description": "Approximate disk size in GiB to reserve for the image build environment (usually 2x final image size)"}},
                                     validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
-    kernel_file_name = fields.Str(description="Name of the kernel file to extract and upload")
+    kernel_file_name = fields.Str(metadata={"metadata": {"description": "Name of the kernel file to extract and upload"}})
 
-    initrd_file_name = fields.Str(default="initrd",
-                                  description="Name of the initrd file to extract and upload",
+    initrd_file_name = fields.Str(load_default="initrd", dump_default="initrd",
+                                  metadata={"metadata": {"description": "Name of the initrd file to extract and upload"}},
                                   validate=Length(min=1, error="initrd_file_name field must not be blank"))
 
     kernel_parameters_file_name = \
-        fields.Str(default="kernel-parameters",
-                   description="Name of the kernel parameters file to extract and upload",
+        fields.Str(load_default="kernel-parameters", dump_default="kernel-parameters",
+                   metadata={"metadata": {"description": "Name of the kernel parameters file to extract and upload"}},
                    validate=Length(min=1, error="kernel_parameters_file_name field must not be blank"))
 
     ssh_containers = fields.List(fields.Nested(SshContainerInputSchema()), allow_none=True)
 
     # v2.1
-    require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
-                                  description="Job requires the use of dkms")
+    require_dkms = fields.Boolean(required=False, load_default=False, dump_default=False,
+                                  metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2
-    job_mem_size = fields.Integer(Default=1,
-                                    Description="approximate working memory in GiB to reserve for the build job "
-                                                "environment (loosely proporational to the final image size)",
-                                    validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
+    job_mem_size = fields.Integer(load_default=1, dump_default=1,
+                                  validate=Range(min=1, error="build_env_size must be greater than or equal to 1"),
+                                  metadata={"metadata": {"description": "Approximate working memory in GiB to reserve for the build job "
+                                    "environment (loosely proportional to the final image size)"}})
 
     @post_load
-    def make_job(self, data):
+    def make_job(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V2JobRecord(**data)
 
@@ -188,16 +182,16 @@ class V2JobRecordInputSchema(Schema):
 
 class SshConnectionInfo(Schema):
     """ A schema specifically for validating SSH Container Connection Info """
-    host = fields.String(description="Host ip or name to use to connect to the SSH container")
-    port = fields.Integer(description="Port number to use to connect to the SSH container")
+    host = fields.String(metadata={"metadata": {"description": "Host ip or name to use to connect to the SSH container"}})
+    port = fields.Integer(metadata={"metadata": {"description": "Port number to use to connect to the SSH container"}})
 
 
 class SshContainerSchema(SshContainerInputSchema):
     """ A schema specifically for validating SSH Containers """
-    status = fields.String(description="SSH Container Status")
-    host = fields.String(description="Host ip or name to use to connect to the SSH container")
-    port = fields.Integer(description="Port number to use to connect to the SSH container")
-    connection_info = fields.Dict(key=fields.Str(), values=fields.Nested(SshConnectionInfo))
+    status = fields.String(metadata={"metadata": {"description": "SSH Container Status"}})
+    host = fields.String(metadata={"metadata": {"description": "Host ip or name to use to connect to the SSH container"}})
+    port = fields.Integer(metadata={"metadata": {"description": "Port number to use to connect to the SSH container"}})
+    connection_info = fields.Dict(keys=fields.Str(), values=fields.Nested(SshConnectionInfo))
 
     class Meta:  # pylint: disable=missing-docstring
         # host and port have been deprecated and are no longer used.
@@ -210,38 +204,38 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     JobRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the job")
-    created = fields.DateTime(description="the time the job record was created")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the job"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the job record was created"}})
     kubernetes_job = fields.Str(allow_none=True,
-                                description="Job name for the underlying Kubernetes job")
+                                metadata={"metadata": {"description": "Job name for the underlying Kubernetes job"}})
     kubernetes_service = fields.Str(allow_none=True,
-                                    description="Service name for the underlying Kubernetes service")
+                                    metadata={"metadata": {"description": "Service name for the underlying Kubernetes service"}})
     kubernetes_configmap = fields.Str(allow_none=True,
-                                      description="ConfigMap name for the underlying Kubernetes configmap")
-    kubernetes_namespace = fields.Str(allow_none=True, default="default",
-                                      description="Kubernetes namespace where the IMS job resources were created")
-    status = fields.Str(allow_none=False,
-                        description="state of the job request",
+                                      metadata={"metadata": {"description": "ConfigMap name for the underlying Kubernetes configmap"}})
+    kubernetes_namespace = fields.Str(allow_none=True, load_default="default", dump_default="default",
+                                      metadata={"metadata": {"description": "Kubernetes namespace where the IMS job resources were created"}})
+    status = fields.Str(allow_none=False,metadata={"metadata": {"description": "State of the job request"}},
                         validate=OneOf(STATUS_TYPES, error="Job state must be one of: {choices}."))
     resultant_image_id = fields.UUID(allow_none=True,
-                                     description="the unique id of the resultant image record")
+                                     metadata={"metadata": {"description": "Unique id of the resultant image record"}})
     ssh_containers = fields.List(fields.Nested(SshContainerSchema()), allow_none=True)
     
     # v2.1
-    arch = fields.Str(description="Architecture of the job", default=ARCH_X86_64,
-                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
+    arch = fields.Str(metadata={"metadata": {"description": "Architecture of the job"}},
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]),
+                          load_default=ARCH_X86_64, dump_default=ARCH_X86_64)
 
     # v2.2
     kubernetes_pvc = fields.Str(allow_none=True,
-                                      description="PVC name for the underlying Kubernetes image pvc")
+                                metadata={"metadata": {"description": "PVC name for the underlying Kubernetes image pvc"}})
 
     # v2.3
-    remote_build_node = fields.Str(allow_none=False, default="",
-                                        description="XName of remote job if running on a remote node")
+    remote_build_node = fields.Str(allow_none=False, load_default="", dump_default="",
+                                   metadata={"metadata": {"description": "XName of remote job if running on a remote node"}})
 
     # after reading in the data, make sure there is an arch defined - default to x86
     @post_load(pass_original=False)
-    def fill_arch(self, data, **kwargs):
+    def fill_arch(self, data, many, partial, **kwargs):
         if not "arch" in data or data["arch"] is None:
             data["arch"] = ARCH_X86_64
         return data
@@ -250,11 +244,10 @@ class V2JobRecordPatchSchema(Schema):
     """
     Schema for a updating a JobRecord object.
     """
-    status = fields.Str(required=False,
-                        description="state of the job request",
+    status = fields.Str(required=False,metadata={"metadata": {"description": "State of the job request"}},
                         validate=OneOf(STATUS_TYPES, error="Job state must be one of: {choices}."))
     resultant_image_id = fields.UUID(required=False,
-                                     description="the unique id of the resultant image record")
+                                     metadata={"metadata": {"description": "Unique id of the resultant image record"}})
 
 #NOTE: this can't live in helper.py due to a circular dependency
 def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:

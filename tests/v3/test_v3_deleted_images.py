@@ -33,7 +33,7 @@ from testtools.matchers import HasLength
 
 from src.server import app
 from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
 
 
@@ -171,7 +171,7 @@ class TestV3DeletedImageEndpoint(TestV3BaseDeletedImage):
                     self.assertAlmostEqual(datetime.strptime(test_record[key],
                                                              '%Y-%m-%dT%H:%M:%S'),
                                            datetime.strptime(response_data[key],
-                                                             '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                             DATETIME_STRING),
                                            delta=timedelta(seconds=1))
                 else:
                     self.assertEqual(response_data[key], test_record[key],
@@ -302,7 +302,7 @@ class TestV3ImagesCollectionEndpoint(TestV3BaseDeletedImage):
                             self.assertAlmostEqual(datetime.strptime(source_record[key],
                                                                      '%Y-%m-%dT%H:%M:%S'),
                                                    datetime.strptime(response_record[key],
-                                                                     '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                     DATETIME_STRING),
                                                    delta=timedelta(seconds=1))
                         else:
                             self.assertEqual(source_record[key], response_record[key],

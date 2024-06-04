@@ -180,7 +180,7 @@ before trying to build:
 ```
 $ docker login artifactory.algol60.net
 ```
-See more information on authetication here:
+See more information on authentication here:
 https://rndwiki-pro.its.hpecorp.net/display/CSMTemp/Client+Authentication#ClientAuthentication-SecurityConsiderations
 
 ## Running Locally
@@ -206,6 +206,8 @@ This will start the IMS server on `http://localhost:9100`. An S3 instance is
 required for the IMS server to do anything meaningful. See the [Configuration Options](#Configuration-Options)
 section for more information and further configuration possibilities.
 
+Fetch recipes and images:
+
 ```
 $ curl http://127.0.0.1:9100/images
 []
@@ -213,9 +215,38 @@ $ curl http://127.0.0.1:9100/recipes
 []
 ```
 
+Add a public key:
+
+```
+$ curl http://127.0.0.1:9100/public-keys -X POST -H "Content-Type: application/json" \
+    --data '{"name":"test","public_key":"TEST_KEY_DATA"}'
+```
+
+Get a recipe description:
+
+```
+$ curl http://127.0.0.1:9100/recipes/RECIPE_ID
+```
+
+Patch an image record:
+
+```
+curl http://127.0.0.1:9100/images/IMAGE_ID -X PATCH -H "Content-Type: application/json" \
+    --data '{"platform":"aarch64"}'
+```
+
+Create a job:
+
+```
+curl http://127.0.0.1:9100/jobs -X POST -H "Content-Type: application/json" \
+    --data '{ "job_type":"create","require_dkms":"False","image_root_archive_name":"Test","artifact_id":"RECIPE_ID", \
+    "public_key_id":"PUBLIC_KEY_ID"}'
+```
+
 **NOTE:** To successfully post jobs to the IMS Jobs endpoint, you must be running under 
 kubernetes as the IMS Service tries to launch a new K8S job. This is not expected to 
-work when running the IMS Service locally under Docker.
+work when running the IMS Service locally under Docker. However running locally you
+can watch the logs and verify the request posts correctly.
 
 ## Testing
 
@@ -227,6 +258,47 @@ $ ./runUnitTests.sh
 $ ./runCodeStyleCheck.sh
 $ ./runLint.sh
 ```
+
+### Setting up PyTest
+
+PyTest runs the unit tests directly, not inside a container. This means that it needs
+some additional changes to get the correct configuration to run locally.
+
+The following are required beyond the development system setup:
+* The Python requirements in requirements-test.txt
+
+1. Activate the virtual environment created for development
+
+    ```
+    $ . .env/bin/activate
+    ```
+
+1. Install required python modules
+
+    ```
+    $ pip3 install -r requirements-test.txt
+    ```
+
+1. Create pytest.ini file with env vars
+
+    In the parent directory that IMS is cloned into, create the file 'pytest.ini'
+    and put the following contents in it:
+
+    ```
+    [pytest]
+    env =
+      FLASK_ENV=development 
+    ```
+
+1. Create a directory for the IMS data files
+
+    This is the directory that the unit tests will use to create the
+    data file for IMS object records.
+
+    ```
+    cd ~
+    mkdir -p ims/data
+    ```
 
 ### CT Tests
 

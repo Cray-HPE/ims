@@ -37,7 +37,7 @@ from testtools.matchers import HasLength
 
 from src.server import app
 from src.server.helper import S3Url
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 from tests.v2.ims_fixtures import V2FlaskTestClientFixture, V2ImagesDataFixture
 
 
@@ -122,7 +122,7 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_with_link[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data_record_with_link[key],
@@ -142,7 +142,7 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data_record_link_none[key],
@@ -162,7 +162,7 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_no_link[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
                 self.assertEqual(response_data[key], None,
@@ -272,7 +272,7 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
                 self.assertEqual(response_data[key], link_data['link'],
@@ -331,7 +331,7 @@ class TestV2ImageEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_with_link[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data_record_with_link[key],
@@ -355,7 +355,7 @@ class TestV2ImageEndpoint(TestCase):
                     self.assertAlmostEqual(datetime.datetime.strptime(self.data_record_link_none[key],
                                                                     '%Y-%m-%dT%H:%M:%S'),
                                         datetime.datetime.strptime(response_data['created'],
-                                                                    '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                    DATETIME_STRING),
                                         delta=datetime.timedelta(seconds=5))
                 elif key == 'arch':
                     self.assertEqual(response_data[key], patch_data['arch'],
@@ -421,7 +421,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data[key])

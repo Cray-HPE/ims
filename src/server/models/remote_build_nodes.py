@@ -144,11 +144,11 @@ class V3RemoteBuildNodeRecord:
 
 class V3RemoteBuildNodeRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input """
-    xname = fields.Str(required=True, description="The XName of the remote build node",
+    xname = fields.Str(required=True, metadata={"metadata": {"description": "XName of the remote build node"}},
                       validate=Length(min=1, error="name field must not be blank"))
 
     @post_load
-    def make_remote_build_node(self, data):
+    def make_remote_build_node(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V3RemoteBuildNodeRecord(**data)
 

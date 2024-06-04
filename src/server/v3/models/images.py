@@ -47,7 +47,7 @@ class V3DeletedImageRecordInputSchema(V2ImageRecordInputSchema):
     """ A schema specifically for defining and validating user input """
 
     @post_load
-    def make_image(self, data):
+    def make_image(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V3DeletedImageRecord(**data)
 
@@ -62,9 +62,9 @@ class V3DeletedImageRecordSchema(V3DeletedImageRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     ImageRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the image")
-    created = fields.DateTime(description="the time the image record was created")
-    deleted = fields.DateTime(description="the time the image record was deleted")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the image"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the image record was created"}})
+    deleted = fields.DateTime(metadata={"metadata": {"description": "Time the image record was deleted"}})
 
 
 class V3DeletedImageRecordPatchSchema(Schema):
@@ -72,6 +72,6 @@ class V3DeletedImageRecordPatchSchema(Schema):
     Schema for a updating an ImageRecord object.
     """
     operation = fields.Str(required=True,
-                           description='The operation or action that should be taken on the image record. '
-                                       f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }',
+                           metadata={"metadata": {"description": "The operation or action that should be taken on the image record. "
+                                                   f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }'}},
                            validate=OneOf(PATCH_OPERATIONS, error="Recipe type must be one of: {choices}."))
