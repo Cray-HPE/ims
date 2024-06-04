@@ -508,7 +508,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata',],
                               'returned keys not the same')
 
     def test_post_no_link(self):
@@ -526,7 +526,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata'],
                               'returned keys not the same')
 
     def test_post_400_no_input(self):
