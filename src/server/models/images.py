@@ -66,7 +66,7 @@ class V2ImageRecordInputSchema(Schema):
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the image"}})
     metadata = fields.Mapping(keys=fields.Str(required=True),
-                              value=fields.Str(required=False, dump_default='', load_default=''),
+                              values=fields.Str(required=False, dump_default='', load_default=''),
                               metadata={"metadata": {"description":"User supplied additional information about an image"}},
                               dump_default={}, load_default={})
 
@@ -107,7 +107,7 @@ class V2ImageRecordPatchSchema(Schema):
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the recipe"}})
     metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()),
-                           default=[],
+                           load_default=[], dump_default=[],
                            required=False,
-                           description="A list of change operations to perform on Image Metadata.")
+                           metadata={"metadata": {"description":"A list of change operations to perform on Image Metadata."}})
 
