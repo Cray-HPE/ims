@@ -55,6 +55,8 @@ class TestV2ImageEndpoint(TestCase):
         self.test_id = str(uuid.uuid4())
         self.test_id_link_none = str(uuid.uuid4())
         self.test_id_no_link = str(uuid.uuid4())
+        self.test_id_with_metadata = str(uuid.uuid4())
+        self.test_id_without_metadata = str(uuid.uuid4())
         self.test_arch = "x86_64"
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
         self.data_record_with_link = {
@@ -87,14 +89,14 @@ class TestV2ImageEndpoint(TestCase):
         self.data_record_with_metadata = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
-            'id': self.test_id_no_link,
+            'id': self.test_id_with_metadata,
             'arch': self.test_arch,
             'metadata': {'foo': 'bar'}
         }
         self.data_record_with_no_metadata = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
-            'id': self.test_id_no_link,
+            'id': self.test_id_without_metadata,
             'arch': self.test_arch
         }
         self.data = [
@@ -171,6 +173,7 @@ class TestV2ImageEndpoint(TestCase):
         response = self.app.get(self.test_uri_no_link)
         self.assertEqual(response.status_code, 200, 'status code was not 200')
         response_data = json.loads(response.data)
+        print(f"{response_data}")
         self.assertEqual(set(self.data_record_no_link.keys()).difference(response_data.keys()), set(),
                          'returned keys not the same')
         self.assertEqual(response_data["link"], None)
