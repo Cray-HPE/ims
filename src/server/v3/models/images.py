@@ -69,7 +69,7 @@ class V3DeletedImageRecordSchema(V3DeletedImageRecordInputSchema):
 
 class V3DeletedImageRecordPatchSchema(Schema):
     """
-    Schema for a updating an ImageRecord object.
+    Schema for updating an ImageRecord object.
     """
     operation = fields.Str(required=True,
                            metadata={"metadata": {"description": "The operation or action that should be taken on the image record. "
