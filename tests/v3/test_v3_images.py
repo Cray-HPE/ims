@@ -99,7 +99,7 @@ class TestV3ImageBase(TestCase):
         self.data_record_with_no_metadata_record = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
-            'id': self.test_id_without_metadata,
+            'id': self.data_record_with_no_metadata_id,
             'arch': self.test_arch
         }
         self.data = [
