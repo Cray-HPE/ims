@@ -49,6 +49,8 @@ class TestV3ImageBase(TestCase):
         self.s3resource_stub = Stubber(app.app.s3resource.meta.client)
 
         self.test_with_link_id = str(uuid.uuid4())
+        self.test_id_with_metadata = str(uuid.uuid4())
+        self.test_id_without_metadata = str(uuid.uuid4())
         self.test_arch = "x86_64"
         self.test_with_link_uri = '/v3/images/{}'.format(self.test_with_link_id)
         self.test_with_link_record = {
@@ -61,6 +63,7 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_with_link_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
 
         self.test_link_none_id = str(uuid.uuid4())
@@ -71,6 +74,7 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_link_none_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
 
         self.test_no_link_id = str(uuid.uuid4())
@@ -80,12 +84,27 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_no_link_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
-
+        self.data_record_with_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_with_metadata,
+            'arch': self.test_arch,
+            'metadata': {'foo': 'bar'}
+        }
+        self.data_record_with_no_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_without_metadata,
+            'arch': self.test_arch
+        }
         self.data = [
-            self.test_with_link_record,
-            self.test_link_none_record,
-            self.test_no_link_record
+            self.data_record_with_link,
+            self.data_record_link_none,
+            self.data_record_no_link,
+            self.data_record_with_metadata,
+            self.data_record_with_no_metadata
         ]
 
         self.app = self.useFixture(V3FlaskTestClientFixture()).client
