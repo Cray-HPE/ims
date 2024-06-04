@@ -235,7 +235,6 @@ class V2ImageResource(V2BaseImageResource):
                 if not value:
                     current_app.logger.info("No metadata values to patch.")
                     continue
-                current_app.logger.info(f"Patching metadata with '{value}'.")
                 # Even though the API represents Image Metadata Annotations as a list internally, they behave like
                 # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
                 # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
@@ -263,7 +262,6 @@ class V2ImageResource(V2BaseImageResource):
                 image.metadata = metadata_dict
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
-                current_app.logger.info("key: %s, value: %s, equal to link: %s?" %(key, value, key == 'link'))
                 return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
