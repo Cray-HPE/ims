@@ -49,8 +49,6 @@ class TestV3ImageBase(TestCase):
         self.s3resource_stub = Stubber(app.app.s3resource.meta.client)
 
         self.test_with_link_id = str(uuid.uuid4())
-        self.test_id_with_metadata = str(uuid.uuid4())
-        self.test_id_without_metadata = str(uuid.uuid4())
         self.test_arch = "x86_64"
         self.test_with_link_uri = '/v3/images/{}'.format(self.test_with_link_id)
         self.test_with_link_record = {
@@ -86,14 +84,19 @@ class TestV3ImageBase(TestCase):
             'arch': self.test_arch,
             'metadata': {}
         }
-        self.data_record_with_metadata = {
+        self.test_data_record_with_metadata_id = str(uuid.uuid4())
+        self.test_data_record_with_metadata_uri = '/v3/images/{}'.format(self.test_data_record_with_metadata_id)
+        self.test_data_record_with_metadata_record = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
-            'id': self.test_id_with_metadata,
+            'id': self.test_data_record_with_metadata_id,
             'arch': self.test_arch,
             'metadata': {'foo': 'bar'}
         }
-        self.data_record_with_no_metadata = {
+
+        self.data_record_with_no_metadata_id = str(uuid.uuid4())
+        self.data_record_with_no_metadata_uri = '/v3/images/{}'.format(self.data_record_with_no_metadata_id)
+        self.data_record_with_no_metadata_record = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_without_metadata,
