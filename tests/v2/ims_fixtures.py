@@ -57,9 +57,6 @@ class V2ImagesDataFixture(_GenericDataFixture):
 
 
 class V2JobsDataFixture(_GenericDataFixture):
-
-
-
     schema = V2JobRecordSchema
     datastore = app.data['jobs']
     id_field = 'id'

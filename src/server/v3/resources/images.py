@@ -349,7 +349,6 @@ class V3ImageResource(V3BaseImageResource):
         # Validate input
         errors = image_patch_input_schema.validate(json_data)
         if errors:
-            current_app.logger.info("PATCH data: '%s'", json_data)
             current_app.logger.info("%s There was a problem validating the PATCH data: %s", log_id, errors)
             return generate_data_validation_failure(errors)
 
@@ -408,8 +407,7 @@ class V3ImageResource(V3BaseImageResource):
                 # to convert the temporary dictionary back into a list of key:value pairs.
                 image.metadata = metadata_dict
             else:
-                current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
-                current_app.logger.info(f"{log_id}: '{key}', of type: %s. Is metadata? %s" % (type(key), key == 'metadata'))
+                current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)

@@ -35,14 +35,6 @@ from src.server.models import ArtifactLink
 from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 
-class ImageMetadata(Schema):
-    """ A schema specifically for validating existing image metadata instances. """
-    key = fields.Str(required=True, description="An arbitrary key of metadata given for an image",
-                     validate=Length(min=1, error="name field must not be blank"))
-    value = fields.Str(required=True, default="",
-                       description="A value field given for an associated image metadata key.")
-
-
 class V2ImageRecord:
     """ The ImageRecord object """
 
@@ -74,7 +66,7 @@ class V2ImageRecordInputSchema(Schema):
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the image"}})
     metadata = fields.Mapping(keys=fields.Str(required=True),
-                              value=fields.Str(required=False),
+                              value=fields.Str(required=False, default=''),
                               desciption="User supplied additional information about an image",
                               default={})
 
