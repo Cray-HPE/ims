@@ -36,7 +36,7 @@ from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
 
 class ImageMetadata(Schema):
-    """ A schema specifically for validating artifact links """
+    """ A schema specifically for validating existing image metadata instances. """
     key = fields.Str(required=True, description="An arbitrary key of metadata given for an image",
                      validate=Length(min=1, error="name field must not be blank"))
     value = fields.Str(required=True, default="",
@@ -72,10 +72,14 @@ class V2ImageRecordInputSchema(Schema):
                          description="the location of the image manifest")
     arch = fields.Str(required=False, default=ARCH_X86_64, description="Architecture of the image",
                       validate=OneOf([ARCH_ARM64, ARCH_X86_64]), load_default=True, dump_default=True)
-    metadata = fields.Nested(ImageMetadata,
-                             required=False,
-                             default={},
-                             description="user supplied additional information about an image")
+#    metadata = fields.Nested(ImageMetadata,
+#                             required=False,
+#                             default={},
+#                             description="user supplied additional information about an image")
+    metadata = fields.Mapping(keys=fields.Str(required=True),
+                              value=fields.Str(required=False),
+                              desciption="User supplied additional information about an image",
+                              default={})
 
     @post_load
     def make_image(self, data):
