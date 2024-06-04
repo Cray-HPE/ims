@@ -34,15 +34,25 @@ from marshmallow.validate import Length, OneOf
 from src.server.models import ArtifactLink
 from src.server.helper import ARCH_X86_64, ARCH_ARM64
 
+
+class ImageMetadata(Schema):
+    """ A schema specifically for validating existing image metadata instances. """
+    key = fields.Str(required=True, description="An arbitrary key of metadata given for an image",
+                     validate=Length(min=1, error="name field must not be blank"))
+    value = fields.Str(required=True, default="",
+                       description="A value field given for an associated image metadata key.")
+
+
 class V2ImageRecord:
     """ The ImageRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, link=None, id=None, created=None, arch=ARCH_X86_64):
+    def __init__(self, name, link=None, id=None, created=None, arch=ARCH_X86_64, metadata=None):
         # Supplied
         self.name = name
         self.link = link
-        
+        self.metadata = metadata if metadata else {}
+
         # v2.1
         self.arch = arch
 
@@ -63,6 +73,10 @@ class V2ImageRecordInputSchema(Schema):
     arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]), 
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the image"}})
+    metadata = fields.Mapping(keys=fields.Str(required=True),
+                              value=fields.Str(required=False),
+                              desciption="User supplied additional information about an image",
+                              default={})
 
     @post_load
     def make_image(self, data, many, partial):
@@ -84,12 +98,24 @@ class V2ImageRecordSchema(V2ImageRecordInputSchema):
     created = fields.DateTime(metadata={"metadata": {"description": "Time the image record was created"}})
 
 
+class V2ImageRecordMetadataPatchSchema(Schema):
+    operation = fields.Str(required=True, description="A method for how to change a metadata struct.",
+                           validate=OneOf(['set', 'remove']))
+    key = fields.Str(required=True, description="The metadata key that is to be affected.")
+    value = fields.Str(required=False, description="The value to store for the provided key.")
+
+
 class V2ImageRecordPatchSchema(Schema):
     """
-    Schema for a updating an ImageRecord object.
+    Schema for updating an ImageRecord object.
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          metadata={"metadata": {"description": "Location of the image manifest"}})
     arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]), 
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the recipe"}})
+    metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()),
+                           default=[],
+                           required=False,
+                           description="A list of change operations to perform on Image Metadata.")
+

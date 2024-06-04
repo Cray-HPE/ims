@@ -67,6 +67,7 @@ class TestV2ImageEndpoint(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
         self.data_record_link_none = {
             'name': self.getUniqueString(),
@@ -74,17 +75,34 @@ class TestV2ImageEndpoint(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
             'arch': self.test_arch,
+            'metadata': {}
         }
         self.data_record_no_link = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_no_link,
             'arch': self.test_arch,
+            'metadata': {}
+        }
+        self.data_record_with_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_no_link,
+            'arch': self.test_arch,
+            'metadata': {'foo': 'bar'}
+        }
+        self.data_record_with_no_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_no_link,
+            'arch': self.test_arch
         }
         self.data = [
             self.data_record_with_link,
             self.data_record_link_none,
-            self.data_record_no_link
+            self.data_record_no_link,
+            self.data_record_with_metadata,
+            self.data_record_with_no_metadata
         ]
 
         self.useFixture(V2ImagesDataFixture(initial_data=self.data))
@@ -261,8 +279,7 @@ class TestV2ImageEndpoint(TestCase):
         self.stubber.activate()
         response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(link_data))
         self.stubber.deactivate()
-
-        self.assertEqual(response.status_code, 200, 'status code was not 200')
+        self.assertEqual(response.status_code, 200, 'status code was not 200: data:%s response.data: %s' % (json.dumps(link_data), response.data))
         response_data = json.loads(response.data)
         self.assertEqual(set(self.data_record_link_none.keys()).difference(response_data.keys()), set(),
                          'returned keys not the same')

@@ -29,6 +29,7 @@ import http.client
 
 from flask import jsonify, request, current_app
 from flask_restful import Resource
+from copy import deepcopy
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response, generate_patch_conflict
@@ -208,7 +209,8 @@ class V2ImageResource(V2BaseImageResource):
         # Validate input
         errors = image_patch_input_schema.validate(json_data)
         if errors:
-            current_app.logger.info("%s There was a problem validating the PATCH data: %s", log_id, errors)
+            current_app.logger.info("%s There was a problem validating the PATCH data: %s, json_data: %s"
+                                    % (log_id, errors, json_data))
             return generate_data_validation_failure(errors)
 
         image = current_app.data["images"][image_id]
@@ -229,8 +231,37 @@ class V2ImageResource(V2BaseImageResource):
             elif key == "arch":
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
+            elif key == 'metadata':
+                if not value:
+                    current_app.logger.info("No metadata values to patch.")
+                    continue
+                # Even though the API represents Image Metadata Annotations as a list internally, they behave like
+                # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
+                # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
+                # multiple insertions or deletions. We will flatten this back out to a list before setting it within
+                # the image.
+                metadata_dict = deepcopy(image.metadata)
+                for changeset in value:
+                    operation = changeset.get('operation')
+                    if operation not in ['set', 'remove']:
+                        current_app.logger.info(f"Unknown requested operation change '{operation}'.")
+                        return generate_data_validation_failure(errors=[])
+                    annotation_key = changeset.get('key')
+                    annotation_value = changeset.get('value', '')
+
+                    if operation == 'set':
+                        metadata_dict[annotation_key] = annotation_value
+                    elif operation == 'remove':
+                        try:
+                            del metadata_dict[annotation_key]
+                        except KeyError:
+                            current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
+                            pass
+                # With every change made to the image_annotation_dictionary, the last thing that is necessary is
+                # to convert the temporary dictionary back into a list of key:value pairs.
+                image.metadata = metadata_dict
             else:
-                current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
+                current_app.logger.info(f"{log_id} Not able to patch record field '{key}' with value {value}")
                 return generate_data_validation_failure(errors=[])
 
             setattr(image, key, value)
