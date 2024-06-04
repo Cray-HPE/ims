@@ -20,7 +20,7 @@ jmespath==0.9.5
 # CSM 1.6 uses Kubernetes 1.22, so use client v22.x to ensure compatability
 kubernetes==22.6.0
 MarkupSafe==1.1.1
-marshmallow==3.0.0b16
+marshmallow==3.1.1
 oauthlib==2.1.0
 pluggy==1.4.0
 pyasn1==0.4.8
