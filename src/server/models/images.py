@@ -66,9 +66,9 @@ class V2ImageRecordInputSchema(Schema):
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the image"}})
     metadata = fields.Mapping(keys=fields.Str(required=True),
-                              value=fields.Str(required=False, default=''),
-                              desciption="User supplied additional information about an image",
-                              default={})
+                              value=fields.Str(required=False, dump_default='', load_default=''),
+                              metadata={"metadata": {"description":"User supplied additional information about an image"}},
+                              dump_default={}, load_default={})
 
     @post_load
     def make_image(self, data, many, partial):
@@ -91,10 +91,10 @@ class V2ImageRecordSchema(V2ImageRecordInputSchema):
 
 
 class V2ImageRecordMetadataPatchSchema(Schema):
-    operation = fields.Str(required=True, description="A method for how to change a metadata struct.",
+    operation = fields.Str(required=True, metadata={"metadata": {"description":"A method for how to change a metadata struct."}},
                            validate=OneOf(['set', 'remove']))
-    key = fields.Str(required=True, description="The metadata key that is to be affected.")
-    value = fields.Str(required=False, description="The value to store for the provided key.")
+    key = fields.Str(required=True, metadata={"metadata": {"description":"The metadata key that is to be affected."}})
+    value = fields.Str(required=False, metadata={"metadata": {"description":"The value to store for the provided key."}})
 
 
 class V2ImageRecordPatchSchema(Schema):
