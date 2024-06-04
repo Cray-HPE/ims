@@ -96,6 +96,7 @@ class TestV3BaseDeletedImage(TestCase):
             'name': self.getUniqueString(),
             'metadata': {},
             'arch': "x86_64",
+            'metadata' : {},
             'link': None,
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
             'deleted': datetime.now().replace(microsecond=0).isoformat(),

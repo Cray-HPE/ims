@@ -103,11 +103,11 @@ class TestV3ImageBase(TestCase):
             'arch': self.test_arch
         }
         self.data = [
-            self.data_record_with_link,
-            self.data_record_link_none,
-            self.data_record_no_link,
-            self.data_record_with_metadata,
-            self.data_record_with_no_metadata
+            self.test_with_link_record,
+            self.test_link_none_record,
+            self.test_no_link_record,
+            self.test_data_record_with_metadata_record,
+            self.data_record_with_no_metadata_record
         ]
 
         self.app = self.useFixture(V3FlaskTestClientFixture()).client
