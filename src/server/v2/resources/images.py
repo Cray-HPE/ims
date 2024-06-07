@@ -84,6 +84,7 @@ class V2ImageCollection(V2BaseImageResource):
         """ retrieve a list/collection of images """
         log_id = get_log_id()
         current_app.logger.info("%s ++ images.v2.GET", log_id)
+        current_app.logger.info("%s ++ images.v2.GET RAW:%s" % (log_id, current_app.data["images"].values()))
         return_json = image_schema.dump(iter(current_app.data["images"].values()), many=True)
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)

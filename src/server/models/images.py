@@ -62,12 +62,12 @@ class V2ImageRecordInputSchema(Schema):
                       metadata={"metadata": {"description": "Name of the image"}})
     link = fields.Nested(ArtifactLink, required=False, allow_none=True,
                          metadata={"metadata": {"description": "Location of the image manifest"}})
-    arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]), 
+    arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64, ARCH_X86_64]),
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the image"}})
     metadata = fields.Mapping(keys=fields.Str(required=True),
                               values=fields.Str(required=False, dump_default='', load_default=''),
-                              metadata={"metadata": {"description":"User supplied additional information about an image"}},
+                              metadata={"metadata": {"description": "User supplied additional information about an image"}},
                               dump_default={}, load_default={})
 
     @post_load
@@ -91,7 +91,8 @@ class V2ImageRecordSchema(V2ImageRecordInputSchema):
 
 
 class V2ImageRecordMetadataPatchSchema(Schema):
-    operation = fields.Str(required=True, metadata={"metadata": {"description":"A method for how to change a metadata struct."}},
+    operation = fields.Str(required=True,
+                           metadata={"metadata": {"description": "A method for how to change a metadata struct."}},
                            validate=OneOf(['set', 'remove']))
     key = fields.Str(required=True, metadata={"metadata": {"description":"The metadata key that is to be affected."}})
     value = fields.Str(required=False, metadata={"metadata": {"description":"The value to store for the provided key."}})
