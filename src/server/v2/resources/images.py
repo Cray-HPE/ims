@@ -168,6 +168,7 @@ class V2ImageResource(V2BaseImageResource):
             current_app.logger.info("%s no IMS image record matches image_id=%s", log_id, image_id)
             return generate_resource_not_found_response()
 
+        current_app.logger.info("%s ++ images.v2.GET Raw: %s" % (log_id, current_app.data['images'][image_id]))
         return_json = image_schema.dump(current_app.data['images'][image_id])
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
