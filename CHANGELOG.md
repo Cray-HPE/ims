@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Dependencies
+- CASMCMS-9027: Bumped dependency versions to resolve [SNYK-PYTHON-CERTIFI-5805047 CVE](https://snyk.io/vuln/SNYK-PYTHON-CERTIFI-5805047)
+  and [SNYK-PYTHON-WERKZEUG-3319936 CVE](https://snyk.io/vuln/SNYK-PYTHON-WERKZEUG-3319936):
+    - `certifi` from 2019.11.28 to 2023.7.22
+    - `Werkzeug` from 0.15.5 to 2.2.3
+    - `MarkupSafe` from 1.1.1 to 2.1.5 (to resolve dependency conflicts caused by above changes)
 
 ## [3.8.6] - 2024-05-16
 ### Dependencies
