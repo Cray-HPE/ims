@@ -104,11 +104,10 @@ class V2ImageRecordPatchSchema(Schema):
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
                          metadata={"metadata": {"description": "Location of the image manifest"}})
-    arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]), 
+    arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64, ARCH_X86_64]),
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the recipe"}})
     metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()),
-                           load_default=[], dump_default=[],
                            required=False,
                            metadata={"metadata": {"description":"A list of change operations to perform on Image Metadata."}})
 

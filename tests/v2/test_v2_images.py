@@ -52,13 +52,12 @@ class TestV2ImageEndpoint(TestCase):
 
     def setUp(self):
         super(TestV2ImageEndpoint, self).setUp()
-        self.test_id = str(uuid.uuid4())
-        self.test_id_link_none = str(uuid.uuid4())
-        self.test_id_no_link = str(uuid.uuid4())
-        self.test_id_with_metadata = str(uuid.uuid4())
-        self.test_id_without_metadata = str(uuid.uuid4())
         self.test_arch = "x86_64"
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
+
+        # Default fixture
+        self.test_id = str(uuid.uuid4())
+        self.test_uri_with_link = '/images/{}'.format(self.test_id)
         self.data_record_with_link = {
             'name': self.getUniqueString(),
             'link': {
@@ -71,6 +70,9 @@ class TestV2ImageEndpoint(TestCase):
             'arch': self.test_arch,
             'metadata': {}
         }
+        # Fixture without a link
+        self.test_id_link_none = str(uuid.uuid4())
+        self.test_uri_link_none = '/images/{}'.format(self.test_id_link_none)
         self.data_record_link_none = {
             'name': self.getUniqueString(),
             'link': None,
@@ -79,6 +81,9 @@ class TestV2ImageEndpoint(TestCase):
             'arch': self.test_arch,
             'metadata': {}
         }
+        # Test Fixtures with no set link
+        self.test_id_no_link = str(uuid.uuid4())
+        self.test_uri_no_link = '/images/{}'.format(self.test_id_no_link)
         self.data_record_no_link = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
@@ -86,19 +91,37 @@ class TestV2ImageEndpoint(TestCase):
             'arch': self.test_arch,
             'metadata': {}
         }
+        # with_metadata; allows for testing records with stored metadata information
+        self.test_id_with_metadata = str(uuid.uuid4())
+        self.test_uri_with_metadata = '/images/{}'.format(self.test_id_no_link)
         self.data_record_with_metadata = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_with_metadata,
             'arch': self.test_arch,
-            'metadata': {'foo': 'bar'}
+            'metadata': {'foo': 'bar'},
+            'link': {
+                'path': 's3://boot-images/{}/manifest.json'.format(self.test_id_with_metadata),
+                'etag': self.getUniqueString(),
+                'type': 's3'
+            },
         }
+        # with_no_metadata; allows for testing existing data structures on system
+        self.test_id_with_no_metadata = str(uuid.uuid4())
+        self.test_uri_with_no_metadata = '/images/{}'.format(self.test_id_with_no_metadata)
         self.data_record_with_no_metadata = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
-            'id': self.test_id_without_metadata,
-            'arch': self.test_arch
+            'id': self.test_id_with_no_metadata,
+            'arch': self.test_arch,
+            'link': {
+                'path': 's3://boot-images/{}/manifest.json'.format(self.test_id_with_no_metadata),
+                'etag': self.getUniqueString(),
+                'type': 's3'
+            },
         }
+        # Test Fixture for link cascades
+        self.test_uri_with_link_cascade_false = '/images/{}?cascade=False'.format(self.test_id)
         self.data = [
             self.data_record_with_link,
             self.data_record_link_none,
@@ -106,13 +129,7 @@ class TestV2ImageEndpoint(TestCase):
             self.data_record_with_metadata,
             self.data_record_with_no_metadata
         ]
-
         self.useFixture(V2ImagesDataFixture(initial_data=self.data))
-        self.test_uri_with_link = '/images/{}'.format(self.test_id)
-        self.test_uri_with_link_cascade_false = '/images/{}?cascade=False'.format(self.test_id)
-        self.test_uri_link_none = '/images/{}'.format(self.test_id_link_none)
-        self.test_uri_no_link = '/images/{}'.format(self.test_id_no_link)
-
         self.s3_manifest_data = {
             "version": "1.0",
             "created": "2020-01-14 03:17:14",
@@ -359,10 +376,12 @@ class TestV2ImageEndpoint(TestCase):
     def test_patch_change_arch(self):
         """ Test that we're able to patch a record with a new architecture"""
         
-        test_archs = ['x86_64','aarch64','x86_64']
+        test_archs = ['x86_64', 'aarch64', 'x86_64']
         for arch in test_archs:
             patch_data = {'arch': arch}
-            response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(patch_data))
+            response = self.app.patch(self.test_uri_link_none,
+                                      content_type='application/json',
+                                      data=json.dumps(patch_data))
 
             self.assertEqual(response.status_code, 200, 'status code was not 200')
             response_data = json.loads(response.data)
@@ -380,8 +399,54 @@ class TestV2ImageEndpoint(TestCase):
                     self.assertEqual(response_data[key], patch_data['arch'],
                                     'resource field "{}" returned was not equal'.format(key))
                 else:
-                    self.assertEqual(response_data[key], self.data_record_link_none[key],
+                    self.assertEqual(response_data[key],
+                                     self.data_record_link_none[key],
                                     'resource field "{}" returned was not equal'.format(key))
+
+    def test_patch_set_metadata(self):
+        test_kv_pairs = [('foo', 'bar'), ('projected', 'image')]
+        for key_val, val_val in test_kv_pairs:
+            patch_data = {'metadata': [{'operation': 'set', 'key': key_val, 'value': val_val}]}
+            response = self.app.patch(self.test_uri_link_none,
+                                      content_type='application/json',
+                                      data=json.dumps(patch_data))
+            self.assertEqual(response.status_code, 200, 'status code was not 200')
+
+    def test_patch_remove_metadata(self):
+        patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
+        response = self.app.patch(self.data_record_with_metadata,
+                                  content_type='application/json',
+                                  data=json.dumps(patch_data))
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+
+    def test_patch_remove_metadata_idempotent(self):
+        patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
+        response = self.app.patch(self.data_record_with_no_metadata,
+                                  content_type='application/json',
+                                  data=json.dumps(patch_data))
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+
+    def test_patch_multiple_changesets_single_patch(self):
+        patch_data = {'metadata': []}
+        for operation in ('set', 'remove', 'set', 'remove', 'remove'):
+            patch_data['metadata'].append({'operation': operation, 'key': 'foo', 'value': 'bar'})
+        for test_uri in (self.test_uri_no_link,
+                         self.test_uri_with_link,
+                         self.test_uri_link_none,
+#                         self.test_uri_with_metadata,
+#                         self.test_uri_with_no_metadata
+                         ):
+            response = self.app.patch(test_uri,
+                                      content_type='application/json',
+                                      data=json.dumps(patch_data))
+            self.assertEqual(response.status_code, 200, 'status code was not 200')
+            response = self.app.get(test_uri)
+            response_data = json.loads(response.data)
+            self.assertEqual(response.status_code, 200, 'unable to retrieve after a patch')
+            # We ended with a remove, so there should be no remaining metadata
+            self.assertEqual(response_data.metadata.keys(), 0,
+                             'Unable to remove set keys: %s' % (response_data.metadata.keys()))
+
 
 class TestV2ImagesCollectionEndpoint(TestCase):
     """
