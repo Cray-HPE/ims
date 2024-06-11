@@ -414,14 +414,14 @@ class TestV2ImageEndpoint(TestCase):
 
     def test_patch_remove_metadata(self):
         patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
-        response = self.app.patch(self.data_record_with_metadata,
+        response = self.app.patch(self.test_uri_with_metadata,
                                   content_type='application/json',
                                   data=json.dumps(patch_data))
         self.assertEqual(response.status_code, 200, 'status code was not 200')
 
     def test_patch_remove_metadata_idempotent(self):
         patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
-        response = self.app.patch(self.data_record_with_no_metadata,
+        response = self.app.patch(self.test_uri_with_no_metadata,
                                   content_type='application/json',
                                   data=json.dumps(patch_data))
         self.assertEqual(response.status_code, 200, 'status code was not 200')
@@ -433,8 +433,8 @@ class TestV2ImageEndpoint(TestCase):
         for test_uri in (self.test_uri_no_link,
                          self.test_uri_with_link,
                          self.test_uri_link_none,
-#                         self.test_uri_with_metadata,
-#                         self.test_uri_with_no_metadata
+                         self.test_uri_with_metadata,
+                         self.test_uri_with_no_metadata
                          ):
             response = self.app.patch(test_uri,
                                       content_type='application/json',
@@ -444,8 +444,8 @@ class TestV2ImageEndpoint(TestCase):
             response_data = json.loads(response.data)
             self.assertEqual(response.status_code, 200, 'unable to retrieve after a patch')
             # We ended with a remove, so there should be no remaining metadata
-            self.assertEqual(response_data.metadata.keys(), 0,
-                             'Unable to remove set keys: %s' % (response_data.metadata.keys()))
+            self.assertEqual(len(response_data['metadata'].keys()), 0,
+                             'Unable to remove set keys: %s' % (response_data['metadata'].keys()))
 
 
 class TestV2ImagesCollectionEndpoint(TestCase):
