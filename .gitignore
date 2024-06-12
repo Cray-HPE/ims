@@ -8,3 +8,5 @@ myimage.yaml
 .version
 .env
 .vscode
+.idea/*
+.idea/inspectionProfiles/*
