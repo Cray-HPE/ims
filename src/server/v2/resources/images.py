@@ -241,12 +241,12 @@ class V2ImageResource(V2BaseImageResource):
                     operation = changeset.get('operation')
                     annotation_key = changeset.get('key')
                     annotation_value = changeset.get('value', '')
-                    current_app.logger.info("Image Patch changeset: Current: %s -> %s %s %s"
+                    current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
                                             % (image.metadata, operation, annotation_key, annotation_value))
                     if operation not in ['set', 'remove']:
                         current_app.logger.info(f"Unknown requested operation change '{operation}'.")
                         return generate_data_validation_failure(errors=[])
-                    current_app.logger.info("Image Patch changeset: %s %s %s" % (operation, annotation_key, annotation_value))
+                    current_app.logger.debug("Image Patch changeset: %s %s %s" % (operation, annotation_key, annotation_value))
                     if operation == 'set':
                         image.metadata[annotation_key] = annotation_value
                     elif operation == 'remove':
@@ -254,7 +254,7 @@ class V2ImageResource(V2BaseImageResource):
                             del image.metadata[annotation_key]
                         except KeyError:
                             current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
-                    current_app.logger.info("Image metadata result: %s" %(image.metadata))
+                    current_app.logger.debug("Image metadata result: %s" %(image.metadata))
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
@@ -262,5 +262,5 @@ class V2ImageResource(V2BaseImageResource):
         current_app.data['images'][image_id] = image
 
         return_json = image_schema.dump(current_app.data['images'][image_id])
-        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        current_app.logger.debug("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)

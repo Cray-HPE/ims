@@ -428,8 +428,8 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                                                                   DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
-                self.assertEqual(response_data[key], link_data['link'],
-                                 'resource field "{}" returned was not equal'.format(key))
+                self.assertEqual(response_data[key], link_data[key],
+                                 'resource field "{}" returned was not equal: {} != {}'.format(key, response_data[key], link_data[key]))
             else:
                 self.assertEqual(response_data[key], self.test_link_none_record[key],
                                  'resource field "{}" returned was not equal'.format(key))

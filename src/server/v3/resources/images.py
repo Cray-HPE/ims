@@ -374,47 +374,41 @@ class V3ImageResource(V3BaseImageResource):
                         current_app.logger.info(f"The artifact {value} is not in S3 and "
                                                 f"was not soft-deleted. Ignoring")
                         current_app.logger.info(str(exc))
+                setattr(image, key, value)
             elif key == "arch":
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
+                setattr(image, key, value)
             elif key == 'metadata':
-                if not value:
-                    current_app.logger.info("No metadata values to patch.")
-                    continue
-                # Even though the API represents Image Metadata Annotations as a list internally, they behave like
-                # dictionaries. The ordered nature of the data should not matter, nor are they enforced. As such,
-                # converting the list of k:vs to a unified dictionary has performance advantages log(n) when doing
-                # multiple insertions or deletions. We will flatten this back out to a list before setting it within
-                # the image.
-                metadata_dict = deepcopy(image.metadata)
+                # The API represents metadata keys as a dictionary, but the patchset is provided as a list of
+                # changes that need to be applied to the metadata itself.
                 for changeset in value:
                     operation = changeset.get('operation')
+                    annotation_key = changeset.get('key')
+                    annotation_value = changeset.get('value', '')
+                    current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
+                                             % (image.metadata, operation, annotation_key, annotation_value))
                     if operation not in ['set', 'remove']:
                         current_app.logger.info(f"Unknown requested operation change '{operation}'.")
                         return generate_data_validation_failure(errors=[])
-                    annotation_key = changeset.get('key')
-                    annotation_value = changeset.get('value', '')
-
+                    current_app.logger.debug(
+                        "Image Patch changeset: %s %s %s" % (operation, annotation_key, annotation_value))
                     if operation == 'set':
-                        metadata_dict[annotation_key] = annotation_value
+                        image.metadata[annotation_key] = annotation_value
                     elif operation == 'remove':
                         try:
-                            del metadata_dict[annotation_key]
+                            del image.metadata[annotation_key]
                         except KeyError:
                             current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
-                            pass
-                # With every change made to the image_annotation_dictionary, the last thing that is necessary is
-                # to convert the temporary dictionary back into a list of key:value pairs.
-                image.metadata = metadata_dict
+                    current_app.logger.debug("Image metadata result: %s" % (image.metadata))
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
+        current_app.logger.info(f"{log_id} image metadata information dump: '%s'" % image.metadata)
+        current_app.data['images'][image_id] = image
 
-            setattr(image, key, value)
-        current_app.data[self.images_table][image_id] = image
-
-        return_json = image_schema.dump(current_app.data[self.images_table][image_id])
-        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        return_json = image_schema.dump(current_app.data['images'][image_id])
+        current_app.logger.debug("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
 
 
