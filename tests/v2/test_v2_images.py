@@ -406,21 +406,21 @@ class TestV2ImageEndpoint(TestCase):
     def test_patch_set_metadata(self):
         test_kv_pairs = [('foo', 'bar'), ('projected', 'image')]
         for key_val, val_val in test_kv_pairs:
-            patch_data = {'metadata': [{'operation': 'set', 'key': key_val, 'value': val_val}]}
+            patch_data = {'metadata': {'operation': 'set', 'key': key_val, 'value': val_val}}
             response = self.app.patch(self.test_uri_link_none,
                                       content_type='application/json',
                                       data=json.dumps(patch_data))
             self.assertEqual(response.status_code, 200, 'status code was not 200')
 
     def test_patch_remove_metadata(self):
-        patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
+        patch_data = {'metadata': {'operation': 'remove', 'key': 'key'}}
         response = self.app.patch(self.test_uri_with_metadata,
                                   content_type='application/json',
                                   data=json.dumps(patch_data))
         self.assertEqual(response.status_code, 200, 'status code was not 200')
 
     def test_patch_remove_metadata_idempotent(self):
-        patch_data = {'metadata': [{'operation': 'remove', 'key': 'key'}]}
+        patch_data = {'metadata': {'operation': 'remove', 'key': 'key'}}
         response = self.app.patch(self.test_uri_with_no_metadata,
                                   content_type='application/json',
                                   data=json.dumps(patch_data))
