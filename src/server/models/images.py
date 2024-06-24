@@ -107,7 +107,7 @@ class V2ImageRecordPatchSchema(Schema):
     arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64, ARCH_X86_64]),
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the recipe"}})
-    metadata = fields.List(fields.Nested(V2ImageRecordMetadataPatchSchema()),
-                           required=False,
-                           metadata={"metadata": {"description":"A list of change operations to perform on Image Metadata."}})
+    metadata = fields.Nested(V2ImageRecordMetadataPatchSchema(),
+                             required=False,
+                             metadata={"metadata": {"description": "An action to set or remove image metadata information."}})
 

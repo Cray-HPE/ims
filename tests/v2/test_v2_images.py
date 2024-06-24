@@ -426,27 +426,6 @@ class TestV2ImageEndpoint(TestCase):
                                   data=json.dumps(patch_data))
         self.assertEqual(response.status_code, 200, 'status code was not 200')
 
-    def test_patch_multiple_changesets_single_patch(self):
-        patch_data = {'metadata': []}
-        for operation in ('set', 'remove', 'set', 'remove', 'remove'):
-            patch_data['metadata'].append({'operation': operation, 'key': 'foo', 'value': 'bar'})
-        for test_uri in (self.test_uri_no_link,
-                         self.test_uri_with_link,
-                         self.test_uri_link_none,
-                         self.test_uri_with_metadata,
-                         self.test_uri_with_no_metadata
-                         ):
-            response = self.app.patch(test_uri,
-                                      content_type='application/json',
-                                      data=json.dumps(patch_data))
-            self.assertEqual(response.status_code, 200, 'status code was not 200')
-            response = self.app.get(test_uri)
-            response_data = json.loads(response.data)
-            self.assertEqual(response.status_code, 200, 'unable to retrieve after a patch')
-            # We ended with a remove, so there should be no remaining metadata
-            self.assertEqual(len(response_data['metadata'].keys()), 0,
-                             'Unable to remove set keys: %s' % (response_data['metadata'].keys()))
-
 
 class TestV2ImagesCollectionEndpoint(TestCase):
     """

@@ -380,27 +380,22 @@ class V3ImageResource(V3BaseImageResource):
                 image.arch = value
                 setattr(image, key, value)
             elif key == 'metadata':
-                # The API represents metadata keys as a dictionary, but the patchset is provided as a list of
-                # changes that need to be applied to the metadata itself.
-                for changeset in value:
-                    operation = changeset.get('operation')
-                    annotation_key = changeset.get('key')
-                    annotation_value = changeset.get('value', '')
-                    current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
-                                             % (image.metadata, operation, annotation_key, annotation_value))
-                    if operation not in ['set', 'remove']:
-                        current_app.logger.info(f"Unknown requested operation change '{operation}'.")
-                        return generate_data_validation_failure(errors=[])
-                    current_app.logger.debug(
-                        "Image Patch changeset: %s %s %s" % (operation, annotation_key, annotation_value))
-                    if operation == 'set':
-                        image.metadata[annotation_key] = annotation_value
-                    elif operation == 'remove':
-                        try:
-                            del image.metadata[annotation_key]
-                        except KeyError:
-                            current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
-                    current_app.logger.debug("Image metadata result: %s" % (image.metadata))
+                operation = value.get('operation')
+                annotation_key = value.get('key')
+                annotation_value = value.get('value', '')
+                current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
+                                        % (image.metadata, operation, annotation_key, annotation_value))
+                if operation not in ['set', 'remove']:
+                    current_app.logger.info(f"Unknown requested operation change '{operation}'.")
+                    return generate_data_validation_failure(errors=[])
+                if operation == 'set':
+                    image.metadata[annotation_key] = annotation_value
+                elif operation == 'remove':
+                    try:
+                        del image.metadata[annotation_key]
+                    except KeyError:
+                        current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
+                current_app.logger.debug("Image metadata result: %s", image.metadata)
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
