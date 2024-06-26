@@ -254,7 +254,7 @@ class V2ImageResource(V2BaseImageResource):
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
-        current_app.logger.info(f"{log_id} image metadata information dump: '%s'" % image.metadata)
+        current_app.logger.debug(f"{log_id} image metadata information dump: '%s'" % image.metadata)
         current_app.data['images'][image_id] = image
 
         return_json = image_schema.dump(current_app.data['images'][image_id])
