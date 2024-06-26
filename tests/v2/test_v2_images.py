@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2019, 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2019, 2021-2022, 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -52,11 +52,12 @@ class TestV2ImageEndpoint(TestCase):
 
     def setUp(self):
         super(TestV2ImageEndpoint, self).setUp()
-        self.test_id = str(uuid.uuid4())
-        self.test_id_link_none = str(uuid.uuid4())
-        self.test_id_no_link = str(uuid.uuid4())
         self.test_arch = "x86_64"
         self.app = self.useFixture(V2FlaskTestClientFixture()).client
+
+        # Default fixture
+        self.test_id = str(uuid.uuid4())
+        self.test_uri_with_link = '/images/{}'.format(self.test_id)
         self.data_record_with_link = {
             'name': self.getUniqueString(),
             'link': {
@@ -67,32 +68,68 @@ class TestV2ImageEndpoint(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
+        # Fixture without a link
+        self.test_id_link_none = str(uuid.uuid4())
+        self.test_uri_link_none = '/images/{}'.format(self.test_id_link_none)
         self.data_record_link_none = {
             'name': self.getUniqueString(),
             'link': None,
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_link_none,
             'arch': self.test_arch,
+            'metadata': {}
         }
+        # Test Fixtures with no set link
+        self.test_id_no_link = str(uuid.uuid4())
+        self.test_uri_no_link = '/images/{}'.format(self.test_id_no_link)
         self.data_record_no_link = {
             'name': self.getUniqueString(),
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_id_no_link,
             'arch': self.test_arch,
+            'metadata': {}
         }
+        # with_metadata; allows for testing records with stored metadata information
+        self.test_id_with_metadata = str(uuid.uuid4())
+        self.test_uri_with_metadata = '/images/{}'.format(self.test_id_no_link)
+        self.data_record_with_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_with_metadata,
+            'arch': self.test_arch,
+            'metadata': {'foo': 'bar'},
+            'link': {
+                'path': 's3://boot-images/{}/manifest.json'.format(self.test_id_with_metadata),
+                'etag': self.getUniqueString(),
+                'type': 's3'
+            },
+        }
+        # with_no_metadata; allows for testing existing data structures on system
+        self.test_id_with_no_metadata = str(uuid.uuid4())
+        self.test_uri_with_no_metadata = '/images/{}'.format(self.test_id_with_no_metadata)
+        self.data_record_with_no_metadata = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_id_with_no_metadata,
+            'arch': self.test_arch,
+            'link': {
+                'path': 's3://boot-images/{}/manifest.json'.format(self.test_id_with_no_metadata),
+                'etag': self.getUniqueString(),
+                'type': 's3'
+            },
+        }
+        # Test Fixture for link cascades
+        self.test_uri_with_link_cascade_false = '/images/{}?cascade=False'.format(self.test_id)
         self.data = [
             self.data_record_with_link,
             self.data_record_link_none,
-            self.data_record_no_link
+            self.data_record_no_link,
+            self.data_record_with_metadata,
+            self.data_record_with_no_metadata
         ]
-
         self.useFixture(V2ImagesDataFixture(initial_data=self.data))
-        self.test_uri_with_link = '/images/{}'.format(self.test_id)
-        self.test_uri_with_link_cascade_false = '/images/{}?cascade=False'.format(self.test_id)
-        self.test_uri_link_none = '/images/{}'.format(self.test_id_link_none)
-        self.test_uri_no_link = '/images/{}'.format(self.test_id_no_link)
-
         self.s3_manifest_data = {
             "version": "1.0",
             "created": "2020-01-14 03:17:14",
@@ -261,8 +298,7 @@ class TestV2ImageEndpoint(TestCase):
         self.stubber.activate()
         response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(link_data))
         self.stubber.deactivate()
-
-        self.assertEqual(response.status_code, 200, 'status code was not 200')
+        self.assertEqual(response.status_code, 200, 'status code was not 200: data:%s response.data: %s' % (json.dumps(link_data), response.data))
         response_data = json.loads(response.data)
         self.assertEqual(set(self.data_record_link_none.keys()).difference(response_data.keys()), set(),
                          'returned keys not the same')
@@ -340,10 +376,12 @@ class TestV2ImageEndpoint(TestCase):
     def test_patch_change_arch(self):
         """ Test that we're able to patch a record with a new architecture"""
         
-        test_archs = ['x86_64','aarch64','x86_64']
+        test_archs = ['x86_64', 'aarch64', 'x86_64']
         for arch in test_archs:
             patch_data = {'arch': arch}
-            response = self.app.patch(self.test_uri_link_none, content_type='application/json', data=json.dumps(patch_data))
+            response = self.app.patch(self.test_uri_link_none,
+                                      content_type='application/json',
+                                      data=json.dumps(patch_data))
 
             self.assertEqual(response.status_code, 200, 'status code was not 200')
             response_data = json.loads(response.data)
@@ -361,8 +399,33 @@ class TestV2ImageEndpoint(TestCase):
                     self.assertEqual(response_data[key], patch_data['arch'],
                                     'resource field "{}" returned was not equal'.format(key))
                 else:
-                    self.assertEqual(response_data[key], self.data_record_link_none[key],
+                    self.assertEqual(response_data[key],
+                                     self.data_record_link_none[key],
                                     'resource field "{}" returned was not equal'.format(key))
+
+    def test_patch_set_metadata(self):
+        test_kv_pairs = [('foo', 'bar'), ('projected', 'image')]
+        for key_val, val_val in test_kv_pairs:
+            patch_data = {'metadata': {'operation': 'set', 'key': key_val, 'value': val_val}}
+            response = self.app.patch(self.test_uri_link_none,
+                                      content_type='application/json',
+                                      data=json.dumps(patch_data))
+            self.assertEqual(response.status_code, 200, 'status code was not 200')
+
+    def test_patch_remove_metadata(self):
+        patch_data = {'metadata': {'operation': 'remove', 'key': 'key'}}
+        response = self.app.patch(self.test_uri_with_metadata,
+                                  content_type='application/json',
+                                  data=json.dumps(patch_data))
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+
+    def test_patch_remove_metadata_idempotent(self):
+        patch_data = {'metadata': {'operation': 'remove', 'key': 'key'}}
+        response = self.app.patch(self.test_uri_with_no_metadata,
+                                  content_type='application/json',
+                                  data=json.dumps(patch_data))
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+
 
 class TestV2ImagesCollectionEndpoint(TestCase):
     """
@@ -469,7 +532,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata'],
                               'returned keys not the same')
 
     def test_post_link_none(self):
@@ -488,7 +551,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata',],
                               'returned keys not the same')
 
     def test_post_no_link(self):
@@ -506,7 +569,7 @@ class TestV2ImagesCollectionEndpoint(TestCase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata'],
                               'returned keys not the same')
 
     def test_post_400_no_input(self):

@@ -34,10 +34,10 @@ class V3DeletedImageRecord(V2ImageRecord):
     """ The ImageRecord object """
 
     # pylint: disable=W0622
-    def __init__(self, name, link=None, id=None, created=None, deleted=None, arch="x86_64"):
+    def __init__(self, name, link=None, id=None, created=None, deleted=None, arch="x86_64", metadata=None):
         # Supplied
         self.deleted = deleted or datetime.datetime.now()
-        super().__init__(name, link=link, id=id, created=created, arch=arch)
+        super().__init__(name, link=link, id=id, created=created, arch=arch, metadata=metadata)
 
     def __repr__(self):
         return '<V3DeletedImageRecord(id={self.id!r})>'.format(self=self)
@@ -69,7 +69,7 @@ class V3DeletedImageRecordSchema(V3DeletedImageRecordInputSchema):
 
 class V3DeletedImageRecordPatchSchema(Schema):
     """
-    Schema for a updating an ImageRecord object.
+    Schema for updating an ImageRecord object.
     """
     operation = fields.Str(required=True,
                            metadata={"metadata": {"description": "The operation or action that should be taken on the image record. "

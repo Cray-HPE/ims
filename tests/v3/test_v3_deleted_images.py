@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -79,6 +79,7 @@ class TestV3BaseDeletedImage(TestCase):
             'id': self.test_with_link_id,
             'name': self.getUniqueString(),
             'arch': "x86_64",
+            'metadata': {},
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
@@ -93,6 +94,7 @@ class TestV3BaseDeletedImage(TestCase):
         self.test_no_link_record = {
             'id': self.test_no_link_id,
             'name': self.getUniqueString(),
+            'metadata': {},
             'arch': "x86_64",
             'link': None,
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
