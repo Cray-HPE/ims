@@ -5,6 +5,7 @@ testtools
 fixtures
 pytest
 pytest-cov
+pytest-env
 pycodestyle
 pylint
 mock

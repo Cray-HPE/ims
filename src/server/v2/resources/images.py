@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -83,6 +83,7 @@ class V2ImageCollection(V2BaseImageResource):
         """ retrieve a list/collection of images """
         log_id = get_log_id()
         current_app.logger.info("%s ++ images.v2.GET", log_id)
+        current_app.logger.info("%s ++ images.v2.GET RAW:%s" % (log_id, current_app.data["images"].values()))
         return_json = image_schema.dump(iter(current_app.data["images"].values()), many=True)
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
@@ -166,6 +167,7 @@ class V2ImageResource(V2BaseImageResource):
             current_app.logger.info("%s no IMS image record matches image_id=%s", log_id, image_id)
             return generate_resource_not_found_response()
 
+        current_app.logger.info("%s ++ images.v2.GET Raw: %s" % (log_id, current_app.data['images'][image_id]))
         return_json = image_schema.dump(current_app.data['images'][image_id])
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
@@ -206,6 +208,7 @@ class V2ImageResource(V2BaseImageResource):
             return generate_missing_input_response()
 
         # Validate input
+        current_app.logger.info("%s image patch json_value: %s" % (log_id, json_data))
         errors = image_patch_input_schema.validate(json_data)
         if errors:
             current_app.logger.info("%s There was a problem validating the PATCH data: %s", log_id, errors)
@@ -226,16 +229,34 @@ class V2ImageResource(V2BaseImageResource):
                     if problem:
                         current_app.logger.info("%s Could not validate link artifact or artifact doesn't exist", log_id)
                         return problem
+                setattr(image, key, value)
             elif key == "arch":
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
+                setattr(image, key, value)
+            elif key == 'metadata':
+                operation = value.get('operation')
+                annotation_key = value.get('key')
+                annotation_value = value.get('value', '')
+                current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
+                                        % (image.metadata, operation, annotation_key, annotation_value))
+                if operation not in ['set', 'remove']:
+                    current_app.logger.info(f"Unknown requested operation change '{operation}'.")
+                    return generate_data_validation_failure(errors=[])
+                if operation == 'set':
+                    image.metadata[annotation_key] = annotation_value
+                elif operation == 'remove':
+                    try:
+                        del image.metadata[annotation_key]
+                    except KeyError:
+                        current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
+                current_app.logger.debug("Image metadata result: %s", image.metadata)
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
-
-            setattr(image, key, value)
+        current_app.logger.debug(f"{log_id} image metadata information dump: '%s'" % image.metadata)
         current_app.data['images'][image_id] = image
 
         return_json = image_schema.dump(current_app.data['images'][image_id])
-        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        current_app.logger.debug("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)

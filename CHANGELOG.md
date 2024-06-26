@@ -5,7 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.16.0] - 2024-06-26
+### Added
+- CASMCMS-8915: IMS API features for tagging built images.
+### Dependencies
+- CASMCMS-8022 - update python dependencies to most recent versions. 
+| Package               | From       | To       |
+|-----------------------|------------|----------|
+| `aniso8601`           | 3.0.2      | 9.0.1    |
+| `boto3`               | 1.12.49    | 1.34.114 |
+| `botocore`            | 1.15.49    | 1.34.114 |
+| `cachetools`          | 3.0.0      | 5.3.3    |
+| `certifi`             | 2019.11.28 | 2024.2.2 |
+| `chardet`             | 3.0.4      | 5.2.0    |
+| `click`               | 6.7        | 8.1.7    |
+| `docutils`            | 0.14       | 0.21.2   |
+| `Flask`               | 1.1.4      | 3.0.3    |
+| `flask-marshmallow`   | 0.9.0      | 1.2.1    |
+| `google-auth`         | 1.6.3      | 2.29.0   |
+| `gunicorn`            | 19.10.0    | 22.0.0   |
+| `idna`                | 2.8        | 3.7      |
+| `itsdangerous`        | 0.24       | 2.2.0    |
+| `Jinja2`              | 2.10.3     | 3.1.4    |
+| `jmespath`            | 0.9.5      | 1.0.1    |
+| `MarkupSafe`          | 1.1.1      | 2.1.5    |
+| `marshmallow`         | 3.0.0b16   | 3.21.2   |
+| `oauthlib`            | 2.1.0      | 3.2.2    |
+| `pyasn1`              | 0.4.8      | 0.6.0    |
+| `pyasn1-modules`      | 0.2.8      | 0.4.0    |
+| `pytz`                | 2018.4     | 2024.1   |
+| `requests`            | 2.23.0     | 2.31.0   |
+| `requests-oauthlib`   | 1.0.0      | 1.3.1    |
+| `rsa`                 | 4.7.2      | 4.9      |
+| `s3transfer`          | 0.3.7      | 0.10.1   |
+| `urllib3`             | 1.25.11    | 1.26.18  |
+| `websocket-client`    | 0.54.0     | 1.8.0    |
+| `Werkzeug`            | 0.15.6     | 3.0.3    |
 
 ## [3.15.0] - 2024-05-20
 ### Dependencies

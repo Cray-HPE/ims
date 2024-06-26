@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,7 @@ import http.client
 
 from flask import jsonify, request, current_app
 from flask_restful import Resource
+from copy import deepcopy
 
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response, generate_patch_conflict
@@ -373,18 +374,36 @@ class V3ImageResource(V3BaseImageResource):
                         current_app.logger.info(f"The artifact {value} is not in S3 and "
                                                 f"was not soft-deleted. Ignoring")
                         current_app.logger.info(str(exc))
+                setattr(image, key, value)
             elif key == "arch":
                 current_app.logger.info(f"Patching architecture with {value}")
                 image.arch = value
+                setattr(image, key, value)
+            elif key == 'metadata':
+                operation = value.get('operation')
+                annotation_key = value.get('key')
+                annotation_value = value.get('value', '')
+                current_app.logger.debug("Image Patch changeset: Current: %s -> %s %s %s"
+                                        % (image.metadata, operation, annotation_key, annotation_value))
+                if operation not in ['set', 'remove']:
+                    current_app.logger.info(f"Unknown requested operation change '{operation}'.")
+                    return generate_data_validation_failure(errors=[])
+                if operation == 'set':
+                    image.metadata[annotation_key] = annotation_value
+                elif operation == 'remove':
+                    try:
+                        del image.metadata[annotation_key]
+                    except KeyError:
+                        current_app.logger.info("No-op when removing non-existent metadata from IMS record.")
+                current_app.logger.debug("Image metadata result: %s", image.metadata)
             else:
                 current_app.logger.info(f"{log_id} Not able to patch record field {key} with value {value}")
                 return generate_data_validation_failure(errors=[])
+        current_app.logger.info(f"{log_id} image metadata information dump: '%s'" % image.metadata)
+        current_app.data['images'][image_id] = image
 
-            setattr(image, key, value)
-        current_app.data[self.images_table][image_id] = image
-
-        return_json = image_schema.dump(current_app.data[self.images_table][image_id])
-        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        return_json = image_schema.dump(current_app.data['images'][image_id])
+        current_app.logger.debug("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
 
 

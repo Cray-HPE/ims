@@ -33,7 +33,7 @@ from testtools import TestCase
 from testtools.matchers import HasLength
 
 from tests.v2.ims_fixtures import V2FlaskTestClientFixture, V2PublicKeysDataFixture
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 
 
 class TestV2PublicKeyEndpoint(TestCase):
@@ -65,7 +65,7 @@ class TestV2PublicKeyEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data[key],
@@ -117,7 +117,7 @@ class TestV2PublicKeysCollectionEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.data[key])

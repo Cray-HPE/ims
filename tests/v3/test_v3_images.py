@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,7 @@ from testtools.matchers import HasLength
 
 from src.server import app
 from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
 
 
@@ -61,6 +61,7 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_with_link_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
 
         self.test_link_none_id = str(uuid.uuid4())
@@ -71,6 +72,7 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_link_none_id,
             'arch': self.test_arch,
+            'metadata': {}
         }
 
         self.test_no_link_id = str(uuid.uuid4())
@@ -80,12 +82,32 @@ class TestV3ImageBase(TestCase):
             'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
             'id': self.test_no_link_id,
             'arch': self.test_arch,
+            'metadata': {}
+        }
+        self.test_data_record_with_metadata_id = str(uuid.uuid4())
+        self.test_data_record_with_metadata_uri = '/v3/images/{}'.format(self.test_data_record_with_metadata_id)
+        self.test_data_record_with_metadata_record = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.test_data_record_with_metadata_id,
+            'arch': self.test_arch,
+            'metadata': {'foo': 'bar'}
         }
 
+        self.data_record_with_no_metadata_id = str(uuid.uuid4())
+        self.data_record_with_no_metadata_uri = '/v3/images/{}'.format(self.data_record_with_no_metadata_id)
+        self.data_record_with_no_metadata_record = {
+            'name': self.getUniqueString(),
+            'created': datetime.datetime.now().replace(microsecond=0).isoformat(),
+            'id': self.data_record_with_no_metadata_id,
+            'arch': self.test_arch
+        }
         self.data = [
             self.test_with_link_record,
             self.test_link_none_record,
-            self.test_no_link_record
+            self.test_no_link_record,
+            self.test_data_record_with_metadata_record,
+            self.data_record_with_no_metadata_record
         ]
 
         self.app = self.useFixture(V3FlaskTestClientFixture()).client
@@ -171,7 +193,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.test_with_link_record[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.test_with_link_record[key],
@@ -191,7 +213,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.test_link_none_record[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.test_link_none_record[key],
@@ -211,7 +233,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.test_no_link_record[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
                 self.assertEqual(response_data[key], None,
@@ -349,7 +371,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                     self.assertAlmostEqual(datetime.datetime.strptime(self.test_link_none_record[key],
                                                                     '%Y-%m-%dT%H:%M:%S'),
                                         datetime.datetime.strptime(response_data['created'],
-                                                                    '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                    DATETIME_STRING),
                                         delta=datetime.timedelta(seconds=5))
                 elif key == 'arch':
                     self.assertEqual(response_data[key], patch_data['arch'],
@@ -403,11 +425,11 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.test_link_none_record[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key == 'link':
-                self.assertEqual(response_data[key], link_data['link'],
-                                 'resource field "{}" returned was not equal'.format(key))
+                self.assertEqual(response_data[key], link_data[key],
+                                 'resource field "{}" returned was not equal: {} != {}'.format(key, response_data[key], link_data[key]))
             else:
                 self.assertEqual(response_data[key], self.test_link_none_record[key],
                                  'resource field "{}" returned was not equal'.format(key))
@@ -453,7 +475,7 @@ class TestV3ImageEndpoint(TestV3ImageBase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.test_with_link_record[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.test_with_link_record[key],
@@ -486,7 +508,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                             self.assertAlmostEqual(datetime.datetime.strptime(source_record[key],
                                                                               '%Y-%m-%dT%H:%M:%S'),
                                                    datetime.datetime.strptime(response_record[key],
-                                                                              '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                              DATETIME_STRING),
                                                    delta=datetime.timedelta(seconds=1))
                         else:
                             self.assertEqual(source_record[key], response_record[key])
@@ -536,7 +558,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata'],
                               'returned keys not the same')
 
     def test_post_link_none(self):
@@ -555,7 +577,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata',],
                               'returned keys not the same')
 
     def test_post_no_link(self):
@@ -573,7 +595,7 @@ class TestV3ImagesCollectionEndpoint(TestV3ImageBase):
                          r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z')
         self.assertIsNotNone(response_data['created'], 'image creation date/time was not set properly')
         self.assertItemsEqual(response_data.keys(),
-                              ['created', 'name', 'link', 'id', 'arch'],
+                              ['created', 'name', 'link', 'id', 'arch', 'metadata'],
                               'returned keys not the same')
 
     def test_post_400_no_input(self):

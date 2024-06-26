@@ -47,7 +47,7 @@ class V3DeletedPublicKeyRecordInputSchema(V2PublicKeyRecordInputSchema):
     """ A schema specifically for defining and validating user input """
 
     @post_load
-    def make_public_key(self, data):
+    def make_public_key(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         return V3DeletedPublicKeyRecord(**data)
 
@@ -62,9 +62,9 @@ class V3DeletedPublicKeyRecordSchema(V3DeletedPublicKeyRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     DeletedRecipeRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the public_key")
-    created = fields.DateTime(description="the time the public_key record was created")
-    deleted = fields.DateTime(description="the time the public_key record was deleted")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the public_key"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the public_key record was created"}})
+    deleted = fields.DateTime(metadata={"metadata": {"description": "Time the public_key record was deleted"}})
 
 
 class V3DeletedPublicKeyRecordPatchSchema(Schema):
@@ -72,6 +72,6 @@ class V3DeletedPublicKeyRecordPatchSchema(Schema):
     Schema for a updating an PublicKey object.
     """
     operation = fields.Str(required=True,
-                           description='The operation or action that should be taken on the recipe record. '
-                                       f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }',
+                           metadata={"metadata": {"description": "The operation or action that should be taken on the recipe record. "
+                                                  f'Supported operations are: { ", ".join(PATCH_OPERATIONS) }'}},
                            validate=OneOf(PATCH_OPERATIONS, error="Recipe type must be one of: {choices}."))

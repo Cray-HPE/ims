@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -33,7 +33,7 @@ from testtools.matchers import HasLength
 
 from src.server import app
 from src.server.helper import S3Url, ARTIFACT_LINK_TYPE_S3
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3ImagesDataFixture, V3DeletedImagesDataFixture
 
 
@@ -79,6 +79,7 @@ class TestV3BaseDeletedImage(TestCase):
             'id': self.test_with_link_id,
             'name': self.getUniqueString(),
             'arch': "x86_64",
+            'metadata': {},
             'link': {
                 'path': 's3://boot-images/{}/manifest.json'.format(self.test_with_link_id),
                 'etag': self.getUniqueString(),
@@ -93,6 +94,7 @@ class TestV3BaseDeletedImage(TestCase):
         self.test_no_link_record = {
             'id': self.test_no_link_id,
             'name': self.getUniqueString(),
+            'metadata': {},
             'arch': "x86_64",
             'link': None,
             'created': (datetime.now() - timedelta(days=77)).replace(microsecond=0).isoformat(),
@@ -171,7 +173,7 @@ class TestV3DeletedImageEndpoint(TestV3BaseDeletedImage):
                     self.assertAlmostEqual(datetime.strptime(test_record[key],
                                                              '%Y-%m-%dT%H:%M:%S'),
                                            datetime.strptime(response_data[key],
-                                                             '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                             DATETIME_STRING),
                                            delta=timedelta(seconds=1))
                 else:
                     self.assertEqual(response_data[key], test_record[key],
@@ -302,7 +304,7 @@ class TestV3ImagesCollectionEndpoint(TestV3BaseDeletedImage):
                             self.assertAlmostEqual(datetime.strptime(source_record[key],
                                                                      '%Y-%m-%dT%H:%M:%S'),
                                                    datetime.strptime(response_record[key],
-                                                                     '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                     DATETIME_STRING),
                                                    delta=timedelta(seconds=1))
                         else:
                             self.assertEqual(source_record[key], response_record[key],

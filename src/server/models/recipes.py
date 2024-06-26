@@ -47,8 +47,8 @@ LINUX_DISTRIBUTIONS = (LINUX_DISTRIBUTION_SLES12, LINUX_DISTRIBUTION_SLES15, LIN
 
 class RecipeKeyValuePair(Schema):
     """ A schema specifically for defining and validating user input of SSH Containers """
-    key = fields.String(description="Template Key", required=True)
-    value = fields.String(description="Template Value", required=True)
+    key = fields.String(metadata={"metadata": {"description": "Template Key"}}, required=True)
+    value = fields.String(metadata={"metadata": {"description": "Template Value"}}, required=True)
 
 
 class V2RecipeRecord:
@@ -77,31 +77,27 @@ class V2RecipeRecord:
 class V2RecipeRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input """
     # v2.0
-    name = fields.Str(required=True, description="the name of the recipe",
-                      validate=Length(min=1, error="name field must not be blank"))
+    name = fields.Str(required=True, validate=Length(min=1, error="name field must not be blank"),
+                      metadata={"metadata": {"description": "Name of the recipe"}})
     link = fields.Nested(ArtifactLink, required=False, allow_none=True,
-                         description="the location of the recipe archive")
-    recipe_type = fields.Str(required=True,
-                             description="The type of recipe, currently '%s' is the only valid value"
-                                         % RECIPE_TYPE_KIWI_NG,
-                             validate=OneOf(RECIPE_TYPES, error="Recipe type must be one of: {choices}."))
-    linux_distribution = fields.Str(required=True,
-                                    description="The linux distributiobn of the recipe, either '%s' or '%s' or '%s'"
-                                                % (LINUX_DISTRIBUTION_SLES12, LINUX_DISTRIBUTION_SLES15,
-                                                   LINUX_DISTRIBUTION_CENTOS),
+                         metadata={"metadata": {"description": "Location of the recipe archive"}})
+    recipe_type = fields.Str(required=True, validate=OneOf(RECIPE_TYPES, error="Recipe type must be one of: {choices}."),
+                            metadata={"metadata": {"description": f"The type of recipe, currently '{RECIPE_TYPE_KIWI_NG}' is the only valid value"}})
+    linux_distribution = fields.Str(required=True,metadata={"metadata": {"description": f"The linux distribution of the recipe, either "
+                                    f"'{LINUX_DISTRIBUTION_SLES12}' or '{LINUX_DISTRIBUTION_SLES15}' or '{LINUX_DISTRIBUTION_CENTOS}'"}},
                                     validate=OneOf(LINUX_DISTRIBUTIONS, error="Recipe type must be one of: {choices}."))
 
     # v2.1
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)
 
     # v2.2
-    require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
-                                  description="Recipe requires the use of dkms")
-    arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
-                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
+    require_dkms = fields.Boolean(load_default=False, dump_default=False,
+                                  metadata={"metadata": {"description": "Recipe requires the use of dkms"}})
+    arch = fields.Str(required=False, metadata={"metadata": {"description": "Architecture of the recipe"}},
+                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=ARCH_X86_64, dump_default=ARCH_X86_64)
 
     @post_load
-    def make_recipe(self, data):
+    def make_recipe(self, data, many, partial):
         """ Marshall an object out of the individual data components """
         data['template_dictionary'] = data.get('template_dictionary', [])
         return V2RecipeRecord(**data)
@@ -117,8 +113,8 @@ class V2RecipeRecordSchema(V2RecipeRecordInputSchema):
     read in from a database. Builds upon the basic input fields in
     RecipeRecordInputSchema.
     """
-    id = fields.UUID(description="the unique id of the recipe")
-    created = fields.DateTime(description="the time the recipe record was created")
+    id = fields.UUID(metadata={"metadata": {"description": "Unique id of the recipe"}})
+    created = fields.DateTime(metadata={"metadata": {"description": "Time the recipe record was created"}})
 
 
 class V2RecipeRecordPatchSchema(Schema):
@@ -126,9 +122,10 @@ class V2RecipeRecordPatchSchema(Schema):
     Schema for a updating a RecipeRecord object.
     """
     link = fields.Nested(ArtifactLink, required=False, allow_none=False,
-                         description="the location of the recipe archive")
-    arch = fields.Str(required=False, description="Architecture of the recipe", default=ARCH_X86_64,
-                          validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=True, dump_default=True)
-    require_dkms = fields.Boolean(required=False, default=False, load_default=True, dump_default=True,
-                                  description="Recipe requires the use of dkms")
+                         metadata={"metadata": {"description": "Location of the recipe archive"}})
+    arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]),
+                      load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
+                      metadata={"metadata": {"description": "Architecture of the recipe"}})
+    require_dkms = fields.Boolean(required=False, load_default=False, dump_default=False,
+                                  metadata={"metadata": {"description": "Recipe requires the use of dkms"}})
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)

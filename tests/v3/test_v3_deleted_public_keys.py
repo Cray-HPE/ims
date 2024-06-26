@@ -31,7 +31,7 @@ from testtools.matchers import HasLength
 from src.server import app
 from src.server.helper import S3Url
 from tests.v3.ims_fixtures import V3FlaskTestClientFixture, V3PublicKeysDataFixture, V3DeletedPublicKeysDataFixture
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 
 
 class TestV3DeletedPublicKeysBase(TestCase):
@@ -81,7 +81,7 @@ class TestV3DeletedPublicKeysEndpoint(TestV3DeletedPublicKeysBase):
                 self.assertAlmostEqual(datetime.strptime(self.test_public_key_record[key],
                                                          '%Y-%m-%dT%H:%M:%S'),
                                        datetime.strptime(response_data[key],
-                                                         '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                         DATETIME_STRING),
                                        delta=timedelta(seconds=1))
             else:
                 self.assertEqual(response_data[key], self.test_public_key_record[key],
@@ -159,7 +159,7 @@ class TestV3PublicKeysCollectionEndpoint(TestV3DeletedPublicKeysBase):
                             self.assertAlmostEqual(datetime.strptime(source_record[key],
                                                                      '%Y-%m-%dT%H:%M:%S'),
                                                    datetime.strptime(response_record[key],
-                                                                     '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                     DATETIME_STRING),
                                                    delta=timedelta(seconds=1))
                         else:
                             self.assertEqual(source_record[key], response_record[key],

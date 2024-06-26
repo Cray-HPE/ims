@@ -43,7 +43,7 @@ from src.server import app
 from src.server.helper import ARTIFACT_LINK_TYPE_S3, S3Url
 from src.server.models.jobs import (KERNEL_FILE_NAME_ARM, KERNEL_FILE_NAME_X86,
                                     STATUS_TYPES)
-from tests.utils import check_error_responses
+from tests.utils import check_error_responses, DATETIME_STRING
 #from tests.v2.ims_fixtures import (V2FlaskTestClientFixture,
 #                                   V2ImagesDataFixture, V2JobsDataFixture,
 #                                   V2PublicKeysDataFixture,
@@ -101,7 +101,7 @@ class TestV3JobEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.data[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             elif key in self.data:
                 self.assertEqual(response_data[key], self.data[key],
@@ -382,7 +382,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                 self.assertAlmostEqual(datetime.datetime.strptime(self.job_data[key],
                                                                   '%Y-%m-%dT%H:%M:%S'),
                                        datetime.datetime.strptime(response_data['created'],
-                                                                  '%Y-%m-%dT%H:%M:%S+00:00'),
+                                                                  DATETIME_STRING),
                                        delta=datetime.timedelta(seconds=5))
             else:
                 self.assertEqual(response_data[key], self.job_data[key])

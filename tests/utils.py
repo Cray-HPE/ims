@@ -25,6 +25,8 @@
 Test Utilities
 """
 
+# Format for read/write of test data datetime strings
+DATETIME_STRING = '%Y-%m-%dT%H:%M:%S'
 
 def check_error_responses(testcase, response, status_code, fields):
     """
