@@ -2363,10 +2363,17 @@ components:
             - x86_64
           type: string
         metadata:
-          description: List of key/value pairs to associate with an Image
+          description: User supplied annotations about an image
           type: object
           properties:
-            $ref: '#/components/schemas/ImageMetadataAnnotationKeyValuePair'
+            key:
+              description: Template variable to associate with the IMS image
+              example: includes_additional_packages
+              type: string
+            value:
+              description: Value variable to associate with the IMS image
+              example: "foo,bar,baz"
+              type: string
     JobRecord:
       description: A Job Record
       type: object
