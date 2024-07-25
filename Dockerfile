@@ -24,7 +24,7 @@
 # Cray Image Management Service Dockerfile
 
 # Create 'base' image target
-FROM artifactory.algol60.net/docker.io/library/alpine:3.15 as base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 as base
 WORKDIR /app
 RUN mkdir -p /var/ims/data /app /results && \
     chown -Rv 65534:65534 /var/ims/data /app /results
@@ -42,8 +42,8 @@ ENV VIRTUAL_ENV=/app/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN pip3 install --no-cache-dir -U pip && \
-    pip3 install --no-cache-dir -U wheel && \
+RUN pip3 install --no-cache-dir -U pip -c constraints.txt && \
+    pip3 install --no-cache-dir -U wheel -c constraints.txt && \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Install server
