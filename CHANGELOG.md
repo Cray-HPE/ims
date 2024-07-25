@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.16.2] - 2024-07-25
 ### Dependencies
-- Resolved CVES
-  - Require `setuptools` >= 70.0
+- Resolved CVE: Require `setuptools` >= 70.0
 
 ## [3.16.1] - 2024-06-27
 ### Fixed
