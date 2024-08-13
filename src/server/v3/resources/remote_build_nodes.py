@@ -32,11 +32,47 @@ from flask_restful import Resource
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
 from src.server.helper import get_log_id
-from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordInputSchema, V3RemoteBuildNodeRecordSchema, V3RemoteBuildNodeRecord
+from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordInputSchema, V3RemoteBuildNodeRecordSchema, V3RemoteBuildNodeRecord, RemoteNodeStatus
 from src.server.v3.models import PATCH_OPERATION_UNDELETE
 
 remote_build_node_user_input_schema = V3RemoteBuildNodeRecordInputSchema()
 remote_build_node_schema = V3RemoteBuildNodeRecordSchema()
+
+class V3RemoteBuildStatus(Resource):
+    """
+    Class for querying the current status of the remote build nodes
+    """
+
+    def get(self, remote_build_node_xname):
+        """ Retrieve a remote build node. """
+        log_id = get_log_id()
+        current_app.logger.info("%s ++ remote_build_status.v3.GET %s", log_id, remote_build_node_xname)
+
+        if remote_build_node_xname not in current_app.data['remote_build_nodes']:
+            current_app.logger.info("%s no IMS remote build node matches xname=%s", log_id, remote_build_node_xname)
+            return generate_resource_not_found_response()
+
+        return_json = current_app.data['remote_build_nodes'][remote_build_node_xname].getStatus().toJson()
+        #return_json = current_app.data['remote_build_nodes'][remote_build_node_xname].getStatus()
+        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        return jsonify(return_json)
+
+class V3RemoteBuildStatusCollection(Resource):
+    """
+    Class for querying the current status of all the remote build nodes
+    """
+
+    def get(self):
+        """ Retrieve a remote build node. """
+        log_id = get_log_id()
+        current_app.logger.info("%s ++ remote_build_status_collection.v3.GET", log_id)
+
+        return_json = []
+        for remote_node in current_app.data['remote_build_nodes'].values():
+            return_json.append(remote_node.getStatus().toJson())
+
+        current_app.logger.info("%s Returning json response: %s", log_id, return_json)
+        return jsonify(return_json)
 
 class V3RemoteBuildNodeCollection(Resource):
     """
@@ -113,7 +149,7 @@ class V3RemoteBuildNodeResource(Resource):
         current_app.logger.info("%s ++ remote_build_nodes.v3.GET %s", log_id, remote_build_node_xname)
 
         if remote_build_node_xname not in current_app.data['remote_build_nodes']:
-            current_app.logger.info("%s no IMS remote bild node matches xname=%s", log_id, remote_build_node_xname)
+            current_app.logger.info("%s no IMS remote build node matches xname=%s", log_id, remote_build_node_xname)
             return generate_resource_not_found_response()
 
         return_json = remote_build_node_schema.dump(current_app.data['remote_build_nodes'][remote_build_node_xname])
