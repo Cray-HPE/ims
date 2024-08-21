@@ -34,6 +34,7 @@ from marshmallow import RAISE, Schema, fields, post_load
 from marshmallow.validate import Length, OneOf, Range
 
 from src.server.helper import ARCH_ARM64, ARCH_X86_64
+from src.server.models.remote_build_nodes import RemoteNodeStatus
 
 JOB_TYPE_CREATE = 'create'
 JOB_TYPE_CUSTOMIZE = 'customize'
@@ -259,13 +260,14 @@ def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
     """
     app.logger.info(f"Checking for remote build node for job")
     best_node = ""
-    best_node_job_count = 10000
+    best_node_job_count = RemoteNodeStatus.UNKNOWN_NUM_JOBS - 1
+
     for xname, remote_node in app.data['remote_build_nodes'].items():
-        arch, numJobs = remote_node.getStatus()
-        if arch != None and arch == job.arch:
-            app.logger.info(f"Matching remote node: {xname}, current jobs on node: {numJobs}")
-            # matching arch - can use the node, now pick the best
-            if best_node == "" or numJobs < best_node_job_count:
+        nodeStatus = remote_node.getStatus()
+        if nodeStatus.ableToRunJobs and nodeStatus.nodeArch == job.arch:
+            app.logger.info(f"Matching remote node: {xname}, current jobs on node: {nodeStatus.numCurrentJobs}")
+            # matching arch - can use the node, now pick the node with the least jobs running
+            if best_node == "" or nodeStatus.numCurrentJobs < best_node_job_count:
                 best_node = remote_node.xname
-                best_node_job_count = numJobs
+                best_node_job_count = nodeStatus.numCurrentJobs
     return best_node

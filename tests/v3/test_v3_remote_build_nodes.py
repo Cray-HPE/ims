@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -142,6 +142,54 @@ class TestV3RemoteBuildNodesCollectionEndpoint(TestCase):
         response = self.app.post(self.test_uri, content_type='application/json', data=json.dumps(input_data))
         check_error_responses(self, response, 422, ['status', 'title', 'detail', 'errors'])
         self.assertIn("xname", response.json["errors"], "Expected xname to be listed in error detail")
+
+class TestV3RemoteBuildStatusEndpoint(TestCase):
+    """
+    Test the remote-build-nodes/status/{remote_build_node_xname} endpoint (ims.v3.resources.remote_build_node.RemoteBuildStatus)
+    """
+
+    def setUp(self):
+        super(TestV3RemoteBuildStatusEndpoint, self).setUp()
+        self.app = self.useFixture(V3FlaskTestClientFixture()).client
+        self.data = {
+            'xname': self.getUniqueString()
+        }
+        self.useFixture(V3RemoteBuildNodesDataFixture(initial_data=self.data))
+        self.test_uri = '/v3/remote-build-nodes/status/{}'.format(self.data['xname'])
+
+    def test_get(self):
+        """ Test the remote-build-nodes/status/{remote_build_node_xname} resource retrieval """
+        response = self.app.get(self.test_uri)
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+        response_data = json.loads(response.data)
+        self.assertEqual(response_data['xname'], self.data['xname'])
+
+    def test_get_404_bad_id(self):
+        """ Test the  remote-build-nodes/status/{remote_build_node_xname} resource retrieval with an unknown id """
+        response = self.app.get('/v3/remote-build-nodes/status/{}'.format(str(uuid.uuid4())))
+        check_error_responses(self, response, 404, ['status', 'title', 'detail'])
+
+class TestV3RemoteBuildStatusCollectionEndpoint(TestCase):
+    """
+    Test the remote-build-nodes/ collection endpoint (ims.v3.resources.remote_build_nodes.RemoteBuildStatusCollection)
+    """
+
+    def setUp(self):
+        super(TestV3RemoteBuildStatusCollectionEndpoint, self).setUp()
+        self.test_uri = '/v3/remote-build-nodes/status'
+        self.app = self.useFixture(V3FlaskTestClientFixture()).client
+        self.data = {
+            'xname': self.getUniqueString()
+        }
+        self.test_remote_build_nodes = self.useFixture(V3RemoteBuildNodesDataFixture(initial_data=self.data)).datastore
+
+    def test_get(self):
+        """ Test happy path GET """
+        response = self.app.get(self.test_uri)
+        self.assertEqual(response.status_code, 200, 'status code was not 200')
+        self.assertThat(json.loads(response.data), HasLength(1), 'collection did not have an entry')
+        response_data = json.loads(response.data)[0]
+        self.assertEqual(response_data['xname'], self.data['xname'])
 
 if __name__ == '__main__':
     unittest.main()
