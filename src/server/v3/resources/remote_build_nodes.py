@@ -32,6 +32,7 @@ from flask_restful import Resource
 from src.server.errors import problemify, generate_missing_input_response, generate_data_validation_failure, \
     generate_resource_not_found_response
 from src.server.helper import get_log_id
+from src.server.vault import test_private_key_file
 from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordInputSchema, V3RemoteBuildNodeRecordSchema, V3RemoteBuildNodeRecord, RemoteNodeStatus
 from src.server.v3.models import PATCH_OPERATION_UNDELETE
 
@@ -48,12 +49,15 @@ class V3RemoteBuildStatus(Resource):
         log_id = get_log_id()
         current_app.logger.info("%s ++ remote_build_status.v3.GET %s", log_id, remote_build_node_xname)
 
+        # verify that the remote build node ssh key is present
+        if not test_private_key_file(current_app):
+            current_app.logger.info("SSH key not present for remote build nodes")
+
         if remote_build_node_xname not in current_app.data['remote_build_nodes']:
             current_app.logger.info("%s no IMS remote build node matches xname=%s", log_id, remote_build_node_xname)
             return generate_resource_not_found_response()
 
         return_json = current_app.data['remote_build_nodes'][remote_build_node_xname].getStatus().toJson()
-        #return_json = current_app.data['remote_build_nodes'][remote_build_node_xname].getStatus()
         current_app.logger.info("%s Returning json response: %s", log_id, return_json)
         return jsonify(return_json)
 
@@ -66,6 +70,10 @@ class V3RemoteBuildStatusCollection(Resource):
         """ Retrieve a remote build node. """
         log_id = get_log_id()
         current_app.logger.info("%s ++ remote_build_status_collection.v3.GET", log_id)
+
+        # verify that the remote build node ssh key is present
+        if not test_private_key_file(current_app):
+            current_app.logger.info("SSH key not present for remote build nodes")
 
         return_json = []
         for remote_node in current_app.data['remote_build_nodes'].values():

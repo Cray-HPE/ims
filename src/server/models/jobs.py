@@ -34,6 +34,7 @@ from marshmallow import RAISE, Schema, fields, post_load
 from marshmallow.validate import Length, OneOf, Range
 
 from src.server.helper import ARCH_ARM64, ARCH_X86_64
+from src.server.vault import test_private_key_file
 from src.server.models.remote_build_nodes import RemoteNodeStatus
 
 JOB_TYPE_CREATE = 'create'
@@ -262,6 +263,12 @@ def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
     best_node = ""
     best_node_job_count = RemoteNodeStatus.UNKNOWN_NUM_JOBS - 1
 
+    # make sure the ssh key was set up correctly
+    if not test_private_key_file(app):
+        app.logger.error("Problem with ssh key - unable to create remote jobs")
+        return best_node
+
+    # Since the ssh key is good - look for a valid node
     for xname, remote_node in app.data['remote_build_nodes'].items():
         nodeStatus = remote_node.getStatus()
         if nodeStatus.ableToRunJobs and nodeStatus.nodeArch == job.arch:
