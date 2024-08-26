@@ -261,7 +261,7 @@ def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
     """
     app.logger.info(f"Checking for remote build node for job")
     best_node = ""
-    best_node_job_count = RemoteNodeStatus.UNKNOWN_NUM_JOBS - 1
+    best_node_job_count = 10000 # seed with a really big number of jobs
 
     # make sure the ssh key was set up correctly
     if not test_private_key_file(app):
@@ -273,8 +273,14 @@ def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
         nodeStatus = remote_node.getStatus()
         if nodeStatus.ableToRunJobs and nodeStatus.nodeArch == job.arch:
             app.logger.info(f"Matching remote node: {xname}, current jobs on node: {nodeStatus.numCurrentJobs}")
+            
+            # -1 means no job information, make sure we don't prefer those nodes
+            numNodeJobs = nodeStatus.numCurrentJobs
+            if numNodeJobs == -1:
+                numNodeJobs = 10000
+                
             # matching arch - can use the node, now pick the node with the least jobs running
-            if best_node == "" or nodeStatus.numCurrentJobs < best_node_job_count:
+            if best_node == "" or numNodeJobs < best_node_job_count:
                 best_node = remote_node.xname
-                best_node_job_count = nodeStatus.numCurrentJobs
+                best_node_job_count = numNodeJobs
     return best_node

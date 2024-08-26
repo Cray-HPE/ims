@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - CASMCMS-8979 - add a status endpoint for the remote build nodes.
+- CASMCMS-8979-v2 - clean up status object.
 - CASMCMS-8977 - check that the ssh key is present each time spawning a remote job.
 
 ## [3.16.2] - 2024-07-25
