@@ -42,20 +42,16 @@ from src.server.helper import ARCH_ARM64, ARCH_X86_64
 class RemoteNodeStatus:
     """ Object to hold the current status of a remote build node """
 
-    # status variable to represent and unknown number of jobs on a node
-    UNKNOWN_NUM_JOBS = 10000
-
     def __init__(self, xname: str) -> None:
         self.xname = xname
         self.sshStatus = "Unknown"
         self.podmanStatus = "Unknown"
         self.nodeArch = "Unknown"
-        self.numCurrentJobs = self.UNKNOWN_NUM_JOBS
+        self.numCurrentJobs = -1
         self.ableToRunJobs = False
 
     def toJson(self):
         return self.__dict__
-        #return json.dumps(self, default=lambda o: o.__dict__)
 
 class V3RemoteBuildNodeRecord:
     """ The RemoteBuildNodeRecord object """
