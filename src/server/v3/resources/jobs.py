@@ -97,7 +97,7 @@ class V3BaseJobResource(Resource):
         # {job.id}.ims.{job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
         self.job_customer_access_subnet_name = os.environ.get("JOB_CUSTOMER_ACCESS_SUBNET_NAME", "cmn")
         self.job_customer_access_network_domain = os.environ.get("JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN", "shasta.local")
-        self.job_enable_dkms = os.getenv("JOB_ENABLE_DKMS", 'False').lower() in ('true', '1', 't')
+        self.job_enable_dkms = os.getenv("JOB_ENABLE_DKMS", 'True').lower() in ('true', '1', 't')
         
         # NOTE: make sure this isn't a non-zero length string of spaces
         self.job_kata_runtime = os.getenv("JOB_KATA_RUNTIME", "kata-qemu").strip()
@@ -658,18 +658,21 @@ class V3JobCollection(V3BaseJobResource):
 
         # Determine cases where the dkms security settings are required without user specifying
         if new_job.arch == ARCH_ARM64:
-           # If the architecture is aarch64, then the dkms settings are required
+            # If the architecture is aarch64, then the dkms settings are required
             current_app.logger.info(f" NOTE: aarch64 architecture requires dkms")
             new_job.require_dkms = True
         elif userSpecifiedDKMS==None:
-            if self.job_enable_dkms:
+            # if the user didn't specify for the job, look for defaults
+            if new_job.job_type == JOB_TYPE_CREATE:
+                # Let the setting from the recipe flow through if the user has not specified otherwise
+                if artifact_record.require_dkms != self.job_enable_dkms:
+                    current_app.logger.info(f"Overriding require_dkms based on recipe setting")
+                current_app.logger.info(f"Setting require_dkms based on recipe setting: {artifact_record.require_dkms}")
+                new_job.require_dkms = artifact_record.require_dkms
+            elif not self.job_enable_dkms:
                 # use the default from the ims-config config map
                 current_app.logger.info(f"Setting require_dkms based on ims-config setting")
-                new_job.require_dkms = True
-            elif new_job.job_type == JOB_TYPE_CREATE and artifact_record.require_dkms:
-                # Let the setting from the recipe flow through if the user has not specified otherwise
-                current_app.logger.info(f"Overriding require_dkms based on recipe setting")
-                new_job.require_dkms = True
+                new_job.require_dkms = False
 
         # get the public key information
         public_key_data, problem = V3JobCollection.get_public_key_data(log_id, new_job.public_key_id)

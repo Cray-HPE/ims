@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CASMCMS-8979 - add a status endpoint for the remote build nodes.
 - CASMCMS-8979-v2 - clean up status object.
 - CASMCMS-8977 - check that the ssh key is present each time spawning a remote job.
+- CASMINST-6602 - enable dkms by default.
 
 ### Dependencies
 - CSM 1.6 moved to Kubernetes 1.24, so use client v24.x to ensure compatability

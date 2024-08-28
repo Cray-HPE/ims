@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -56,7 +56,7 @@ class V2RecipeRecord:
 
     # pylint: disable=W0622
     def __init__(self, name, recipe_type, linux_distribution, link=None, id=None, created=None,
-                 template_dictionary=None, require_dkms=False, arch=ARCH_X86_64):
+                 template_dictionary=None, require_dkms=True, arch=ARCH_X86_64):
         # Supplied
         self.name = name
         self.link = link
@@ -91,7 +91,7 @@ class V2RecipeRecordInputSchema(Schema):
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)
 
     # v2.2
-    require_dkms = fields.Boolean(load_default=False, dump_default=False,
+    require_dkms = fields.Boolean(load_default=True, dump_default=True,
                                   metadata={"metadata": {"description": "Recipe requires the use of dkms"}})
     arch = fields.Str(required=False, metadata={"metadata": {"description": "Architecture of the recipe"}},
                           validate=OneOf([ARCH_ARM64,ARCH_X86_64]), load_default=ARCH_X86_64, dump_default=ARCH_X86_64)
@@ -126,6 +126,6 @@ class V2RecipeRecordPatchSchema(Schema):
     arch = fields.Str(required=False, validate=OneOf([ARCH_ARM64,ARCH_X86_64]),
                       load_default=ARCH_X86_64, dump_default=ARCH_X86_64,
                       metadata={"metadata": {"description": "Architecture of the recipe"}})
-    require_dkms = fields.Boolean(required=False, load_default=False, dump_default=False,
+    require_dkms = fields.Boolean(required=False, load_default=True, dump_default=True,
                                   metadata={"metadata": {"description": "Recipe requires the use of dkms"}})
     template_dictionary = fields.List(fields.Nested(RecipeKeyValuePair()), required=False, allow_none=True)
