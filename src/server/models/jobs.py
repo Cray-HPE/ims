@@ -167,7 +167,7 @@ class V2JobRecordInputSchema(Schema):
                                   metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2
-    job_mem_size = fields.Integer(load_default=1, dump_default=1,
+    job_mem_size = fields.Integer(dump_default=1, required=False,
                                   validate=Range(min=1, error="build_env_size must be greater than or equal to 1"),
                                   metadata={"metadata": {"description": "Approximate working memory in GiB to reserve for the build job "
                                     "environment (loosely proportional to the final image size)"}})
