@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CASMCMS-8977 - check that the ssh key is present each time spawning a remote job.
 - CASMINST-6602 - enable dkms by default.
 - CASMTRIAGE-7169 - job memory size was not getting picked up correctly from the ims configuration settings.
+- CASMCMS-9040 - change read/write permissions of recipe config files output in image.
 
 ### Dependencies
 - CSM 1.6 moved to Kubernetes 1.24, so use client v24.x to ensure compatibility
