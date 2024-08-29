@@ -26,6 +26,7 @@ Remote Build Nodes
 """
 
 import socket
+import json
 from flask import current_app as app
 
 from marshmallow import Schema, fields, post_load, RAISE
@@ -38,6 +39,20 @@ from invoke.exceptions import UnexpectedExit, Failure
 
 from src.server.helper import ARCH_ARM64, ARCH_X86_64
 
+class RemoteNodeStatus:
+    """ Object to hold the current status of a remote build node """
+
+    def __init__(self, xname: str) -> None:
+        self.xname = xname
+        self.sshStatus = "Unknown"
+        self.podmanStatus = "Unknown"
+        self.nodeArch = "Unknown"
+        self.numCurrentJobs = -1
+        self.ableToRunJobs = False
+
+    def toJson(self):
+        return self.__dict__
+
 class V3RemoteBuildNodeRecord:
     """ The RemoteBuildNodeRecord object """
 
@@ -49,21 +64,19 @@ class V3RemoteBuildNodeRecord:
     def __repr__(self):
         return '<V3RemoteBuildNodeRecord(xname={self.xname!r})>'.format(self=self)
 
-    def getStatus(self) -> (str, int): #(arch, current jobs)
+    def getStatus(self) -> RemoteNodeStatus:
         """
         Utility function to verify that a node is set up and available for remote
         builds. If the node can not be contacted or is not set up for running IMS
         jobs, this will return (None,None)
         
         Returns:
-            Archetecture of the node if it can be determined
-            Number of jobs currently running on the node
-
+            RemoteNodeStatus object with details about the current state of the
+            remote build node.
         """
 
         # start with status Invalid
-        arch = None
-        numJobs = None
+        status = RemoteNodeStatus(self.xname)
 
         # connect to the remote node
         connect_kwargs = {"key_filename": "/app/id_ecdsa"}
@@ -75,7 +88,9 @@ class V3RemoteBuildNodeRecord:
         except (BadHostKeyException, AuthenticationException, NoValidConnectionsError,
                 SSHException, socket.error) as error:
             app.logger.error(f"Unable to connect to node: {self.xname}, Error: {error}")
-            return arch, numJobs
+            status.sshStatus = f"Unable to connect to node. Error: {error}"
+            return status
+        status.sshStatus = "SSH connection established."
 
         # make sure the above connection gets closed on exit
         try:
@@ -86,20 +101,23 @@ class V3RemoteBuildNodeRecord:
 
                 # check result
                 if result.exited != 0:
-                    app.logger.error(f"Unable to determine archecture of node: {self.xname}, Error: {result.stdout} {result.stderr}")
-                    return arch, numJobs
+                    app.logger.error(f"Unable to determine architecture of node: {self.xname}, Error: {result.stdout} {result.stderr}")
+                    status.nodeArch = f"Unable to determine architecture of node. Error: {result.stdout} {result.stderr}"
+                    return status
 
                 # see if we can pull out a known arch type
                 if "aarch64" in result.stdout:
-                    arch = ARCH_ARM64
+                    status.nodeArch = ARCH_ARM64
                 elif "x86" in result.stdout:
-                    arch = ARCH_X86_64
+                    status.nodeArch = ARCH_X86_64
                 else:
-                    app.logger.error(f"Unable to determine archecture of node: {self.xname}, Error: {result.stdout}")
-                    return arch, numJobs
+                    app.logger.error(f"Undefined architecture type for node: {self.xname}, Error: {result.stdout}")
+                    status.nodeArch = f"Undefined architecture type for node, result: {result.stdout}"
+                    return status
             except (UnexpectedExit, Failure) as error:
-                app.logger.error(f"Unable to determine archecture of node: {self.xname}, Error: {error}")
-                return arch, numJobs
+                app.logger.error(f"Unable to determine architecture of node: {self.xname}, Error: {error}")
+                status.nodeArch = f"Unable to determine architecture of node. Error: {error}"
+                return status
 
             # insure it has podman installed
             try:
@@ -109,16 +127,26 @@ class V3RemoteBuildNodeRecord:
                 # check result
                 if result.exited != 0:
                     app.logger.error(f"Unable to determine if podman is installed on node: {self.xname}, Error: {result.stdout} {result.stderr}")
-                    return None,None
+                    status.podmanStatus = f"Unable to determine if podman is installed on node. Error: {result.stdout} {result.stderr}"
+                    return status
 
                 # see if we can pull out a known arch type
                 if "/usr/bin/podman" not in result.stdout:
                     app.logger.error(f"Podman not installed on node: {self.xname}, Error: {result.stdout}")
-                    return
+                    status.podmanStatus = f"Podman not installed on node."
+                    return status
+                
+                # report podman is present
+                status.podmanStatus = f"Podman present at /usr/bin/podman"
             except (UnexpectedExit, Failure) as error:
                 app.logger.error(f"Unable determine if tools are installed on node: {self.xname}, Error: {error}")
-                return None,None
+                status.podmanStatus = f"Unable determine if tools are installed on node. Error: {error}"
+                return status
 
+            # Don't fail the remote node over gathering number of current jobs - mark
+            # the node as valid now.
+            status.ableToRunJobs = True
+            
             # Every running IMS job will create a working directory '/tmp/ims_(IMS_JOB_ID)'.
             # Count the number of these directories to find the number of running jobs on
             # the node - they are cleaned up when the job is complete on the node.
@@ -128,19 +156,16 @@ class V3RemoteBuildNodeRecord:
                 if result.exited != 0:
                     # let this go through and schedule a job on the node
                     app.logger.error(f"Unable to determine number of jobs on node: {self.xname}, Error: {result.stdout} {result.stderr}")
-                    numJobs = 0
                 else:
-                    numJobs = int(result.stdout)
+                    status.numCurrentJobs = int(result.stdout)
             except (UnexpectedExit, Failure) as error:
                 # Just log this, but allow the job to run
                 app.logger.error(f"Unable determine number of running jobs on node: {self.xname}, Error: {error}")
-                numJobs = 0
         finally:
             # close tha active connection
             c.close()
 
-        return arch, numJobs
-
+        return status
 
 class V3RemoteBuildNodeRecordInputSchema(Schema):
     """ A schema specifically for defining and validating user input """

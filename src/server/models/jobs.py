@@ -34,6 +34,8 @@ from marshmallow import RAISE, Schema, fields, post_load
 from marshmallow.validate import Length, OneOf, Range
 
 from src.server.helper import ARCH_ARM64, ARCH_X86_64
+from src.server.vault import test_private_key_file
+from src.server.models.remote_build_nodes import RemoteNodeStatus
 
 JOB_TYPE_CREATE = 'create'
 JOB_TYPE_CUSTOMIZE = 'customize'
@@ -83,7 +85,7 @@ class V2JobRecord:
                  kubernetes_configmap=None, enable_debug=False,
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
-                 kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
+                 kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=True,
                  arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node=""):
         # Supplied
         # v2.0
@@ -161,11 +163,11 @@ class V2JobRecordInputSchema(Schema):
     ssh_containers = fields.List(fields.Nested(SshContainerInputSchema()), allow_none=True)
 
     # v2.1
-    require_dkms = fields.Boolean(required=False, load_default=False, dump_default=False,
+    require_dkms = fields.Boolean(required=False, load_default=True, dump_default=True,
                                   metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2
-    job_mem_size = fields.Integer(load_default=1, dump_default=1,
+    job_mem_size = fields.Integer(dump_default=1, required=False,
                                   validate=Range(min=1, error="build_env_size must be greater than or equal to 1"),
                                   metadata={"metadata": {"description": "Approximate working memory in GiB to reserve for the build job "
                                     "environment (loosely proportional to the final image size)"}})
@@ -259,13 +261,26 @@ def find_remote_node_for_job(app, job: V2JobRecordSchema) -> str:
     """
     app.logger.info(f"Checking for remote build node for job")
     best_node = ""
-    best_node_job_count = 10000
+    best_node_job_count = 10000 # seed with a really big number of jobs
+
+    # make sure the ssh key was set up correctly
+    if not test_private_key_file(app):
+        app.logger.error("Problem with ssh key - unable to create remote jobs")
+        return best_node
+
+    # Since the ssh key is good - look for a valid node
     for xname, remote_node in app.data['remote_build_nodes'].items():
-        arch, numJobs = remote_node.getStatus()
-        if arch != None and arch == job.arch:
-            app.logger.info(f"Matching remote node: {xname}, current jobs on node: {numJobs}")
-            # matching arch - can use the node, now pick the best
-            if best_node == "" or numJobs < best_node_job_count:
+        nodeStatus = remote_node.getStatus()
+        if nodeStatus.ableToRunJobs and nodeStatus.nodeArch == job.arch:
+            app.logger.info(f"Matching remote node: {xname}, current jobs on node: {nodeStatus.numCurrentJobs}")
+            
+            # -1 means no job information, make sure we don't prefer those nodes
+            numNodeJobs = nodeStatus.numCurrentJobs
+            if numNodeJobs == -1:
+                numNodeJobs = 10000
+                
+            # matching arch - can use the node, now pick the node with the least jobs running
+            if best_node == "" or numNodeJobs < best_node_job_count:
                 best_node = remote_node.xname
-                best_node_job_count = numJobs
+                best_node_job_count = numNodeJobs
     return best_node

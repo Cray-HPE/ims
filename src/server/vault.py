@@ -109,6 +109,19 @@ def get_exportable_key(app):
         app.logger.error("Failed to get exportable key from vault: %s", err)
     return None
 
+def test_private_key_file(app) -> bool:
+    # If the private key is present, just return
+    if os.path.isfile('id_ecdsa'):
+        app.logger.info("Private ssh key file present")
+        return True
+    
+    # Private key is not present, try to fetch or regenerate it
+    app.logger.info("Private ssh key file not present - attempting to refetch...")
+    remote_node_key_setup(app)
+
+    # return if the key file is present
+    return os.path.isfile('id_ecdsa')
+
 def export_private_key(app, private_key):
     # This will throw an error on attempting to write a null
     if private_key == None:

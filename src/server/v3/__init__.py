@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022, 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -41,7 +41,7 @@ from src.server.v3.resources.recipes import \
     V3RecipeResource, V3RecipeCollection, \
     V3DeletedRecipeResource, V3DeletedRecipeCollection
 from src.server.v3.resources.remote_build_nodes import V3RemoteBuildNodeResource, \
-    V3RemoteBuildNodeCollection
+    V3RemoteBuildNodeCollection, V3RemoteBuildStatus, V3RemoteBuildStatusCollection
 app_errors = {
     # Custom 405 error format to conform to RFC 7807
     'MethodNotAllowed': json.loads(
@@ -60,6 +60,12 @@ for uri_prefix, endpoint_prefix in [('/v3', 'v3')]:
     apiv3.add_resource(V3RemoteBuildNodeCollection,
                        '/'.join([uri_prefix, 'remote-build-nodes']),
                        endpoint='_'.join([endpoint_prefix, 'remote_build_nodes_collection']))
+    apiv3.add_resource(V3RemoteBuildStatus,
+                       '/'.join([uri_prefix, 'remote-build-nodes/status/<remote_build_node_xname>']),
+                       endpoint='_'.join([endpoint_prefix, 'remote_build_status']))
+    apiv3.add_resource(V3RemoteBuildStatusCollection,
+                       '/'.join([uri_prefix, 'remote-build-nodes/status']),
+                       endpoint='_'.join([endpoint_prefix, 'remote_build_status_collection']))
 
     apiv3.add_resource(V3PublicKeyResource,
                        '/'.join([uri_prefix, 'public-keys/<public_key_id>']),
