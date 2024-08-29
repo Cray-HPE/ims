@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.17.0] - 2024-08-29
 ### Added
 - CASMCMS-8979 - add a status endpoint for the remote build nodes.
 - CASMCMS-8977 - check that the ssh key is present each time spawning a remote job.
