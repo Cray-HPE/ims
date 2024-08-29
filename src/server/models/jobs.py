@@ -85,7 +85,7 @@ class V2JobRecord:
                  kubernetes_configmap=None, enable_debug=False,
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
-                 kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=False,
+                 kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=True,
                  arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node=""):
         # Supplied
         # v2.0
@@ -163,7 +163,7 @@ class V2JobRecordInputSchema(Schema):
     ssh_containers = fields.List(fields.Nested(SshContainerInputSchema()), allow_none=True)
 
     # v2.1
-    require_dkms = fields.Boolean(required=False, load_default=False, dump_default=False,
+    require_dkms = fields.Boolean(required=False, load_default=True, dump_default=True,
                                   metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2

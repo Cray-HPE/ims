@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -38,7 +38,7 @@ class V3DeletedRecipeRecord(V2RecipeRecord):
     # pylint: disable=W0622
     def __init__(self, name, recipe_type, linux_distribution,
                  link=None, id=None, created=None, deleted=None,
-                 template_dictionary=None, require_dkms=False, arch=ARCH_X86_64):
+                 template_dictionary=None, require_dkms=True, arch=ARCH_X86_64):
         # Supplied
         self.deleted = deleted or datetime.datetime.now()
         super().__init__(name, recipe_type=recipe_type, linux_distribution=linux_distribution,

@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - CASMCMS-8979 - add a status endpoint for the remote build nodes.
-- CASMCMS-8979-v2 - clean up status object.
 - CASMCMS-8977 - check that the ssh key is present each time spawning a remote job.
+- CASMINST-6602 - enable dkms by default.
 - CASMTRIAGE-7169 - job memory size was not getting picked up correctly from the ims configuration settings.
 
 ### Dependencies
-- CSM 1.6 moved to Kubernetes 1.24, so use client v24.x to ensure compatability
+- CSM 1.6 moved to Kubernetes 1.24, so use client v24.x to ensure compatibility
 
 ## [3.16.2] - 2024-07-25
 ### Dependencies
