@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dependencies
+- CASMCMS-9136: Move `cray-services` base chart minimum version to 11.0.0
+
 ## [3.17.0] - 2024-08-29
 ### Added
 - CASMCMS-8979 - add a status endpoint for the remote build nodes.
