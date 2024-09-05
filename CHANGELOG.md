@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.17.1] - 2024-09-05
 ### Changed
 - Remove Eric Cozzi from chart maintainers. Add David Laine, Julian Smit, and Mitch Harding.
 
