@@ -39,8 +39,12 @@ dependencies:
   version: ^11.0.0
   repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
 maintainers:
-- name: ecozzi-hpe
-  email: eric.cozzi@hpe.com
+- name: dlaine-hpe
+  email: laine@hpe.com
+- name: juliansmit-hpe
+  email: julian.smit@hpe.com
+- name: mharding-hpe
+  email: mitchell.harding@hpe.com
 appVersion: 0.0.0-imsserv-docker
 annotations:
   artifacthub.io/images: |

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Remove Eric Cozzi from chart maintainers. Add David Laine, Julian Smit, and Mitch Harding.
+
 ### Dependencies
 - CASMCMS-9136: Move `cray-services` base chart minimum version to 11.0.0
 
