@@ -201,7 +201,7 @@ data:
             securityContext:
               privileged: true
               capabilities:
-                add: [$security_capabilites]
+                add: [$security_capabilities]
             env:
             - name: API_GATEWAY_HOSTNAME
               value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
@@ -330,7 +330,7 @@ data:
             securityContext:
               privileged: $security_privilege
               capabilities:
-                add: [$security_capabilites]
+                add: [$security_capabilities]
             name: sshd
             ports:
             - containerPort: 22

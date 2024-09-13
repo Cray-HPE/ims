@@ -265,7 +265,7 @@ class V2BaseJobResource(Resource):
 
         # Delete the underlying kubernetes service, job and configmap resources
         for resource, delete_fn in resources.items():
-            # PVC's were added to the job in v2.2 of the schema - they may not exist
+            # PVCs were added to the job in v2.2 of the schema - they may not exist
             # for jobs created before an upgrade.
             name = getattr(job, "kubernetes_%s" % resource)
             if name != None:
@@ -731,7 +731,7 @@ class V2JobCollection(V2BaseJobResource):
             "runtime_class": job_runtime_class,
             "service_account": job_service_account,
             "security_privilege": job_security_privilege,
-            "security_capabilites": job_security_capabilities,
+            "security_capabilities": job_security_capabilities,
             "job_arch": new_job.arch,
             "remote_build_node": new_job.remote_build_node
         }

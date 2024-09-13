@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Language linting
+
 ### Dependencies
 - Use `ims-sshd` v1.11 for CSM 1.6
 
@@ -111,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Disabled concurrent Jenkins builds on same branch/commit
 - Added build timeout to avoid hung builds
-- CASMCMS-8801 - changed the image volume mounts to ude PVC's instead of ephemeral storage.
+- CASMCMS-8801 - changed the image volume mounts to ude PVCs instead of ephemeral storage.
 
 ### Dependencies
 Bumped dependency patch versions:
@@ -218,7 +221,7 @@ Bumped dependency patch versions:
 ## [3.6.0] - 2022-08-03
 ### Changed
 - Build valid unstable charts
-- CASMCMS-7970 - update dev.cray.com addressess.
+- CASMCMS-7970 - update dev.cray.com addresses.
 - CASMCMS-8015 - increase the default ims job size to handle larger images.
 
 ### Removed

@@ -22,7 +22,7 @@ You can verify if kata has been installed and configured in containerd by checki
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata-qemu.options]
         ConfigPath = "/opt/kata/share/defaults/kata-containers/configuration-qemu.toml"
 
-If it doesnt exist, this block will need to be included under the [plugins."io.containerd.grpc.v1.cri".containerd]
+If it doesn't exist, this block will need to be included under the [plugins."io.containerd.grpc.v1.cri".containerd]
 
 If you run into issues when trying to run an IMS job using kata. It may not be installed on the ncn in which the IMS job was scheduled.
 To install kata follow the steps below.
@@ -41,7 +41,7 @@ rm /tmp/kata-static.tar.xz
 Try running:
 kubectl get runtimeclass
 
-If the command doesnt produce any results you will need to install the kata-qemu runtime class onto the kubernetes cluster with the following commands:
+If the command doesn't produce any results you will need to install the kata-qemu runtime class onto the kubernetes cluster with the following commands:
 
 cat > /tmp/qemu-class.yaml <<EOF
 ---
