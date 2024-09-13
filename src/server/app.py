@@ -51,6 +51,11 @@ from src.server.models.remote_build_nodes import V3RemoteBuildNodeRecordSchema
 from src.server.vault import remote_node_key_setup
 
 
+# CASMTRIAGE-6953: The filename strings in this module ('v2_public_keys.json',
+# 'v2.1_images.json', etc) are used by scripts/operations/configuration/update_ims_data_files.py
+# in the docs-csm repository to determine the names of the IMS data files inside its
+# Kubernetes pod.
+
 def load_datastore(_app):
     """ Utility function to load IMS data files. """
 
