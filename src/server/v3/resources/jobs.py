@@ -692,7 +692,8 @@ class V3JobCollection(V3BaseJobResource):
         job_security_capabilities = ""
         if new_job.require_dkms:
             job_enable_dkms = "True"
-            job_runtime_class = self.job_kata_runtime if "kata" in self.job_kata_runtime else "kata-qemu"
+            job_runtime_class = self.job_kata_runtime
+            #job_runtime_class = self.job_kata_runtime if "kata" in self.job_kata_runtime else "kata-qemu"
             job_service_account = "ims-service-job-mount"
             job_security_privilege = "true"
             job_security_capabilities = "SYS_ADMIN"
