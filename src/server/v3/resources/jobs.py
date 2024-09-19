@@ -573,6 +573,9 @@ class V3JobCollection(V3BaseJobResource):
         current_app.logger.info("%s ++ jobs.v3.POST", log_id)
         json_data = request.get_json()
 
+        # add debugging breakpoint
+        import rpdb; rpdb.set_trace()
+
         if not json_data:
             current_app.logger.info("%s No post data accompanied the POST request.", log_id)
             return generate_missing_input_response()

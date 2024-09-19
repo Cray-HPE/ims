@@ -33,6 +33,7 @@ VOLUME ["/var/ims/data", "/results"]
 RUN apk add --upgrade --no-cache apk-tools && \
     apk update && \
     apk add --no-cache gcc py3-pip python3-dev musl-dev libffi-dev openssl-dev openssh-keygen && \
+    apk add --no-cache busybox-extras && \
     apk -U upgrade --no-cache
 
 USER 65534:65534
@@ -44,7 +45,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip3 install --no-cache-dir -U pip -c constraints.txt && \
     pip3 install --no-cache-dir -U wheel -c constraints.txt && \
-    pip3 install --no-cache-dir -r requirements.txt
+    pip3 install --no-cache-dir rpdb -r requirements.txt
 
 # Install server
 COPY src/ /app/src/
