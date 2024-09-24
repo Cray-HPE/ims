@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- CASMTRIAGE-7252: Increase DEFAULT_IMS_IMAGE_SIZE from 30 to 60.
+
 ## [3.17.2] - 2024-09-13
 ### Added
 - CASMTRIAGE-6953: Added comment to `src/server/app.py` noting dependency of IMS import tool in `docs-csm`

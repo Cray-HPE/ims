@@ -69,10 +69,9 @@ ARCH_TO_KERNEL_FILE_NAME = dict({
     ARCH_X86_64: KERNEL_FILE_NAME_X86
 })
 
-
 DEFAULT_INITRD_FILE_NAME = 'initrd'
-DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", 15)
-DEFAULT_JOB_MEM_SIZE = os.environ.get("DEFAULT_IMS_JOB_MEM_SIZE", 1)
+DEFAULT_IMAGE_SIZE = os.environ.get("DEFAULT_IMS_IMAGE_SIZE", "60")
+DEFAULT_JOB_MEM_SIZE = os.environ.get("DEFAULT_IMS_JOB_MEM_SIZE", "8")
 DEFAULT_KERNEL_PARAMETERS_FILE_NAME = 'kernel-parameters'
 
 # pylint: disable=R0902
@@ -146,7 +145,7 @@ class V2JobRecordInputSchema(Schema):
                                          validate=Length(min=1, error="image_root_archive_name field must not be blank"))
     enable_debug = fields.Boolean(load_default=False,dump_default=False,
                                   metadata={"metadata": {"description": "Whether to enable debugging of the job"}})
-    build_env_size = fields.Integer(load_default=15,dump_default=15,
+    build_env_size = fields.Integer(load_default=60,dump_default=60,
                                     metadata={"metadata": {"description": "Approximate disk size in GiB to reserve for the image build environment (usually 2x final image size)"}},
                                     validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
     kernel_file_name = fields.Str(metadata={"metadata": {"description": "Name of the kernel file to extract and upload"}})
@@ -167,7 +166,7 @@ class V2JobRecordInputSchema(Schema):
                                   metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2
-    job_mem_size = fields.Integer(dump_default=1, required=False,
+    job_mem_size = fields.Integer(dump_default=8, required=False,
                                   validate=Range(min=1, error="build_env_size must be greater than or equal to 1"),
                                   metadata={"metadata": {"description": "Approximate working memory in GiB to reserve for the build job "
                                     "environment (loosely proportional to the final image size)"}})

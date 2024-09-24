@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -31,7 +31,7 @@ metadata:
 data:
   API_GATEWAY_HOSTNAME: "{{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local"
   CA_CERT: "/mnt/ca-vol/certificate_authority.crt"
-  DEFAULT_IMS_IMAGE_SIZE: "30"
+  DEFAULT_IMS_IMAGE_SIZE: "60"
   DEFAULT_IMS_JOB_NAMESPACE: "{{ .Values.ims_config.cray_ims_job_namespace }}"
   DEFAULT_IMS_JOB_MEM_SIZE: "8"
 
