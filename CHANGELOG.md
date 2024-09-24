@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.18.0] - 2024-09-24
+
+### Changed
+- CASMTRIAGE-7252: Increase DEFAULT_IMS_IMAGE_SIZE from 30 to 60.
+
+### Fixed
+- Fixed Dockerfile to stop "from/as" casing warnings at build time
+
 ## [3.17.2] - 2024-09-13
 ### Added
 - CASMTRIAGE-6953: Added comment to `src/server/app.py` noting dependency of IMS import tool in `docs-csm`

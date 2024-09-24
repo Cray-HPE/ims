@@ -24,7 +24,7 @@
 # Cray Image Management Service Dockerfile
 
 # Create 'base' image target
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 as base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS base
 WORKDIR /app
 RUN mkdir -p /var/ims/data /app /results && \
     chown -Rv 65534:65534 /var/ims/data /app /results
@@ -50,7 +50,7 @@ RUN pip3 install --no-cache-dir -U pip -c constraints.txt && \
 COPY src/ /app/src/
 
 # Run unit tests
-FROM base as testing
+FROM base AS testing
 
 ADD docker_test_entry.sh /app/
 ADD requirements-test.txt /app/
@@ -61,21 +61,21 @@ ARG FORCE_TESTS=null
 CMD [ "./docker_test_entry.sh" ]
 
 # Run openapi validation on openapi.yaml
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/openapitools/openapi-generator-cli:v5.1.0 as openapi-validator
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/openapitools/openapi-generator-cli:v5.1.0 AS openapi-validator
 RUN mkdir /tmp/api
 COPY api/openapi.yaml /tmp/api/
 ARG FORCE_OPENAPI_VALIDATION_CHECK=null
 RUN docker-entrypoint.sh validate -i /tmp/api/openapi.yaml || true
 
 # Run code style checkers
-FROM testing as codestyle
+FROM testing AS codestyle
 ADD .pylintrc .pycodestyle /app/
 ADD runCodeStyleCheck.sh /app/
 ARG FORCE_STYLE_CHECKS=null
 CMD [ "./runCodeStyleCheck.sh" ]
 
 # Build Application Image
-FROM base as application
+FROM base AS application
 
 EXPOSE 9000
 # RUN apk add --no-cache py3-gunicorn py3-gevent py3-greenlet
