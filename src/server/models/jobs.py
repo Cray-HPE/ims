@@ -145,7 +145,7 @@ class V2JobRecordInputSchema(Schema):
                                          validate=Length(min=1, error="image_root_archive_name field must not be blank"))
     enable_debug = fields.Boolean(load_default=False,dump_default=False,
                                   metadata={"metadata": {"description": "Whether to enable debugging of the job"}})
-    build_env_size = fields.Integer(load_default=60,dump_default=60,
+    build_env_size = fields.Integer(dump_default=DEFAULT_IMAGE_SIZE,
                                     metadata={"metadata": {"description": "Approximate disk size in GiB to reserve for the image build environment (usually 2x final image size)"}},
                                     validate=Range(min=1, error="build_env_size must be greater than or equal to 1"))
     kernel_file_name = fields.Str(metadata={"metadata": {"description": "Name of the kernel file to extract and upload"}})
@@ -166,7 +166,7 @@ class V2JobRecordInputSchema(Schema):
                                   metadata={"metadata": {"description": "Job requires the use of dkms"}})
 
     # v2.2
-    job_mem_size = fields.Integer(dump_default=8, required=False,
+    job_mem_size = fields.Integer(dump_default=DEFAULT_JOB_MEM_SIZE, required=False,
                                   validate=Range(min=1, error="build_env_size must be greater than or equal to 1"),
                                   metadata={"metadata": {"description": "Approximate working memory in GiB to reserve for the build job "
                                     "environment (loosely proportional to the final image size)"}})

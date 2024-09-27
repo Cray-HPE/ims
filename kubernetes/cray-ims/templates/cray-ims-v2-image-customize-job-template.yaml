@@ -20,6 +20,11 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
+
+NOTE: Kata hypevisor setup adds ALL container cpu limits together for
+  the hardware description.  This changes the nproc return of available
+  cpus in the container, possibly overloading the VM causing it to
+  crash. Be careful adjusting any cpu limits for the containers.
 */}}
 apiVersion: v1
 data:
@@ -73,6 +78,18 @@ data:
       namespace: $namespace
     spec:
       backoffLimit: 0
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - cray-ims
+            namespaces:
+              - $namespace
       template:
         metadata:
           annotations:
@@ -130,7 +147,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "4" # NOTE: see comment at top of the file
             securityContext:
               privileged: true
               capabilities:
@@ -147,7 +164,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "48"
+                cpu: "8" # NOTE: see comment at top of the file
             env:
             - name: API_GATEWAY_HOSTNAME
               value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
@@ -261,7 +278,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "8" # NOTE: see comment at top of the file
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image

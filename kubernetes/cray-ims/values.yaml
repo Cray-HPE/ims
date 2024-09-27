@@ -43,8 +43,8 @@ s3:
 
 alpine:
   image:
-    repository: alpine
-    tag: latest
+    repository: artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine
+    tag: 3
     pullPolicy: IfNotPresent
 
 ims_config:
