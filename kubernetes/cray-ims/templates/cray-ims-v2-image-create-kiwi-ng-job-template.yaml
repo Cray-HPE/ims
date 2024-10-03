@@ -20,7 +20,13 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
+
+NOTE: Kata hypevisor setup adds ALL container cpu limits together for
+  the hardware description.  This changes the nproc return of available
+  cpus in the container, possibly overloading the VM causing it to
+  crash. Be careful adjusting any cpu limits for the containers.
 */}}
+
 apiVersion: v1
 data:
   image_configmap_create.yaml.template: |
@@ -75,6 +81,18 @@ data:
       namespace: $namespace
     spec:
       backoffLimit: 0
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - cray-ims
+            namespaces:
+              - $namespace
       template:
         metadata:
           labels:
@@ -121,7 +139,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "2" # NOTE: see comment at top of the file
           # Step 2: Wait for Repos
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
             imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
@@ -151,7 +169,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "1" # NOTE: see comment at top of the file
           # Step 3: Build a RPM containing the Cray Root CA certificate
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
             imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
@@ -186,7 +204,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "1" # NOTE: see comment at top of the file
           # Step 4: Build the image
           - image: {{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}
             imagePullPolicy: {{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.imagePullPolicy }}
@@ -197,7 +215,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "48"
+                cpu: "8" # NOTE: see comment at top of the file
             securityContext:
               privileged: true
               capabilities:
@@ -255,7 +273,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "48"
+                cpu: "8" # NOTE: see comment at top of the file
             envFrom:
             - configMapRef:
                 name: cray-ims-$id-configmap
@@ -372,7 +390,7 @@ data:
                 cpu: "500m"
               limits:
                 memory: "$job_mem_limit"
-                cpu: "8"
+                cpu: "2" # NOTE: see comment at top of the file
           volumes:
           - name: image-vol
             persistentVolumeClaim:

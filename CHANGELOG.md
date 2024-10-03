@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.19.0] - 2024-10-03
+
+### Changed
+- CASMTRIAGE-7327 - fix loading default values from ims-config.
+- CASMTRIAGE-7274 - fix cpu limits to not overdrive kata vm, add job pod anti-affinity.
+- CASMCMS-9147 - stop using alpine:latest image.
+
 ## [3.18.0] - 2024-09-24
 
 ### Changed
