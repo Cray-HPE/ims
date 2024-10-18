@@ -81,23 +81,26 @@ data:
       namespace: $namespace
     spec:
       backoffLimit: 0
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                  - cray-ims
-            namespaces:
-              - $namespace
       template:
         metadata:
           labels:
             app: ims-$id-create
+            app.kubernetes.io/name: ims-job
         spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: kubernetes.io/hostname
+                  labelSelector:
+                    matchExpressions:
+                      - key: app.kubernetes.io/name
+                        operator: In
+                        values:
+                        - ims-job
+                    namespaces:
+                      - $namespace
           runtimeClassName: $runtime_class
           serviceAccountName: $service_account
           restartPolicy: Never  # Don't ever restart this job
