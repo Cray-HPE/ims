@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.21.0] - 2024-12-10
+### Fixed
+- CASMCMS-9166 - fix image delete/undelete preserving arch setting.
+
+### Dependencies
+- Update ims-utils to pick up CASMCMS-9037
+- Update ims-sshd to pick up CASMCMS-9226
+
 ## [3.20.0] - 2024-10-18
 ### Changed
 - CASMTRIAGE-7401 - anti-affinity in the job pods.

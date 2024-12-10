@@ -257,7 +257,8 @@ class V3ImageCollection(V3BaseImageResource):
                 # TODO ADD IMAGE FILTER OPTIONS
 
                 deleted_image = V3DeletedImageRecord(name=image.name, link=image.link,
-                                                     id=image.id, created=image.created)
+                                                     id=image.id, created=image.created,
+                                                     arch=image.arch)
                 if deleted_image.link:
                     try:
                         artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
@@ -311,7 +312,8 @@ class V3ImageResource(V3BaseImageResource):
 
         try:
             image = current_app.data[self.images_table][image_id]
-            deleted_image = V3DeletedImageRecord(name=image.name, link=image.link, id=image.id, created=image.created)
+            deleted_image = V3DeletedImageRecord(name=image.name, link=image.link, id=image.id,
+                                                 arch=image.arch, created=image.created)
             if deleted_image.link:
                 try:
                     artifacts, _ = self._soft_delete_manifest_and_artifacts(log_id, image_id, image.link)
@@ -485,7 +487,8 @@ class V3DeletedImageCollection(V3BaseImageResource):
                 # TODO ADD IMAGE FILTER OPTIONS
 
                 image = V2ImageRecord(name=deleted_image.name, link=deleted_image.link,
-                                      id=deleted_image.id, created=deleted_image.created)
+                                      id=deleted_image.id, created=deleted_image.created,
+                                      arch=deleted_image.arch)
                 for key, value in list(json_data.items()):
                     if key == "operation":
                         if value == PATCH_OPERATION_UNDELETE:
@@ -596,7 +599,8 @@ class V3DeletedImageResource(V3BaseImageResource):
 
         deleted_image = current_app.data[self.deleted_images_table][deleted_image_id]
         image = V2ImageRecord(name=deleted_image.name, link=deleted_image.link,
-                              id=deleted_image.id, created=deleted_image.created)
+                              id=deleted_image.id, created=deleted_image.created,
+                              arch=deleted_image.arch)
         for key, value in list(json_data.items()):
             if key == "operation":
                 if value == PATCH_OPERATION_UNDELETE:
