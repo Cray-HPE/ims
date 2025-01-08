@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -128,6 +128,26 @@ cray-service:
           valueFrom:
             secretKeyRef:
               name: ims-s3-credentials
+              key: ssl_validate
+        - name: S3_STS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sts-s3-credentials
+              key: access_key
+        - name: S3_STS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sts-s3-credentials
+              key: secret_key
+        - name: S3_STS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: sts-s3-credentials
+              key: s3_endpoint
+        - name: S3_STS_SSL_VALIDATE
+          valueFrom:
+            secretKeyRef:
+              name: sts-s3-credentials
               key: ssl_validate
       volumeMounts:
         - mountPath: /var/ims/data

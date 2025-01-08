@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,9 @@ Image Management Service API Main
 """
 
 import os
-
 import http.client
+import logging
+
 from flask import Flask
 from flask_restful import Api
 
@@ -104,16 +105,17 @@ def load_boto3(_app):
     """ Utility function to initialize S3 client objects. """
     boto3.set_stream_logger('boto3.resources', _app.config['LOG_LEVEL'])
     boto3.set_stream_logger("botocore", _app.config['LOG_LEVEL'])
+    s3_config = BotoConfig(
+            connect_timeout=int(_app.config['S3_CONNECT_TIMEOUT']),
+            read_timeout=int(_app.config['S3_READ_TIMEOUT'])
+    )
     _app.s3 = boto3.client(
         's3',
         endpoint_url=_app.config['S3_ENDPOINT'],
         aws_access_key_id=_app.config['S3_ACCESS_KEY'],
         aws_secret_access_key=_app.config['S3_SECRET_KEY'],
         verify=_app.config['S3_SSL_VALIDATE'],
-        config=BotoConfig(
-            connect_timeout=int(_app.config['S3_CONNECT_TIMEOUT']),
-            read_timeout=int(_app.config['S3_READ_TIMEOUT']),
-        ),
+        config=s3_config
     )
     _app.s3resource = boto3.resource(
         service_name='s3',
@@ -121,12 +123,39 @@ def load_boto3(_app):
         endpoint_url=_app.config['S3_ENDPOINT'],
         aws_access_key_id=_app.config['S3_ACCESS_KEY'],
         aws_secret_access_key=_app.config['S3_SECRET_KEY'],
-        config=BotoConfig(
-            connect_timeout=int(_app.config['S3_CONNECT_TIMEOUT']),
-            read_timeout=int(_app.config['S3_READ_TIMEOUT']),
-        )
+        config=s3_config
+    )
+    # NOTE: Only present for multi-part file copy of artifacts that are uploaded
+    #  through 'cray artifacts create boot-images...' and end up with STS as the
+    #  artifact owner.
+    _app.s3_sts_resource = boto3.resource(
+        service_name='s3',
+        verify=_app.config['S3_STS_SSL_VALIDATE'],
+        endpoint_url=_app.config['S3_ENDPOINT'],
+        aws_access_key_id=_app.config['S3_STS_ACCESS_KEY'],
+        aws_secret_access_key=_app.config['S3_STS_SECRET_KEY'],
+        config=s3_config
     )
 
+def str_to_log_level(level:str) -> int:
+    # NOTE: we only have to do this until we upgrade to Flask:3.2 or later, then the
+    # _app.logger.setLevel will take the string version of the logging level
+    nameToLevel = {
+        'CRITICAL': logging.CRITICAL,
+        'FATAL': logging.FATAL,
+        'ERROR': logging.ERROR,
+        'WARN': logging.WARNING,
+        'WARNING': logging.WARNING,
+        'INFO': logging.INFO,
+        'DEBUG': logging.DEBUG,
+        'NOTSET': logging.NOTSET,
+    }
+
+    # default to INFO if something unexpected is here
+    retVal = nameToLevel.get(level)
+    if retVal is None:
+        retVal = logging.INFO
+    return retVal
 
 def create_app():
     """
@@ -145,7 +174,7 @@ def create_app():
     _app.config.from_object(APP_SETTINGS[os.getenv('FLASK_ENV', 'production')])
 
     # pylint: disable=E1101
-    _app.logger.setLevel(_app.config['LOG_LEVEL'])
+    _app.logger.setLevel(str_to_log_level(_app.config['LOG_LEVEL']))
     _app.logger.info('Image management service configured in {} mode'.format(os.getenv('FLASK_ENV', 'production')))
 
     # dictionary to all the data store objects
