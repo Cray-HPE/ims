@@ -28,7 +28,6 @@ Image Management Service API Main
 
 import os
 import http.client
-import logging
 
 from flask import Flask
 from flask_restful import Api
@@ -137,26 +136,6 @@ def load_boto3(_app):
         config=s3_config
     )
 
-def str_to_log_level(level:str) -> int:
-    # NOTE: we only have to do this until we upgrade to Flask:3.2 or later, then the
-    # _app.logger.setLevel will take the string version of the logging level
-    nameToLevel = {
-        'CRITICAL': logging.CRITICAL,
-        'FATAL': logging.FATAL,
-        'ERROR': logging.ERROR,
-        'WARN': logging.WARNING,
-        'WARNING': logging.WARNING,
-        'INFO': logging.INFO,
-        'DEBUG': logging.DEBUG,
-        'NOTSET': logging.NOTSET,
-    }
-
-    # default to INFO if something unexpected is here
-    retVal = nameToLevel.get(level)
-    if retVal is None:
-        retVal = logging.INFO
-    return retVal
-
 def create_app():
     """
     Create the Flask application for the Image Management Service. Register
@@ -174,7 +153,7 @@ def create_app():
     _app.config.from_object(APP_SETTINGS[os.getenv('FLASK_ENV', 'production')])
 
     # pylint: disable=E1101
-    _app.logger.setLevel(str_to_log_level(_app.config['LOG_LEVEL']))
+    _app.logger.setLevel(_app.config['LOG_LEVEL'])
     _app.logger.info('Image management service configured in {} mode'.format(os.getenv('FLASK_ENV', 'production')))
 
     # dictionary to all the data store objects

@@ -51,7 +51,7 @@ class Config:
     DEBUG = False
     TESTING = False
     MAX_CONTENT_LENGTH = None  # Unlimited
-    LOG_LEVEL = os.getenv('LOG_LEVEL','INFO')
+    LOG_LEVEL = logging.INFO
 
     # S3 creds for 'IMS' user
     S3_ENDPOINT = os.getenv('S3_ENDPOINT')
@@ -97,7 +97,7 @@ class DevelopmentConfig(Config):
     """
     DEBUG = True
     ENV = 'development'
-    LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = logging.DEBUG
     HACK_DATA_STORE = os.path.join(os.path.expanduser("~"), 'ims', 'data')
 
 
@@ -106,13 +106,13 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     ENV = 'development'
-    LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = logging.DEBUG
 
 
 class StagingConfig(Config):
     """Configuration for Staging."""
     DEBUG = True
-    LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = logging.DEBUG
 
 
 class ProductionConfig(Config):
