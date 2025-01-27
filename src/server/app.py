@@ -145,7 +145,7 @@ def load_boto3(_app):
 def str_to_log_level(level:str) -> int:
     # NOTE: we only have to do this until we upgrade to Flask:3.2 or later, then the
     # _app.logger.setLevel will take the string version of the logging level
-    nameToLevel = {
+    name_to_level = {
         'CRITICAL': logging.CRITICAL,
         'FATAL': logging.FATAL,
         'ERROR': logging.ERROR,
@@ -157,10 +157,10 @@ def str_to_log_level(level:str) -> int:
     }
 
     # default to INFO if something unexpected is here
-    retVal = nameToLevel.get(level)
-    if retVal is None:
-        retVal = logging.INFO
-    return retVal
+    ret_val = name_to_level.get(level)
+    if ret_val is None:
+        ret_val = logging.INFO
+    return ret_val
 
 def create_app():
     """
