@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [3.22.0] - 2025-01-29
+### Fixed
+- CASMCMS-9201 - large artifacts orphaned by delete operation
+
 ## [3.21.0] - 2024-12-10
 ### Fixed
 - CASMCMS-9166 - fix image delete/undelete preserving arch setting.

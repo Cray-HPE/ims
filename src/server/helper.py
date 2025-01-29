@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2023, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -426,9 +426,37 @@ def delete_artifact(artifact_link):
 
 def s3_move_artifact(origin_url, destination_path):
     """ Utility function to orchestrate moving/renaming a S3 artifact to a new key value. """
-    new_object = app.s3resource.Object(origin_url.bucket, destination_path)
-    new_object.copy_from(CopySource='/'.join([origin_url.bucket, origin_url.key]))
+
+    # NOTE: there is 'move' or 'rename' function with S3 objects, so we have to copy then
+    #  delete the old object. For artifacts smaller than 5Gb, the Object.copy_from function
+    #  works and does this in a single transfer operation. For larger than 5Gb, it has to
+    #  use a multi-part copy operation. This is automatically handled by the Object.copy
+    #  function. The multi-part copy requires greater levels of permissions than the single
+    #  transfer copy. It will currenly not work if the owner of the object is something
+    #  other than IMS. When an object is copied into S3 via 'cray artifacts create ...' it
+    #  has an owner of 'STS' and can't be copied with the multi-part transfer.
+
+    # Find the owner of the object
+    sts_owned = False
+    orig_object_owner = app.s3resource.ObjectAcl(origin_url.bucket, origin_url.key)
+    if orig_object_owner.owner != None and 'ID' in orig_object_owner.owner and orig_object_owner.owner['ID']=='STS':
+        app.logger.info(f"Source object owner: {orig_object_owner.owner['ID']}")
+        sts_owned = True
+
+    # if the object is owned by 'STS', then a multi-part copy needs to be done with 'STS' creds
+    new_object = None
+    if not sts_owned:
+        new_object = app.s3resource.Object(origin_url.bucket, destination_path)
+    else:
+        new_object = app.s3_sts_resource.Object(origin_url.bucket, destination_path)
+
+    # Copy - should do multi-part copy if needed
+    copy_source = {'Bucket':origin_url.bucket, 'Key':origin_url.key}
+    new_object.copy(copy_source)
+
+    # delete the original object
     app.s3resource.Object(origin_url.bucket, origin_url.key).delete()
+
     return new_object
 
 
