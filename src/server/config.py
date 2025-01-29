@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2022, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -53,12 +53,26 @@ class Config:
     MAX_CONTENT_LENGTH = None  # Unlimited
     LOG_LEVEL = logging.INFO
 
+    # S3 creds for 'IMS' user
     S3_ENDPOINT = os.getenv('S3_ENDPOINT')
     S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')
     S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')
     S3_SSL_VALIDATE = \
         False if os.getenv('S3_SSL_VALIDATE', 'False').lower() in ('false', 'off', 'no', 'f', '0') \
             else os.getenv('S3_SSL_VALIDATE')
+            
+    # S3 creds for 'STS' user
+    # NOTE: artifacts in boot-images that are uploaded via 'cray artifacts create...' will be
+    #  assigned to the STS owner. A multi-part copy must be done as the STS user for this to
+    #  succeed. This should not be required and may be a bug in boto3 so this may be able to
+    #  be removed at some time in the future.
+    S3_STS_ENDPOINT = os.getenv('S3_STS_ENDPOINT')
+    S3_STS_ACCESS_KEY = os.getenv('S3_STS_ACCESS_KEY')
+    S3_STS_SECRET_KEY = os.getenv('S3_STS_SECRET_KEY')
+    S3_STS_SSL_VALIDATE = \
+        False if os.getenv('S3_STS_SSL_VALIDATE', 'False').lower() in ('false', 'off', 'no', 'f', '0') \
+            else os.getenv('S3_STS_SSL_VALIDATE')
+
     S3_IMS_BUCKET = os.getenv('S3_IMS_BUCKET', 'ims')
     S3_BOOT_IMAGES_BUCKET = os.getenv('S3_BOOT_IMAGES_BUCKET', 'boot-images')
 
