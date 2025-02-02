@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -52,7 +52,7 @@ from src.server.helper import (ARCH_ARM64, ARCH_X86_64, ARTIFACT_LINK,
                                IMAGE_MANIFEST_ARTIFACTS,
                                IMAGE_MANIFEST_VERSION,
                                IMAGE_MANIFEST_VERSION_1_0, get_download_url,
-                               get_log_id, read_manifest_json,
+                               get_log_id, read_manifest_json, S3Url,
                                validate_artifact)
 from src.server.ims_exceptions import ImsArtifactValidationException
 from src.server.models.jobs import (ARCH_TO_KERNEL_FILE_NAME, JOB_STATUS_ERROR,
@@ -490,7 +490,7 @@ class V3JobCollection(V3BaseJobResource):
             if problem:
                 return None, problem
 
-            return {"artifact": artifact_record, "url": download_url, "md5sum": md5sum}, None
+            return {"artifact": artifact_record, "url": download_url, "md5sum": md5sum, "s3_key": S3Url(artifact_record.link['path']).key}, None
 
         def _get_image_info(artifact_info):
             """
@@ -514,7 +514,6 @@ class V3JobCollection(V3BaseJobResource):
             )
             if problem:
                 return None, problem
-
             manifest_rootfs_md5sum = ""
             if "md5" in rootfs_artifact and rootfs_artifact["md5"]:
                 manifest_rootfs_md5sum = rootfs_artifact["md5"]
@@ -535,7 +534,7 @@ class V3JobCollection(V3BaseJobResource):
             if problem:
                 return None, problem
 
-            return {"artifact": artifact_record, "url": download_url, "md5sum": md5sum}, None
+            return {"artifact": artifact_record, "url": download_url, "md5sum": md5sum, "s3_key": S3Url(rootfs_artifact['link']['path']).key}, None
 
         artifact_info, problem = V3JobCollection.retrieve_artifact_record(job_type, log_id, artifact_id)
         if problem:
@@ -641,6 +640,8 @@ class V3JobCollection(V3BaseJobResource):
         if problem:
             current_app.logger.info("%s Could not get download url for artifact", log_id)
             return problem
+
+        current_app.logger.info("artifact_info: %s", artifact_info)
         artifact_record = artifact_info["artifact"]  # pylint: disable=unsubscriptable-object
 
         current_app.logger.info(f"ARTIFACT_RECORD: {artifact_record}")
@@ -648,6 +649,10 @@ class V3JobCollection(V3BaseJobResource):
         # both images and recipes have an architecture specified - shift into the job
         new_job.arch = artifact_record.arch
         current_app.logger.info(f"architecture: {new_job.arch}")
+
+        # Getting S3_Key to be used with boto3 to download the artifact
+        s3_key = artifact_info["s3_key"]
+        current_app.logger.info("S3 Key: %s", s3_key)
 
         # change the file name to match the architecture of the image and recipe, if passed in by user do nothing.
         if new_job.kernel_file_name is None or len(new_job.kernel_file_name) == 0:
@@ -731,6 +736,8 @@ class V3JobCollection(V3BaseJobResource):
             "hostname": external_dns_hostname,
             "namespace": self.default_ims_job_namespace,
             "s3_bucket": current_app.config["S3_BOOT_IMAGES_BUCKET"],
+            "s3_bucket_ims": current_app.config["S3_IMS_BUCKET"],
+            "s3_key": s3_key,
             "job_enable_dkms": job_enable_dkms,
             "runtime_class": job_runtime_class,
             "service_account": job_service_account,

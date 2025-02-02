@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- CASMCMS-8271: Added template parameters and ENVs needed for S3 interaction with boto3.
 
 ## [3.22.0] - 2025-01-29
 ### Fixed
