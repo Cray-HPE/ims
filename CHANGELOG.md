@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- CASMSEC-438 - Added disallow-capabilities, disallow-privileged-containers policy exceptions.
+
 
 ## [3.22.0] - 2025-01-29
 ### Fixed
