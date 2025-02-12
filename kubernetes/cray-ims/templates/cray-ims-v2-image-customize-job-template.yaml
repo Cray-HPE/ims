@@ -143,7 +143,7 @@ data:
             - name: remote-key
               mountPath: /etc/cray/remote-keys
               readOnly: true
-            command: [ "sh", "-c", "/scripts/prep-env.sh /mnt/image \"$download_url\" && sleep 600" ]
+            command: [ "sh", "-c", "chown -R 65534:65534 /mnt/image && /scripts/prep-env.sh /mnt/image \"$download_url\"" ]
             resources:
               requests:
                 memory: "$job_mem_size"
@@ -152,7 +152,8 @@ data:
                 memory: "$job_mem_limit"
                 cpu: "4" # NOTE: see comment at top of the file
             securityContext:
-              privileged: false
+              runAsUser: 65534
+              runAsGroup: 65534
           # User customization of image root
           containers:
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
