@@ -143,7 +143,7 @@ data:
             - name: remote-key
               mountPath: /etc/cray/remote-keys
               readOnly: true
-            command: [ "sh", "-ce", "/scripts/prep-env.sh /mnt/image \"$download_url\"" ]
+            command: [ "sh", "-ce", "/scripts/prep-env.sh /mnt/image \"$download_url\" && sleep 600" ]
             resources:
               requests:
                 memory: "$job_mem_size"
