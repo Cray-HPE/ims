@@ -152,9 +152,7 @@ data:
                 memory: "$job_mem_limit"
                 cpu: "4" # NOTE: see comment at top of the file
             securityContext:
-              privileged: true
-              capabilities:
-                add: [$security_capabilities]
+              privileged: false
           # User customization of image root
           containers:
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}

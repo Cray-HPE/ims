@@ -220,9 +220,7 @@ data:
                 memory: "$job_mem_limit"
                 cpu: "8" # NOTE: see comment at top of the file
             securityContext:
-              privileged: true
-              capabilities:
-                add: [$security_capabilities]
+              privileged: false
             env:
             - name: API_GATEWAY_HOSTNAME
               value: {{ .Values.api_gw.api_gw_service_name }}.{{ .Values.api_gw.api_gw_service_namespace }}.svc.cluster.local
