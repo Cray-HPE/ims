@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018, 2021-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018, 2021-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,7 +24,7 @@
 # Cray Image Management Service Dockerfile
 
 # Create 'base' image target
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS base
 WORKDIR /app
 RUN mkdir -p /var/ims/data /app /results && \
     chown -Rv 65534:65534 /var/ims/data /app /results
