@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - CASMCMS-8271: Added template parameters and ENVs needed for S3 interaction with boto3.
 
+## [3.23.0] - 2025-02-13
+### Dependencies
+- CASMCMS-9282
+  - Bump Alpine version from 3.15 to 3.21, because 3.15 no longer receives security patches
+  - Move to `ims-utils` 2.16
+
 ## [3.22.0] - 2025-01-29
 ### Fixed
 - CASMCMS-9201 - large artifacts orphaned by delete operation
