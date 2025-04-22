@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CASMCMS-9375: During create ims stores incorrect metadata for an image
+
 ## [3.23.0] - 2025-02-13
 ### Dependencies
 - CASMCMS-9282
