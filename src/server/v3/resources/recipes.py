@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -130,7 +130,8 @@ class V3RecipeCollection(V3BaseRecipeCollection):
                 deleted_recipe = V3DeletedRecipeRecord(name=recipe.name, recipe_type=recipe.recipe_type,
                                                        linux_distribution=recipe.linux_distribution,
                                                        template_dictionary=recipe.template_dictionary,
-                                                       id=recipe.id, created=recipe.created, link=recipe.link)
+                                                       id=recipe.id, created=recipe.created, link=recipe.link,
+                                                       arch=recipe.arch)
                 if deleted_recipe.link:
                     try:
                         deleted_recipe.link = soft_delete_artifact(recipe.link)
@@ -185,7 +186,8 @@ class V3RecipeResource(V3BaseRecipeCollection):
             deleted_recipe = V3DeletedRecipeRecord(name=recipe.name, recipe_type=recipe.recipe_type,
                                                    linux_distribution=recipe.linux_distribution,
                                                    template_dictionary=recipe.template_dictionary,
-                                                   id=recipe.id, created=recipe.created, link=recipe.link)
+                                                   id=recipe.id, created=recipe.created, link=recipe.link,
+                                                   arch=recipe.arch)
             if deleted_recipe.link:
                 try:
                     deleted_recipe.link = soft_delete_artifact(recipe.link)
@@ -339,7 +341,7 @@ class V3DeletedRecipeCollection(V3BaseRecipeCollection):
                                         linux_distribution=deleted_recipe.linux_distribution,
                                         template_dictionary=deleted_recipe.template_dictionary,
                                         id=deleted_recipe.id, created=deleted_recipe.created,
-                                        link=deleted_recipe.link)
+                                        link=deleted_recipe.link, arch=deleted_recipe.arch)
                 for key, value in list(json_data.items()):
                     if key == "operation":
                         if value == PATCH_OPERATION_UNDELETE:
@@ -438,7 +440,7 @@ class V3DeletedRecipeResource(V3BaseRecipeCollection):
                                 linux_distribution=deleted_recipe.linux_distribution,
                                 template_dictionary=deleted_recipe.template_dictionary,
                                 id=deleted_recipe.id, created=deleted_recipe.created,
-                                link=deleted_recipe.link)
+                                link=deleted_recipe.link, arch=deleted_recipe.arch)
         for key, value in list(json_data.items()):
             if key == "operation":
                 if value == PATCH_OPERATION_UNDELETE:
