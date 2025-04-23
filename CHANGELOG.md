@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.24.0] - 2025-04-23
 ### Fixed
 - CASMCMS-9375: During create ims stores incorrect metadata for an image
 - CASMCMS-9363: IMS - deleted recipe always gets assigned arch=x86_64
