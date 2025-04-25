@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - CASMCMS-9387: API V2: During create image ims stores incorrect metadata for an image
 
+## [3.24.1] - 2025-04-25
+### Fixed
+- CASMCMS-9386: API spec
+  - Correct schemas for `metadata` fields in `ImageRecord` and `DeletedImageRecord`
+  - Create new `ImageCreateRecord` schema to reflect that the schema for creating an image is not identical
+    to the ones for describing one.
+  - Fix incorrectly-named duplicate `operationId`
+  - Correct return type of v2 image create endpoint
+
 ## [3.24.0] - 2025-04-23
 ### Fixed
 - CASMCMS-9375: During create ims stores incorrect metadata for an image

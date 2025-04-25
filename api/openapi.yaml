@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -343,7 +343,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ImageRecord'
+              $ref: '#/components/schemas/ImageCreateRecord'
         description: Image record to create
         required: true
       responses:
@@ -1386,7 +1386,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ImageRecord'
+              $ref: '#/components/schemas/ImageCreateRecord'
         description: Image record to create
         required: true
       responses:
@@ -1395,7 +1395,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeletedImageRecord'
+                $ref: '#/components/schemas/ImageRecord'
         '400':
           $ref: '#/components/responses/NoInputProvided'
         '422':
@@ -2321,42 +2321,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecipeKeyValuePair'
-    ImagePatchRecord:
-      description: Values used to update an existing IMS Image Record
-      type: object
-      properties:
-        link:
-          $ref: '#/components/schemas/ArtifactLinkRecord'
-        arch:
-          description: Target architecture for the recipe.
-          example: aarch64
-          enum:
-            - aarch64
-            - x86_64
-          type: string
-        metadata:
-          description: An object which indicates a number of annotation patch operations relating to image tags.
-          type: object
-          required:
-            - operation
-            - key
-          properties:
-            operation:
-              description: How to update a given key within the context of a patch operation
-              type: string
-              enum:
-                - set
-                - remove
-            key:
-              description: The key to update for a given image
-              type: string
-              example: includes_additional_packages
-            value:
-              description: The value to associate with a key during a patch operation
-              type: string
-              example: "vim,emacs,man"
-    ImageRecord:
-      description: An Image Record
+    ImageCreateRecord:
+      description: Values used to create an IMS Image Record
       type: object
       required:
         - name
@@ -2399,6 +2365,78 @@ components:
               description: Value variable to associate with the IMS image
               example: "foo,bar,baz"
               type: string
+    ImagePatchRecord:
+      description: Values used to update an existing IMS Image Record
+      type: object
+      properties:
+        link:
+          $ref: '#/components/schemas/ArtifactLinkRecord'
+        arch:
+          description: Target architecture for the recipe.
+          example: aarch64
+          enum:
+            - aarch64
+            - x86_64
+          type: string
+        metadata:
+          description: An object which indicates a number of annotation patch operations relating to image tags.
+          type: object
+          required:
+            - operation
+            - key
+          properties:
+            operation:
+              description: How to update a given key within the context of a patch operation
+              type: string
+              enum:
+                - set
+                - remove
+            key:
+              description: The key to update for a given image
+              type: string
+              example: includes_additional_packages
+            value:
+              description: The value to associate with a key during a patch operation
+              type: string
+              example: "vim,emacs,man"
+    ImageRecord:
+      description: An Image Record
+      type: object
+      required:
+        - name
+        - id
+      properties:
+        id:
+          description: Unique ID of the image.
+          example: 46a2731e-a1d0-4f98-ba92-4f78c756bb12
+          format: uuid
+          readOnly: true
+          type: string
+        created:
+          description: Time the image record was created
+          example: 2018-07-28T03:26:01.234Z
+          format: date-time
+          readOnly: true
+          type: string
+        name:
+          description: Name of the image
+          example: centos7.5_barebones
+          type: string
+          minLength: 1
+        link:
+          $ref: '#/components/schemas/ArtifactLinkRecord'
+        arch:
+          description: Target architecture for the recipe.
+          example: aarch64
+          enum:
+            - aarch64
+            - x86_64
+          type: string
+        metadata:
+          description: User supplied annotations about an image, in the form of string key-value pairs
+          type: object
+          additionalProperties:
+            type: string
     DeletedImageRecord:
       description: A Deleted Image Record
       type: object
@@ -2439,17 +2477,10 @@ components:
             - x86_64
           type: string
         metadata:
-          description: User supplied annotations about an image
+          description: User supplied annotations about an image, in the form of string key-value pairs
           type: object
-          properties:
-            key:
-              description: Template variable to associate with the IMS image
-              example: includes_additional_packages
-              type: string
-            value:
-              description: Value variable to associate with the IMS image
-              example: "foo,bar,baz"
-              type: string
+          additionalProperties:
+            type: string
     JobRecord:
       description: A Job Record
       type: object
