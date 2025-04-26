@@ -106,6 +106,15 @@ class V2ImageCollection(V2BaseImageResource):
 
         current_app.logger.info("%s json_data = %s", log_id, json_data)
 
+        # converting metadata to a dict of actual key/value pair
+        if 'metadata' in json_data.keys() and isinstance(json_data['metadata'], dict):
+            if 'key' in json_data['metadata']:
+                json_data['metadata'] = {json_data['metadata']['key']: json_data['metadata'].get('value', '')}
+            else:
+                current_app.logger.warning("Metadata is missing 'key'")
+        else:
+            current_app.logger.warning("Metadata is not a dictionary.")
+
         # Validate input
         errors = image_user_input_schema.validate(json_data)
         if errors:
