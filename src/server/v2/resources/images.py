@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -105,6 +105,15 @@ class V2ImageCollection(V2BaseImageResource):
             return generate_missing_input_response()
 
         current_app.logger.info("%s json_data = %s", log_id, json_data)
+
+        # converting metadata to a dict of actual key/value pair
+        if 'metadata' in json_data.keys() and isinstance(json_data['metadata'], dict):
+            if 'key' in json_data['metadata']:
+                json_data['metadata'] = {json_data['metadata']['key']: json_data['metadata'].get('value', '')}
+            else:
+                current_app.logger.warning("Metadata is missing 'key'")
+        else:
+            current_app.logger.warning("Metadata is not a dictionary.")
 
         # Validate input
         errors = image_user_input_schema.validate(json_data)

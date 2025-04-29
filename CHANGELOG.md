@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.24.2] - 2025-04-29
+### Fixed
+- CASMCMS-9387: API V2: During create image ims stores incorrect metadata for an image
+- CASMCMS-9389: IMS image tags removed by soft delete
+- CASMCMS-9396: IMS - deleted recipe always gets assigned require_dkms=true
+
 ## [3.24.1] - 2025-04-25
 ### Fixed
 - CASMCMS-9386: API spec
