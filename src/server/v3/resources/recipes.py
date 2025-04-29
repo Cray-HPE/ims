@@ -131,7 +131,7 @@ class V3RecipeCollection(V3BaseRecipeCollection):
                                                        linux_distribution=recipe.linux_distribution,
                                                        template_dictionary=recipe.template_dictionary,
                                                        id=recipe.id, created=recipe.created, link=recipe.link,
-                                                       arch=recipe.arch)
+                                                       arch=recipe.arch, require_dkms=recipe.require_dkms)
                 if deleted_recipe.link:
                     try:
                         deleted_recipe.link = soft_delete_artifact(recipe.link)
@@ -187,7 +187,7 @@ class V3RecipeResource(V3BaseRecipeCollection):
                                                    linux_distribution=recipe.linux_distribution,
                                                    template_dictionary=recipe.template_dictionary,
                                                    id=recipe.id, created=recipe.created, link=recipe.link,
-                                                   arch=recipe.arch)
+                                                   arch=recipe.arch, require_dkms=recipe.require_dkms)
             if deleted_recipe.link:
                 try:
                     deleted_recipe.link = soft_delete_artifact(recipe.link)
@@ -341,7 +341,8 @@ class V3DeletedRecipeCollection(V3BaseRecipeCollection):
                                         linux_distribution=deleted_recipe.linux_distribution,
                                         template_dictionary=deleted_recipe.template_dictionary,
                                         id=deleted_recipe.id, created=deleted_recipe.created,
-                                        link=deleted_recipe.link, arch=deleted_recipe.arch)
+                                        link=deleted_recipe.link, arch=deleted_recipe.arch,
+                                        require_dkms=deleted_recipe.require_dkms)
                 for key, value in list(json_data.items()):
                     if key == "operation":
                         if value == PATCH_OPERATION_UNDELETE:
@@ -440,7 +441,8 @@ class V3DeletedRecipeResource(V3BaseRecipeCollection):
                                 linux_distribution=deleted_recipe.linux_distribution,
                                 template_dictionary=deleted_recipe.template_dictionary,
                                 id=deleted_recipe.id, created=deleted_recipe.created,
-                                link=deleted_recipe.link, arch=deleted_recipe.arch)
+                                link=deleted_recipe.link, arch=deleted_recipe.arch,
+                                require_dkms=deleted_recipe.require_dkms)
         for key, value in list(json_data.items()):
             if key == "operation":
                 if value == PATCH_OPERATION_UNDELETE:
