@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+CASMCMS-9408: Conditionalize podsecuritypolicies references in cray-ims
+
 ## [3.24.2] - 2025-04-29
 ### Fixed
 - CASMCMS-9387: API V2: During create image ims stores incorrect metadata for an image
