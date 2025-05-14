@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.24.3] - 2025-05-14
 ### Fixed
 CASMCMS-9408: Conditionalize podsecuritypolicies references in cray-ims
 
