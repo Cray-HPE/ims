@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.25.0] - 2025-05-29
 ### Dependencies
 - CASMCMS-9399 - update gunicorn to v23.0.0 for CVE issue
 | Package         | From     | To       |
