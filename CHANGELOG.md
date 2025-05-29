@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.25.0] - 2025-05-29
+### Dependencies
+- CASMCMS-9399 - update gunicorn to v23.0.0 for CVE issue
+| Package         | From     | To       |
+|-----------------|----------|----------|
+| `certifi`       | 2024.2.2 | 2024.7.4 |
+| `gunicorn`      | 22.0.0   | 23.0.0   |
+| `Jinja2`        | 3.1.4    | 3.1.6    |
+| `requests`      | 2.31.0   | 2.32.2   |
+| `urllib3`       | 1.26.18  | 1.26.19  |
+| `Werkzeug`      | 3.0.3    | 3.0.6    |
+
 ## [3.24.3] - 2025-05-14
 ### Fixed
 CASMCMS-9408: Conditionalize podsecuritypolicies references in cray-ims
