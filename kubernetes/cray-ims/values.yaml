@@ -95,7 +95,10 @@ jobs:
 cray-service:
   type: Deployment
   nameOverride: cray-ims
-
+  securityContext:
+    runAsUser: 65534
+    runAsGroup: 65534
+    fsGroup: 65534
   containers:
     cray-ims:
       name: cray-ims
