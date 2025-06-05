@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.27.0] - 2025-06-05
+### Fixed
+- CASMCMS-9452: Cleanup of leftover Cluster/RoleBindings under CMS
+
 ## [3.26.0] - 2025-06-04
 ### Fixed
 - CASMCMS-9451 - add pod level security context so PVC's are mounted with the correct owner.
