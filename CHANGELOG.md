@@ -33,7 +33,6 @@ CASMCMS-8923: Updated `cray-ims-kiwi-ng-opensuse-x86_64-builder` version to `1.9
 | `urllib3`       | 1.26.18  | 1.26.19  |
 | `Werkzeug`      | 3.0.3    | 3.0.6    |
 
-
 ## [3.24.3] - 2025-05-14
 ### Fixed
 CASMCMS-9408: Conditionalize podsecuritypolicies references in cray-ims
