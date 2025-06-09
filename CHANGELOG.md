@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Updated
+CASMCMS-8923: Updated `cray-ims-kiwi-ng-opensuse-x86_64-builder` version to `1.9`
+
 ## [3.24.3] - 2025-05-14
 ### Fixed
 CASMCMS-9408: Conditionalize podsecuritypolicies references in cray-ims
