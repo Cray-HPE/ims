@@ -82,7 +82,7 @@ def load_datastore(_app):
         V3DeletedImageRecordSchema(), 'id')
 
     _app.data['jobs'] = DataStoreHACK(
-        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.2_jobs.json'),
+        os.path.join(_app.config['HACK_DATA_STORE'], 'v2.4_jobs.json'),
         V2JobRecordSchema(), 'id')
 
     _app.data['remote_build_nodes'] = DataStoreHACK(
