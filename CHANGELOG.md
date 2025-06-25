@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.30.0] - 2025-06-25
+### Changed
+- CASMCMS-9024 - use DST signing keys with kiwi-ng recipe builds.
+
 ## [3.29.0] - 2025-06-25
 ### Updated
 - CASMCMS-8022: Updated `ims-utils` version to `2.18` and `kiwi-ng` version to `1.10`

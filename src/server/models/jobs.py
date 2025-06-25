@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2018-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2018-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -85,7 +85,8 @@ class V2JobRecord:
                  build_env_size=None, image_root_archive_name=None, kernel_file_name=None,
                  initrd_file_name=None, resultant_image_id=None, ssh_containers=None,
                  kubernetes_namespace=None, kernel_parameters_file_name=None, require_dkms=True,
-                 arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node=""):
+                 arch=None, job_mem_size=None, kubernetes_pvc=None, remote_build_node="",
+                 kubernetes_secret=None):
         # Supplied
         # v2.0
         self.job_type = job_type
@@ -122,6 +123,9 @@ class V2JobRecord:
 
         # v2.3
         self.remote_build_node = remote_build_node or ""
+
+        # v2.4
+        self.kubernetes_secret = kubernetes_secret
 
     def __repr__(self):
         return '<v2JobRecord(id={self.id!r})>'.format(self=self)
@@ -233,6 +237,10 @@ class V2JobRecordSchema(V2JobRecordInputSchema):
     # v2.3
     remote_build_node = fields.Str(allow_none=False, load_default="", dump_default="",
                                    metadata={"metadata": {"description": "XName of remote job if running on a remote node"}})
+
+    # v2.4
+    kubernetes_secret = fields.Str(allow_none=True,
+                                metadata={"metadata": {"description": "Secret name for the job"}})
 
     # after reading in the data, make sure there is an arch defined - default to x86
     @post_load(pass_original=False)
