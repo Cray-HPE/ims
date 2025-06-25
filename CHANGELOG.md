@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.29.0] - 2025-06-25
+### Updated
+- CASMCMS-8022: Updated `ims-utils` version to `2.18` and `kiwi-ng` version to `1.10`
+
 ## [3.28.0] - 2025-06-11
 ### Updated
 - CASMCMS-8923 - Updated `cray-ims-kiwi-ng-opensuse-x86_64-builder` version to `1.9`
