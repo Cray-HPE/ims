@@ -429,7 +429,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name','arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size','remote_build_node','kubernetes_secret'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
@@ -494,7 +494,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name','arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size','remote_build_node','kubernetes_secret'],
                               'returned keys not the same')
 
     @mock.patch("src.server.v3.resources.jobs.open", new_callable=mock.mock_open,
@@ -543,7 +543,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size','remote_build_node','kubernetes_secret'],
                               'returned keys not the same')
 
     def test_post_create_with_ssh_container(self, utils_mock, config_mock, client_mock):
@@ -641,7 +641,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size','remote_build_node','kubernetes_secret'],
                               'returned keys not the same')
 
     @responses.activate
@@ -745,7 +745,7 @@ class TestV3JobsCollectionEndpoint(TestCase):
                                'ssh_containers', 'status', 'image_root_archive_name', 'initrd_file_name',
                                'kernel_file_name', 'resultant_image_id', 'kubernetes_namespace',
                                'kernel_parameters_file_name', 'arch', 'require_dkms', 'kubernetes_pvc',
-                               'job_mem_size','remote_build_node'],
+                               'job_mem_size','remote_build_node','kubernetes_secret'],
                               'returned keys not the same')
 
 

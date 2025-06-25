@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -173,6 +173,7 @@ class V3BaseJobResource(Resource):
         Create kubernetes resources (configmap, service, job, pvc, and destination_rule) for the current job
         """
 
+        # Create the resources defined in template files
         k8s_client = client.ApiClient()
         new_job.kubernetes_namespace = self.default_ims_job_namespace
         job_template_path = os.environ.get("IMS_JOB_TEMPLATE_PATH", "/mnt/ims/v2/job_templates")
@@ -231,6 +232,7 @@ class V3BaseJobResource(Resource):
                 os.close(fd)
                 os.remove(output_file_name)
 
+        # Create the istio rule for this job
         try:
             self._create_istio_destination_rule_for_job(log_id, new_job)
         except ApiException as api_exception:
@@ -241,7 +243,36 @@ class V3BaseJobResource(Resource):
                                            'resources for your IMS job. Review the errors, take any corrective '
                                            'action and then re-run the request with valid information.')
 
+        # Copy the DST signing keys secret from the 'services' namespace for this job
+        self._copy_signing_keys_secret(log_id, new_job)
         return new_job, None
+
+    def _copy_signing_keys_secret(self, log_id, job) :
+        """Copy the signing keys secret to the job namespace if it exists. """
+        k8s_client = client.ApiClient()
+        k8s_v1api = client.CoreV1Api(k8s_client)
+        secret_name = "hpe-signing-key"
+        job_secret_name = "cray-ims-" + str(job.id) + "-signing-keys"
+
+        # Copy the signing keys secret to the job namespace
+        try:
+            # Read the secret from the services namespace
+            secret = k8s_v1api.read_namespaced_secret(secret_name, "services")
+
+            # modify the secret to copy back into the ims namespace
+            secret.metadata.namespace = job.kubernetes_namespace
+            secret.metadata.name = job_secret_name
+            secret.metadata.resource_version = None  # reset the resource version so it can be created
+            secret.metadata.uid = None  # reset the uid so it can be created
+            secret.metadata.creation_timestamp = None  # reset the creation timestamp so it can be created
+
+            # Create the secret in the job namespace
+            k8s_v1api.create_namespaced_secret(namespace=job.kubernetes_namespace, body=secret)
+            job.kubernetes_secret = job_secret_name
+
+        except client.ApiException as e:
+            current_app.logger.error("%s Error reading signing keys secret %s from namespace services: %s",
+                                     log_id, secret_name, e)
 
     def delete_kubernetes_resources(self, log_id, job, delete_job=True):
         """ Delete the underlying kubernetes resources that are created for the create/customize job workflow """
@@ -262,13 +293,14 @@ class V3BaseJobResource(Resource):
             resources['job'] = k8s_batchv1api.delete_namespaced_job
             resources['configmap'] = k8s_v1api.delete_namespaced_config_map
             resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
+            resources['secret'] = k8s_v1api.delete_namespaced_secret
 
         # Delete the underlying kubernetes resources
         for resource, delete_fn in resources.items():
             # PVCs were added to the job in v2.2 of the schema - they may not exist
             # for jobs created before an upgrade.
             name = getattr(job, "kubernetes_%s" % resource)
-            if name != None:
+            if name != None and len(name) > 0:
                 current_app.logger.info(f"{log_id} Deleting k8s {resource} {name}.")
             else:
                 current_app.logger.info(f"{log_id} k8s resource does not exist for job {resource}.")
@@ -681,8 +713,6 @@ class V3JobCollection(V3BaseJobResource):
             return problem
 
         external_dns_hostname = f"{str(new_job.id).lower()}.ims.{self.job_customer_access_subnet_name}.{self.job_customer_access_network_domain}"
-
-        current_app.logger.info(f"INFORMATION:: new_job: {new_job}")
 
         # switch the set of values depending on if the kata-qemu runtime class is used
         job_enable_dkms = "False"

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- CASMCMS-9024 - use DST signing keys with kiwi-ng recipe builds.
 
 ## [3.29.0] - 2025-06-25
 ### Updated

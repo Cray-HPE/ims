@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2025 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
-NOTE: Kata hypevisor setup adds ALL container cpu limits together for
+NOTE: Kata hypervisor setup adds ALL container cpu limits together for
   the hardware description.  This changes the nproc return of available
   cpus in the container, possibly overloading the VM causing it to
   crash. Be careful adjusting any cpu limits for the containers.
@@ -265,6 +265,9 @@ data:
             - name: admin-client-auth
               mountPath: '/etc/admin-client-auth'
               readOnly: true
+            - name: signing-keys
+              mountPath: /etc/cray/signing-keys
+              readOnly: true
           containers:
           - image: {{ .Values.cray_ims_utils.image.repository }}:{{ .Values.cray_ims_utils.image.tag }}
             imagePullPolicy: {{ .Values.cray_ims_utils.image.imagePullPolicy }}
@@ -429,6 +432,9 @@ data:
           - name: admin-client-auth
             secret:
               secretName: "{{ .Values.keycloak.keycloak_admin_client_auth_secret_name }}"
+          - name: signing-keys
+            secret:
+              secretName: cray-ims-$id-signing-keys
 kind: ConfigMap
 metadata:
   name: cray-configmap-ims-v2-image-create-kiwi-ng
