@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dependencies
+- Updated `kubernetes` module to match CSM 1.7 version
+
 ## [3.30.0] - 2025-06-25
 ### Changed
 - CASMCMS-9024 - use DST signing keys with kiwi-ng recipe builds.
