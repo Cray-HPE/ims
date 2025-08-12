@@ -131,6 +131,12 @@ data:
               value: /mnt/image
             - name: IMS_SSHD_IMAGE
               value: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
+            - name: KERNEL_FILENAME
+              value: $kernel_filename
+            - name: INITRD_FILENAME
+              value: $initrd_filename
+            - name: KERNEL_PARAMETERS_FILENAME
+              value: $kernel_parameters_filename
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image

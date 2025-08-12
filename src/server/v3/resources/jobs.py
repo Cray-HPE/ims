@@ -288,11 +288,11 @@ class V3BaseJobResource(Resource):
         k8s_delete_options.propagation_policy = "Background"
 
         resources = OrderedDict()
+        resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
         resources['service'] = k8s_v1api.delete_namespaced_service
         if delete_job:
             resources['job'] = k8s_batchv1api.delete_namespaced_job
             resources['configmap'] = k8s_v1api.delete_namespaced_config_map
-            resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
             resources['secret'] = k8s_v1api.delete_namespaced_secret
 
         # Delete the underlying kubernetes resources

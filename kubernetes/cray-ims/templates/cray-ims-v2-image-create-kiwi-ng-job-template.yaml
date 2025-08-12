@@ -248,8 +248,12 @@ data:
               value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}"
             - name: IMAGE_ROOT_ARCHIVE_NAME
               value: "$image_root_archive_name"
+            - name: KERNEL_FILENAME
+              value: $kernel_filename
             - name: INITRD_FILENAME
-              value: "$initrd_filename"
+              value: $initrd_filename
+            - name: KERNEL_PARAMETERS_FILENAME
+              value: $kernel_parameters_filename
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
