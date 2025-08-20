@@ -131,6 +131,8 @@ data:
               value: /mnt/image
             - name: IMS_SSHD_IMAGE
               value: {{ .Values.cray_ims_sshd.image.repository }}:{{ .Values.cray_ims_sshd.image.tag }}
+            - name: LOG_LEVEL
+              value: "INFO"
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -204,6 +206,8 @@ data:
               value: '$remote_build_node'
             - name: S3_BUCKET
               value: "$s3_bucket"
+            - name: LOG_LEVEL
+              value: "INFO"
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
