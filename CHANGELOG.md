@@ -273,6 +273,8 @@ Bumped dependency patch versions:
 ### Changed
 - CASMCMS-8566 - Set default arm64 runtime to kata
 
+- Adding Microsoft Visual Studio Code devcontainers IDE setup, allows for quick setup to contribute.
+
 ## [3.9.2] - 2023-05-19
 ### Changed
 - CASMCMS-8566 - Set default arm64 runtime to kata
