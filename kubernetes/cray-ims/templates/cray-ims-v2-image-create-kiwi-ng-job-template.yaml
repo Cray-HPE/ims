@@ -120,6 +120,8 @@ data:
               value: "$id"
             - name: DOWNLOAD_MD5SUM
               value: "$download_md5sum"
+            - name: LOG_LEVEL
+              value: "INFO"
             envFrom:
             - configMapRef:
                 name: cray-ims-$id-configmap
@@ -156,6 +158,8 @@ data:
               value: "$id"
             - name: OAUTH_CONFIG_DIR
               value: '/etc/admin-client-auth'
+            - name: LOG_LEVEL
+              value: "INFO"
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -188,6 +192,8 @@ data:
               value: "$id"
             - name: BUILD_ARCH
               value: "$job_arch"
+            - name: LOG_LEVEL
+              value: "INFO"
             volumeMounts:
             - name: ca-rpm-vol
               mountPath: /mnt/ca-rpm
@@ -248,8 +254,12 @@ data:
               value: "{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.repository }}:{{ .Values.cray_ims_kiwi_ng_opensuse_x86_64_builder.image.tag }}"
             - name: IMAGE_ROOT_ARCHIVE_NAME
               value: "$image_root_archive_name"
+            - name: KERNEL_FILENAME
+              value: $kernel_filename
             - name: INITRD_FILENAME
-              value: "$initrd_filename"
+              value: $initrd_filename
+            - name: KERNEL_PARAMETERS_FILENAME
+              value: $kernel_parameters_filename
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -314,6 +324,8 @@ data:
               value: "$job_arch"
             - name: S3_BUCKET
               value: "$s3_bucket"
+            - name: LOG_LEVEL
+              value: "INFO"
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:

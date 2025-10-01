@@ -289,10 +289,10 @@ class V2BaseJobResource(Resource):
 
         resources = OrderedDict()
         resources['service'] = k8s_v1api.delete_namespaced_service
+        resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
         if delete_job:
             resources['job'] = k8s_batchv1api.delete_namespaced_job
             resources['configmap'] = k8s_v1api.delete_namespaced_config_map
-            resources['pvc'] = k8s_v1api.delete_namespaced_persistent_volume_claim
             resources['secret'] = k8s_v1api.delete_namespaced_secret
 
         # Delete the underlying kubernetes service, job and configmap resources
