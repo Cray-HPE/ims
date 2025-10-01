@@ -137,6 +137,8 @@ data:
               value: $initrd_filename
             - name: KERNEL_PARAMETERS_FILENAME
               value: $kernel_parameters_filename
+            - name: LOG_LEVEL
+              value: "INFO"
             volumeMounts:
             - name: image-vol
               mountPath: /mnt/image
@@ -210,6 +212,8 @@ data:
               value: '$remote_build_node'
             - name: S3_BUCKET
               value: "$s3_bucket"
+            - name: LOG_LEVEL
+              value: "INFO"
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:

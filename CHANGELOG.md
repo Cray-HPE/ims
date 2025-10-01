@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Changed
 - CASMCMS-8904 - optimize remote node builds.
 
+### Added
+- CASMCMS-9510: Added `LOG_LEVEL` ENV in `build image` and `customize image` configmap.
+
 ### Dependencies
 - Updated `kubernetes` module to match CSM 1.7 version
+- CASMCMS-9510: Updated `ims-utils` version to `2.19.x` and `ims-kiwi-ng-opensuse-x86_64-builder` to `1.12.X`
 
 ## [3.30.0] - 2025-06-25
 ### Changed
