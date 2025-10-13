@@ -1,7 +1,7 @@
 {{/*
 MIT License
 
-(C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
+(C) Copyright 2021-2025 Hewlett Packard Enterprise Development LP
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -34,6 +34,7 @@ data:
   DEFAULT_IMS_IMAGE_SIZE: "60"
   DEFAULT_IMS_JOB_NAMESPACE: "{{ .Values.ims_config.cray_ims_job_namespace }}"
   DEFAULT_IMS_JOB_MEM_SIZE: "8"
+  DEFAULT_IMS_JOB_REMOTE_TIMEOUT_COUNT: "12"
 
   JOB_CUSTOMER_ACCESS_NETWORK_DOMAIN: "{{ .Values.customer_access.shasta_domain }}"
   JOB_CUSTOMER_ACCESS_SUBNET_NAME: "{{ .Values.customer_access.subnet_name }}"

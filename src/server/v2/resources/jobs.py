@@ -765,7 +765,8 @@ class V2JobCollection(V2BaseJobResource):
             "security_privilege": job_security_privilege,
             "security_capabilities": job_security_capabilities,
             "job_arch": new_job.arch,
-            "remote_build_node": new_job.remote_build_node
+            "remote_build_node": new_job.remote_build_node,
+            "remote_heartbeat_timeout_count": current_app.config["REMOTE_NODE_HEARTBEAT_TIMEOUT_COUNT"]
         }
 
         if new_job.job_type == JOB_TYPE_CREATE:
