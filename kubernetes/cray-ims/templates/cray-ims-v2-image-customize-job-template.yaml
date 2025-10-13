@@ -288,6 +288,8 @@ data:
               value: "$job_arch"
             - name: REMOTE_BUILD_NODE
               value: '$remote_build_node'
+            - name: REMOTE_HEARTBEAT_TIMEOUT_COUNT
+              value: '$remote_heartbeat_timeout_count'
             resources:
               requests:
                 memory: "$job_mem_size"
