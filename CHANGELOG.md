@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.32.1] - 2025-11-24
+### Dependencies
+- CASMCMS-9596 - pin 'testtools' to <2.8 to avoid build issues.
+
 ## [3.32.0] - 2025-10-13
 ### Changed
 - CASMTRIAGE-8568 - better handling of remote build node container failures.
