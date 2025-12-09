@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.33.0] - 2025-11-24
 ### Changed
 - CASMCMS-9613 - fix ims-kiwi-builder image build to not pull in new version of python on rebuilds.
 
