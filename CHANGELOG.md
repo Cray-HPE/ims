@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- CASMCMS-9613 - fix ims-kiwi-builder image build to not pull in new version of python on rebuilds.
 - Added developer documentation to README files.
 
 ## [3.32.1] - 2025-11-24
